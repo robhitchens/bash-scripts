@@ -1,0 +1,1 @@
+ffmpeg -i 'Citric Dummies - Zen and the Arcade of Beating Your Ass - 01 Everyone I Know Will Forget Me.flac' -ab 320k -map_metadata 0 -id3v2_version 3 'Citric Dummies - Zen and the Arcade of Beating Your Ass - 01 Everyone I Know Will Forget Me.mp3'
