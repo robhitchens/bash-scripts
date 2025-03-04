@@ -36,6 +36,7 @@ function compressFile() {
   newDirectory=$1
   # I don't quite understand how the below line works.
   log "debug" "compressFile \$2: $2"
+  originalFileName=$2
   filename=$(basename -- "$2")
   
   log "info" "File: $filename"
@@ -44,18 +45,28 @@ function compressFile() {
   log "info" "File Extension: $extension"
 
   if [ $(echo "${supportedFormats[@]}" | grep -o "$extension" | wc -w) -eq 1 ]; then
-    # TODO add check to see if compressed file already exists.
     targetFilePath="${newDirectory}/${filename%.*}.mp3"
-    log "info" "File: $filename matches supported formats. Compressing to target: $targetFilePath"
-    
-    log "trace" "Executing: mkdir -p \"$newDirectory\""
-    mkdir -p "$newDirectory"
+    if [[ -e $targetFilePath ]]; then
+      log "info" "Compressed file already exists ($targetFilePath) skipping."
+    else 
+      log "info" "File: $filename matches supported formats. Compressing to target: $targetFilePath"
+      
+      log "trace" "Executing: mkdir -p \"$newDirectory\""
+      mkdir -p "$newDirectory"
 
-    log "trace" "Executing: ffmpeg -i \"$i\" -ab 320k -map_metadata 0 -id3v2_version 3 \"$targetFilePath\""
-    #FIXME: dirty way to handle ffmep asking if we want to overwrite a file
-    yes | ffmpeg -i "$i" -ab 320k -map_metadata 0 -id3v2_version 3 "$targetFilePath"
+      log "trace" "Executing: ffmpeg -i \"$i\" -ab 320k -map_metadata 0 -id3v2_version 3 \"$targetFilePath\""
+      #FIXME: dirty way to handle ffmep asking if we want to overwrite a file
+      yes | ffmpeg -i "$i" -ab 320k -map_metadata 0 -id3v2_version 3 "$targetFilePath"
+    fi
   else 
-    log "warn" "File: $filename does not match supported formats"
+    log "warn" "File: $filename does not match supported formats, copying"
+    targetFilePath="${newDirectory}/${filename}"
+    if [[ -e $targetFilePath ]]; then
+      log "info" "File already exists ($targetFilePath) skipping."
+    else 
+      log "info" "Copying $originalFileName to $targetFilePath"
+      cp "$originalFileName" "$targetFilePath"
+    fi
   fi
 }
 
@@ -74,6 +85,9 @@ function enumerate_directory() {
   for i in ./*; do
     if [[ -f $i ]]; then
       log "trace" "executing compressFile \"$newDirectory\" \"$i\""
+      # TODO should probably put check here if file needs to be sent to compression function here.
+      # if not then can copy file over
+      # Also should check if file already exists before bothering to compress, but that can be done in the compression function.
       compressFile "$newDirectory" "$i"
     else
       log "warn" "Item [$i] is not a file and currently being ignored"
@@ -93,17 +107,17 @@ fi
 log "info" "Provided directory $1"
 log "debug" "Listing subdirectories"
 log "trace" "changing to directory \"$1\""
-cd $1
+cd "$1"
 
 # Removing trailing slash
-targetDirectory=$(echo "$2" | sed 's:/*$::')
+readonly targetDirectory=$(echo "$2" | sed 's:/*$::')
 for i in ./*; do
   item=$i
   if [ -d "$item" ]; then 
     enumerate_directory "$item" 
   elif [ -f "$item" ]; then  
     log "info" "File: $item"
-    # TODO need to run compressFile here.
+    compressFile "$targetDirectory" "$item"
   else
     log "warn" "Unknown Type: [$item] skipping"
   fi
