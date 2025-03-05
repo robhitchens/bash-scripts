@@ -2,11 +2,23 @@
 #function compress_file(){}
 #function make_target_dir(){}
 #function file_compression_stats(){}
+#function duration
+
+# NOTE can use `stat -c %s filename` to get filesize in bytes.
+# NOTE can use `echo "scale=2; $endSize/$startSize" | bc` to calculate floating point values
+#
+# NOTE Need to figure out how strictly I want to track the before and after compression size
+#      Do I want to total everything and then do the percentage at the end? or keep a rolling
+#      tally of the compression size. I would probably want a total beginning size and ending size.
+#      Anyways, looks like I have to do a bit more thinking about this, but I'm almost finished with
+#      writing for my usecase and then some tidying up.
+#      Also, should add at least a counter for total files, and files compressed during run.
 
 scriptName=$(basename "$0")
 supportedFormats=("flac" "wav")
 supportedOutputFormats=("mp3")
 
+# Note below use of `declare` is not portable
 declare -A logLevels
 logLevels["INFO"]=5
 logLevels["WARN"]=4
@@ -22,7 +34,7 @@ function log(){
   expression=$2
   timestamp=$(date +%Y-%d-%mT%H:%M:%S)
   #TODO needs work to apply precedence to levels.
-  if [ ${logLevels[$level]} -ge ${logLevels[$loggingLevel]} ]; then
+  if [[ ${logLevels[$level]} -ge ${logLevels[$loggingLevel]} ]]; then
     echo "$timestamp - $level: $expression"
   fi
 }
@@ -44,7 +56,7 @@ function compressFile() {
   extension="${filename##*.}"
   log "info" "File Extension: $extension"
 
-  if [ $(echo "${supportedFormats[@]}" | grep -o "$extension" | wc -w) -eq 1 ]; then
+  if [[ $(echo "${supportedFormats[@]}" | grep -o "$extension" | wc -w) -eq 1 ]]; then
     targetFilePath="${newDirectory}/${filename%.*}.mp3"
     if [[ -e $targetFilePath ]]; then
       log "info" "Compressed file already exists ($targetFilePath) skipping."
@@ -99,7 +111,7 @@ function enumerate_directory() {
 }
 
 #TODO should add way to set debug flag or preview flag
-if [ $# -ne 2 ]; then 
+if [[ $# -ne 2 ]]; then 
   echo "Usage: $scriptName \$sourceDirectory \$targetDirectory" 
   exit 1
 fi
@@ -111,15 +123,17 @@ cd "$1"
 
 # Removing trailing slash
 readonly targetDirectory=$(echo "$2" | sed 's:/*$::')
+readonly start=`date +%s`
 for i in ./*; do
   item=$i
-  if [ -d "$item" ]; then 
+  if [[ -d "$item" ]]; then 
     enumerate_directory "$item" 
-  elif [ -f "$item" ]; then  
+  elif [[ -f "$item" ]]; then  
     log "info" "File: $item"
     compressFile "$targetDirectory" "$item"
   else
     log "warn" "Unknown Type: [$item] skipping"
   fi
 done
-
+readonly end=`date +%s`
+log "info" "Job took $(expr $end - $start) second(s) to run."
