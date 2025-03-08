@@ -1,0 +1,8 @@
+# TODO should add steps to download and install go from source
+# TODO should add variable for go version
+# TODO should add options to install go versions side by side
+rm -rf /usr/local/go && \
+tar -C /usr/local -xzvf go1.24.1.linux-amd64.tar.gz
+# TODO should check to see if line already exists in bashrc
+cat "export PATH=$PATH:/usr/local/go/bin" >> ~/.bashrc
+
