@@ -7,3 +7,4 @@ tar -C /usr/local -xzvf go1.24.1.linux-amd64.tar.gz
 cat "export PATH=$PATH:/usr/local/go/bin" >> ~/.bashrc
 # Install delve debugger
 go install github.com/go-delve/delve/cmd/dlv@latest
+cat "export PATH=$PATH:$HOME/go/bin" >> ~/.bashrc
