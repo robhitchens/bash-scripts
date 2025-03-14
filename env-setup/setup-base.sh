@@ -8,4 +8,6 @@ sudo apt install \
   git \
   w3m \
   htop \
-  calcurse
+  calcurse \
+  cool-retro-term
+# NOTE: cool-retro-term may not be available in all distros package managers
