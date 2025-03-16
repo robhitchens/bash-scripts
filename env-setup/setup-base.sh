@@ -9,5 +9,6 @@ sudo apt install \
   w3m \
   htop \
   calcurse \
-  cool-retro-term
+  cool-retro-term \
+  vifm
 # NOTE: cool-retro-term may not be available in all distros package managers
