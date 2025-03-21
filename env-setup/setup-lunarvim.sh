@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Install neovim
 curl --verbose -OL https://github.com/neovim/neovim/releases/download/v0.10.4/nvim-linux-x86_64.tar.gz
 tar -C /usr/local/ -xvzf nvim-linux-x86_64.tar.gz

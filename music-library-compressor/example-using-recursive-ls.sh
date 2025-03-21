@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Sample using a single element from ls -R to get fullly qualified path
 # to file for compression.
 

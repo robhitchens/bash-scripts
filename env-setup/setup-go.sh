@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # TODO should add steps to download and install go from source
 # TODO should add variable for go version
 # TODO should add options to install go versions side by side

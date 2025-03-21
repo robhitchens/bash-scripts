@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # TODO below are rough wants to be implemented
 #function compress_file(){}
 #function make_target_dir(){}

@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 start=`date +%s`
 sleep 10
 end=`date +%s`
