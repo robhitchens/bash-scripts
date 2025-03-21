@@ -12,5 +12,6 @@ sudo apt install \
   htop \
   calcurse \
   cool-retro-term \
-  vifm
+  vifm \
+  abcde
 # NOTE: cool-retro-term may not be available in all distros package managers
