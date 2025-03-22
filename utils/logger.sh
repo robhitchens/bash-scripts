@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-scriptName=$(basename "$0")
+readonly scriptName=$(basename "$0")
 
 # Note below use of `declare` is not portable
 declare -A logLevels
@@ -17,15 +17,11 @@ loggingLevel="INFO"
 # level ($1 string) - the level of the log message
 # message ($2 string) - the message to be logged
 function log(){
-  level=$(echo "$1" | tr '[:lower:]' '[:upper:]')
-  message="$2"
-  timestamp=$(date +%Y-%d-%mT%H:%M:%S)
+  local level=$(echo "$1" | tr '[:lower:]' '[:upper:]')
+  local message="$2"
+  local timestamp=$(date +%Y-%d-%mT%H:%M:%S)
   if [[ ${logLevels[$level]} -ge ${logLevels[$loggingLevel]} ]]; then
     echo "$timestamp - $level: $message"
-  #else
-  #  echo "level string value: $level"
-  #  echo "provided level value: ${logLevels[$level]}"
-  #  echo "configured level value: ${logLevels[$loggingLevel]}"
   fi
 }
 
