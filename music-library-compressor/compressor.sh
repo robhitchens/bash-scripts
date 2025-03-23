@@ -26,7 +26,7 @@ function compressFile {
   local extension="${filename##*.}"
   log info "File Extension: $extension"
 
-  if [[ $(echo "${supportedFormats[@]}" | grep -o "$extension" | wc -w) -eq 1]]; then
+  if [[ $(echo "${supportedFormats[@]}" | grep -o "$extension" | wc -w) -eq 1 ]]; then
     local targetFilePath="${newDirectory}/${filename%.*}.mp3"
     if [[ -e $targetFilePath ]]; then
       log info "Compressed file already exists ($targetFilePath) skipping."
@@ -69,9 +69,12 @@ readonly start=`date +%s`
 
 # FIXME: need to figure out way to escape output from subshell separated by newline
 # Temporarily setting internal field separator to be new line only
-IFS=$'\n'
+# IFS=$'\n'
+# NOTE: shouldn't need to override the internal field separator by using NUL terminated IO
 # Getting fully qualified source file paths.
-readonly files=$(ls -R ./ | xargs -I {} realpath --relative-to=/ {})
+#readonly files=$(ls -R ./ | xargs -I {} realpath --relative-to=/ {})
+readonly files=$(find ./ -print0 | xargs -0 realpath --relative-to=/)
+#| xargs -I {} realpath --relative-to=/ {})
 #IFS=$' \t\n'
 for i in $files; do
   # TODO need to trim the beginning of the string to remove reference to home
