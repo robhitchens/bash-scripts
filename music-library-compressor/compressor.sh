@@ -46,19 +46,28 @@ function isSupportedFormat {
 function targetName {
   local sourcePath="$1"
   local targetDir="$2"
-  #NOTE: can't include logging if trying to use echo to return a value from a function.
-
-  # log info "Compressing target: $targetFilePath"
-  # TODO fill out with logic:
-  # Remove parent dirs from path, might need to subtract pwd from sourcePath
-  # Prepend result with targetDir
-  # echo result to return for capture. Might need to print NUL byte terminated string.
-
   local currentDir=$(pwd)
+
   log info "Current Dir: $currentDir"
   log debug "Source Path: $sourcePath"
+
   local targetName=$(echo "$sourcePath" | sed -E -e "s:^$currentDir::g" -e "s:(.*):$targetDir\1:g")
+
   echo "$targetName"
+}
+
+# PARAMS:
+# sourceFile ($1 string) - original file to copy
+# targetFile ($2 string) - target file name to copy to
+function copyUnsupportedFile {
+  local sourceFile="$1"
+  local targetFile="$2"
+  if [[ -e "$targetFile" ]]; then 
+    log warn "File already exists ($targetFile) skipping."
+  else
+    log info "Not supported file type: $sourceFile\n copying to dir $targetFile"
+    cp "$sourceFile" "$targetFile"
+  fi
 }
 
 # Guard clause for inputs
@@ -97,8 +106,8 @@ for fd in $files; do
     log trace "Executing: mkdir -p \"$targetDir\""
     mkdir -p "$targetDir"
 
-    # TODO below logic should be migrated to compressFile
     if [[ $supported -eq 'true' ]]; then
+      # TODO below logic should be migrated to compressFile
       # NOTE: due to log function utilizing echo, need to pipe to tail to get the last line for assignment
       newTargetFilename=$(echo "$newTargetFilename" | sed -E -e 's:(.*)(.flac|.wav):\1.mp3:g')
       log debug "NewTargetFilename: $newTargetFilename"
@@ -112,13 +121,7 @@ for fd in $files; do
         yes | ffmpeg -i "/$fd" -ab 320k -map_metadata 0 -id3v2_version 3 "$newTargetFilename"
       fi
     else
-      # TODO: Breakout into function to copy non supported file?
-      if [[ -e "$newTargetFilename" ]]; then 
-        log warn "File already exists ($newTargetFilename) skipping."
-      else
-        log info "Not supported file type: /$fd\n copying to dir $newTargetFilename"
-        cp "/$fd" "$newTargetFilename"
-      fi
+      copyUnsupportedFile "/$fd" "$newTargetFilename"
     fi
   fi
 done
