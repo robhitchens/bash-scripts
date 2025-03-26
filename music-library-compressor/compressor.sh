@@ -11,14 +11,32 @@ readonly supportedFormats=("flac" "wav")
 # FIXME: I don't think the below is used
 readonly supportedOutputFormats=("mp3")
 
-
-
-#TODO simplify below implementation, can filter out directories early, and can filter out duplicates early?
+#TODO this should be broken out in separate functions.
 # PARAMS:
-# newDirectory ($1 string) - directory to write compressed file to.
-# originalFileName ($2 string) - the original name of the file.
+# newTargetFilename ($1 string) - Fully qualified path to write compressed file to.
 function compressFile {
-  # TODO: fill in with extracted implementation of below
+  newTargetFilename="$1"
+  log debug "NewTargetFilename: $newTargetFilename"
+  log info "File: /$fd matches supported formats. Compressing to target: $newTargetFilename"
+  log trace "Executing: ffmpeg -i \"/$fd\" -ab 320k -map_metadata 0 -id3v2_version 3 \"$newTargetFilename\""
+
+  # FIXME: dirty way to handle ffmpeg interactively asking to overwrite file.
+  yes | ffmpeg -i "/$fd" -ab 320k -map_metadata 0 -id3v2_version 3 "$newTargetFilename"
+}
+
+# PARAMS: 
+# filename ($1 string) - Fully qualified path to compressed file
+# RETURNS:
+# Boolean (string) - 'true' or 'false' as to whether or not file already exists.
+function compressedFileExists {
+  filename="$1"
+  if [[ -e "$filename" ]]; then
+    # "return"
+    echo 'true'
+  else
+    # "return"
+    echo 'false'
+  fi
 }
 
 # PARAMS:
@@ -33,9 +51,11 @@ function isSupportedFormat {
   # NOTE: could just use return and supply exit code (0,1)
   if [[ $(echo "${supportedFormats[@]}" | grep -o "$extension" | wc -w) -eq 1 ]]; then
     log info "File: $filename matches supported formats."
+    # "return"
     echo 'true'
   else
     log warn "File: $filename does not match supported formats."
+    # "return"
     echo 'false'
   fi
 }
@@ -43,6 +63,9 @@ function isSupportedFormat {
 # PARAMS:
 # sourcePath ($1 string) - the original fully qualified file path
 # targetDir ($2 string) - the target dir to place the file in
+# currentDir (implicit, string) - current directory of execution provided by pwd
+# RETURNS:
+# targetName (string) - generated target filename
 function targetName {
   local sourcePath="$1"
   local targetDir="$2"
@@ -53,6 +76,7 @@ function targetName {
 
   local targetName=$(echo "$sourcePath" | sed -E -e "s:^$currentDir::g" -e "s:(.*):$targetDir\1:g")
 
+  # "return"
   echo "$targetName"
 }
 
@@ -83,42 +107,51 @@ cd "$1"
 
 readonly targetDirectory=$(echo "$2" | sed 's:/*$::')
 readonly start=`date +%s`
-# TODO add logic here
 
 # FIXME: need to figure out way to escape output from subshell separated by newline
 # Temporarily setting internal field separator to be new line only
 IFS=$'\n'
+
 # NOTE: shouldn't need to override the internal field separator by using NUL terminated IO
 # Getting fully qualified source file paths.
-#readonly files=$(ls -R ./ | xargs -I {} realpath --relative-to=/ {})
 readonly files=$(find ./ -print0 | xargs -0 realpath --relative-to=/)
-#| xargs -I {} realpath --relative-to=/ {})
-#IFS=$' \t\n'
+
+totalOrgFSizeMB="0"
+totalNewFSizeMB="0"
+# TODO: this loop is starting to grow and could probably be refactored into a couple small functions
 for fd in $files; do
   if [[ -d "fd" ]]; then
     log warn "Encountered directory [/$fd] skipping" 
   else
     log info "found /$fd"
+
+    # NOTE: due to log function utilizing echo, need to pipe to tail to get the last line for assignment
     supported=$(isSupportedFormat "/$fd" | tail -n1)
     newTargetFilename=$(targetName "/$fd" "$targetDirectory" | tail -n1)
 
     targetDir=$(dirname $newTargetFilename)
     log trace "Executing: mkdir -p \"$targetDir\""
     mkdir -p "$targetDir"
-
-    if [[ $supported -eq 'true' ]]; then
-      # TODO below logic should be migrated to compressFile
-      # NOTE: due to log function utilizing echo, need to pipe to tail to get the last line for assignment
-      newTargetFilename=$(echo "$newTargetFilename" | sed -E -e 's:(.*)(.flac|.wav):\1.mp3:g')
-      log debug "NewTargetFilename: $newTargetFilename"
-      if [[ -e "$newTargetFilename" ]]; then
+    
+    if [[ $supported = 'true' ]]; then
+      mp3Filename=$(echo "$newTargetFilename" | sed -E -e 's:(.*)(.flac|.wav):\1.mp3:g')
+      fileExists=$(compressedFileExists "$mp3Filename" | tail -n1)
+      if [[ $fileExists = 'true' ]]; then
         log warn "Compressed file already exists ($newTargetFilename) skipping."
       else
-        log info "File: /$fd matches supported formats. Compressing to target: $newTargetFilename"
-        log trace "Executing: ffmpeg -i \"/$fd\" -ab 320k -map_metadata 0 -id3v2_version 3 \"$newTargetFilename\""
+        compressFile "$mp3Filename"
+        originalFileSizeInBytes=$(stat -c %s "/$fd")
+        newFileSizeInBytes=$(stat -c %s "$mp3Filename")
 
-        # FIXME: dirty way to handle ffmpeg interactively asking to overwrite file.
-        yes | ffmpeg -i "/$fd" -ab 320k -map_metadata 0 -id3v2_version 3 "$newTargetFilename"
+        orgFSizeMB=$(echo "$originalFileSizeInBytes/1024/1024" | bc)
+        newFSizeMB=$(echo "$newFileSizeInBytes/1024/1024" | bc)
+        log debug "File size in bytes before [$orgFSizeMB]MB after [$newFSizeMB]MB"
+
+        compressionRatio=$(echo "scale=4; $newFileSizeInBytes/$originalFileSizeInBytes" | bc)
+        log debug "Compression factor: $compressionRatio"
+
+        totalOrgFSizeMB=$(echo "$totalOrgFSizeMB+$orgFSizeMB" | bc)
+        totalNewFSizeMB=$(echo "$totalNewFSizeMB+$newFSizeMB" | bc)
       fi
     else
       copyUnsupportedFile "/$fd" "$newTargetFilename"
@@ -127,3 +160,7 @@ for fd in $files; do
 done
 readonly end=`date +%s`
 log info "Job took $(expr $end - $start) second(s) to run."
+totalCompressionRatio=$(echo "scale=2; ($totalNewFSizeMB/$totalOrgFSizeMB)*100" | bc)
+log info "Total original file size: $totalOrgFSizeMB (MB)"
+log info "Total new file size: $totalNewFSizeMB (MB)"
+log info "Total compression ratio: $totalCompressionRatio%"
