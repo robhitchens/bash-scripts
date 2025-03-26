@@ -11,55 +11,55 @@ readonly supportedFormats=("flac" "wav")
 # FIXME: I don't think the below is used
 readonly supportedOutputFormats=("mp3")
 
-#TODO this should be broken out in separate functions.
+# FIXME: messed up here a bit, fd is getting pulled from higher scope.
 # PARAMS:
-# newTargetFilename ($1 string) - Fully qualified path to write compressed file to.
+# sourceFile ($1 string) - Fully qualified path to source file.
+# newTargetFilename ($2 string) - Fully qualified path to write compressed file to.
 function compressFile {
-  newTargetFilename="$1"
+  local sourceFile="$1"
+  local newTargetFilename="$2"
   log debug "NewTargetFilename: $newTargetFilename"
-  log info "File: /$fd matches supported formats. Compressing to target: $newTargetFilename"
-  log trace "Executing: ffmpeg -i \"/$fd\" -ab 320k -map_metadata 0 -id3v2_version 3 \"$newTargetFilename\""
+  log info "File: $sourceFile matches supported formats. Compressing to target: $newTargetFilename"
+  log trace "Executing: ffmpeg -i \"$sourceFile\" -ab 320k -map_metadata 0 -id3v2_version 3 \"$newTargetFilename\""
 
   # FIXME: capture output and use logger to print?
   # FIXME: dirty way to handle ffmpeg interactively asking to overwrite file.
-  yes | ffmpeg -i "/$fd" -ab 320k -map_metadata 0 -id3v2_version 3 "$newTargetFilename"
+  # FIXME: the preceding slash shouldn't be required.
+  yes | ffmpeg -i "$sourceFile" -ab 320k -map_metadata 0 -id3v2_version 3 "$newTargetFilename"
 }
 
-# TODO: a more bash way to handle this would be to echo non-zero value for true and zero value for false, then use either -n or -z tests
 # PARAMS: 
 # filename ($1 string) - Fully qualified path to compressed file
 # RETURNS:
-# Boolean (string) - 'true' or 'false' as to whether or not file already exists.
+# (string) - 'exists' if the file exists or '' if the file does not exist   
 function compressedFileExists {
   filename="$1"
   if [[ -e "$filename" ]]; then
     # "return"
-    echo 'true'
+    echo 'exists'
   else
     # "return"
-    echo 'false'
+    echo ''
   fi
 }
 
-# TODO: a more bash way to handle this would be to echo non-zero value for true and zero value for false, then use either -n or -z tests
 # PARAMS:
 # filename ($1 string) - the name of the file to check based on file extension
 # RETURNS:
-# 'true' - if file type is supported
-# 'false' - if file type is not supported
+# (string) - 'supported' if file type is supported and '' if the file is not supported.
 function isSupportedFormat {
-  readonly filename=$(basename -- "$1")
-  readonly extension="${filename##*.}"
+  local filename=$(basename -- "$1")
+  local extension="${filename##*.}"
 
   # NOTE: could just use return and supply exit code (0,1)
   if [[ $(echo "${supportedFormats[@]}" | grep -o "$extension" | wc -w) -eq 1 ]]; then
     log info "File: $filename matches supported formats."
     # "return"
-    echo 'true'
+    echo 'supported'
   else
     log warn "File: $filename does not match supported formats."
     # "return"
-    echo 'false'
+    echo ''
   fi
 }
 
@@ -121,11 +121,13 @@ readonly files=$(find ./ -print0 | xargs -0 realpath --relative-to=/)
 
 totalOrgFSizeMB="0"
 totalNewFSizeMB="0"
+
 # TODO: this loop is starting to grow and could probably be refactored into a couple small functions
 for fd in $files; do
   if [[ -d "fd" ]]; then
     log warn "Encountered directory [/$fd] skipping" 
   else
+    # Fixme: should probably just alias fd with /$fd
     log info "found /$fd"
 
     # NOTE: due to log function utilizing echo, need to pipe to tail to get the last line for assignment
@@ -136,14 +138,14 @@ for fd in $files; do
     log trace "Executing: mkdir -p \"$targetDir\""
     mkdir -p "$targetDir"
     
-    if [[ $supported = 'true' ]]; then
+    if [[ -n $supported ]]; then
       # TODO this function could be broken out with mp3Filename as the return value
       mp3Filename=$(echo "$newTargetFilename" | sed -E -e 's:(.*)(.flac|.wav):\1.mp3:g')
       fileExists=$(compressedFileExists "$mp3Filename" | tail -n1)
-      if [[ $fileExists = 'true' ]]; then
+      if [[ -n $fileExists ]]; then
         log warn "Compressed file already exists ($newTargetFilename) skipping."
       else
-        compressFile "$mp3Filename"
+        compressFile "/$fd" "$mp3Filename"
         originalFileSizeInBytes=$(stat -c %s "/$fd")
         newFileSizeInBytes=$(stat -c %s "$mp3Filename")
 
