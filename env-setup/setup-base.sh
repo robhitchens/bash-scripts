@@ -13,5 +13,6 @@ sudo apt install \
   calcurse \
   cool-retro-term \
   vifm \
-  abcde
+  abcde \
+  ffmpeg
 # NOTE: cool-retro-term may not be available in all distros package managers
