@@ -20,6 +20,7 @@ function compressFile {
   log info "File: /$fd matches supported formats. Compressing to target: $newTargetFilename"
   log trace "Executing: ffmpeg -i \"/$fd\" -ab 320k -map_metadata 0 -id3v2_version 3 \"$newTargetFilename\""
 
+  # FIXME: capture output and use logger to print?
   # FIXME: dirty way to handle ffmpeg interactively asking to overwrite file.
   yes | ffmpeg -i "/$fd" -ab 320k -map_metadata 0 -id3v2_version 3 "$newTargetFilename"
 }
@@ -40,6 +41,7 @@ function compressedFileExists {
   fi
 }
 
+# TODO: a more bash way to handle this would be to echo non-zero value for true and zero value for false, then use either -n or -z tests
 # PARAMS:
 # filename ($1 string) - the name of the file to check based on file extension
 # RETURNS:
@@ -135,6 +137,7 @@ for fd in $files; do
     mkdir -p "$targetDir"
     
     if [[ $supported = 'true' ]]; then
+      # TODO this function could be broken out with mp3Filename as the return value
       mp3Filename=$(echo "$newTargetFilename" | sed -E -e 's:(.*)(.flac|.wav):\1.mp3:g')
       fileExists=$(compressedFileExists "$mp3Filename" | tail -n1)
       if [[ $fileExists = 'true' ]]; then
