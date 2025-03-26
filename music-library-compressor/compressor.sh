@@ -24,6 +24,7 @@ function compressFile {
   yes | ffmpeg -i "/$fd" -ab 320k -map_metadata 0 -id3v2_version 3 "$newTargetFilename"
 }
 
+# TODO: a more bash way to handle this would be to echo non-zero value for true and zero value for false, then use either -n or -z tests
 # PARAMS: 
 # filename ($1 string) - Fully qualified path to compressed file
 # RETURNS:
