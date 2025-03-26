@@ -145,7 +145,7 @@ for fd in $files; do
 
         orgFSizeMB=$(echo "$originalFileSizeInBytes/1024/1024" | bc)
         newFSizeMB=$(echo "$newFileSizeInBytes/1024/1024" | bc)
-        log debug "File size in bytes before [$orgFSizeMB]MB after [$newFSizeMB]MB"
+        log debug "File size in bytes before [$orgFSizeMB]MiB after [$newFSizeMB]MiB"
 
         compressionRatio=$(echo "scale=4; $newFileSizeInBytes/$originalFileSizeInBytes" | bc)
         log debug "Compression factor: $compressionRatio"
@@ -161,6 +161,6 @@ done
 readonly end=`date +%s`
 log info "Job took $(expr $end - $start) second(s) to run."
 totalCompressionRatio=$(echo "scale=2; ($totalNewFSizeMB/$totalOrgFSizeMB)*100" | bc)
-log info "Total original file size: $totalOrgFSizeMB (MB)"
-log info "Total new file size: $totalNewFSizeMB (MB)"
+log info "Total original file size: $totalOrgFSizeMB (MiB)"
+log info "Total new file size: $totalNewFSizeMB (MiB)"
 log info "Total compression ratio: $totalCompressionRatio%"
