@@ -4,7 +4,7 @@
 # FIXME: below doesn't appear to work in subshells (at least with my limited knowledge)
 # alias log='../utils/logger.sh'
 # FIXME: aliasing script using function declaration, also assuming similar folder structure on all machines.
-function log { bash ~/projects/bash-scripts/utils/logger.sh "$1" "$2"; }
+function log { bash ~/projects/bash-scripts/utils/logger.sh "$@"; }
 
 readonly scriptName=$(basename "$0")
 readonly supportedFormats=("flac" "wav")
