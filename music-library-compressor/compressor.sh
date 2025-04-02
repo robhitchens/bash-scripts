@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+# BUG: error occurred during full compression run resulting in compression ratio information
+#      and total new file size to be lost.
+# TODO: implement cache file to reduce lookup times when determining which files have already been processed.
+# TODO: Introduce GNU parallel to compression to fully utilize CPU threads.
+# TODO: Refactor logging script to include initial setup/exports to reduce
+#       time it might take to intialize associate array data.
+# TODO: add conditionals to logging at the end for displaying more relevant execution information.
+
 # NOTE: Dependencies
 # FIXME: below doesn't appear to work in subshells (at least with my limited knowledge)
 # alias log='../utils/logger.sh'
