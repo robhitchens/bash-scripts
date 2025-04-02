@@ -14,5 +14,6 @@ sudo apt install \
   cool-retro-term \
   vifm \
   abcde \
-  ffmpeg
+  ffmpeg \
+  parallel
 # NOTE: cool-retro-term may not be available in all distros package managers
