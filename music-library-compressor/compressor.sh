@@ -19,7 +19,7 @@ readonly supportedFormats=("flac" "wav")
 # FIXME: I don't think the below is used
 readonly supportedOutputFormats=("mp3")
 
-readonly indexFileLocation=~/.cache/compressor.index
+readonly indexFileLocation=~/.cache/compressor.idx
 if [[ ! -e "$indexFileLocation" ]]; then
   touch "$indexFileLocation"
 fi
