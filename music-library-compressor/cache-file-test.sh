@@ -5,11 +5,11 @@
 # process 
 IFS=$'\n'
 
-readonly files=$(find /mnt/5D654E2129C52FAB/Music -print0 | head -z -n16 | xargs -0 realpath --relative-to=/)
+readonly files=$(find ~/Music -print0 | xargs -0 realpath --relative-to=/)
 #readonly otherFiles=$(find /mnt/5D654E2129C52FAB/Music -print0 | head -n 10 | xargs -0 realpath --relative-to=/)
 #echo "$files" > /tmp/.cache/indexsh
 
-readonly diffOut=$(echo "$files" | diff --changed-group-format='%<' --unchanged-group-format='' - /tmp/.cache/index)
+readonly diffOut=$(echo "$files" | awk '{ print "/" $0 }'  | diff --changed-group-format='%<' --unchanged-group-format='' - ~/.cache/compressor.index)
 #| sed -E s/\>\ \(.*\)/'\1'/g)
 
 echo "$diffOut"

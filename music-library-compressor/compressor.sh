@@ -19,7 +19,11 @@ readonly supportedFormats=("flac" "wav")
 # FIXME: I don't think the below is used
 readonly supportedOutputFormats=("mp3")
 
-# FIXME: messed up here a bit, fd is getting pulled from higher scope.
+readonly indexFileLocation=~/.cache/compressor.index
+if [[ ! -e "$indexFileLocation" ]]; then
+  touch "$indexFileLocation"
+fi
+
 # PARAMS:
 # sourceFile ($1 string) - Fully qualified path to source file.
 # newTargetFilename ($2 string) - Fully qualified path to write compressed file to.
@@ -126,21 +130,23 @@ IFS=$'\n'
 # NOTE: shouldn't need to override the internal field separator by using NUL terminated IO
 # Getting fully qualified source file paths.
 readonly files=$(find ./ -print0 | xargs -0 realpath --relative-to=/)
+readonly indexDiff=$(echo "$files" | awk '{ print "/" $0 }' | diff --changed-group-format='%<' --unchanged-group-format='' - "$indexFileLocation")
 
 totalOrgFSizeMB="0"
 totalNewFSizeMB="0"
 
 # TODO: this loop is starting to grow and could probably be refactored into a couple small functions
-for fd in $files; do
-  if [[ -d "fd" ]]; then
-    log warn "Encountered directory [/$fd] skipping" 
+for fd in $indexDiff; do
+  if [[ -d "$fd" ]]; then
+    log warn "Encountered directory [$fd] skipping" 
+    echo "$fd" >> "$indexFileLocation"
   else
     # Fixme: should probably just alias fd with /$fd
-    log info "found /$fd"
+    log info "found $fd"
 
     # NOTE: due to log function utilizing echo, need to pipe to tail to get the last line for assignment
-    supported=$(isSupportedFormat "/$fd" | tail -n1)
-    newTargetFilename=$(targetName "/$fd" "$targetDirectory" | tail -n1)
+    supported=$(isSupportedFormat "$fd" | tail -n1)
+    newTargetFilename=$(targetName "$fd" "$targetDirectory" | tail -n1)
 
     targetDir=$(dirname $newTargetFilename)
     log trace "Executing: mkdir -p \"$targetDir\""
@@ -152,8 +158,10 @@ for fd in $files; do
       fileExists=$(compressedFileExists "$mp3Filename" | tail -n1)
       if [[ -n $fileExists ]]; then
         log warn "Compressed file already exists ($newTargetFilename) skipping."
+        echo "$fd" >> "$indexFileLocation"
       else
-        compressFile "/$fd" "$mp3Filename"
+        compressFile "$fd" "$mp3Filename"
+        echo "$fd" >> "$indexFileLocation"
         originalFileSizeInBytes=$(stat -c %s "/$fd")
         newFileSizeInBytes=$(stat -c %s "$mp3Filename")
 
@@ -168,7 +176,8 @@ for fd in $files; do
         totalNewFSizeMB=$(echo "$totalNewFSizeMB+$newFSizeMB" | bc)
       fi
     else
-      copyUnsupportedFile "/$fd" "$newTargetFilename"
+      echo "$fd" >> "$indexFileLocation"
+      copyUnsupportedFile "$fd" "$newTargetFilename"
     fi
   fi
 done
