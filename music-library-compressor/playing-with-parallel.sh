@@ -3,7 +3,7 @@ function wait {
   readonly seconds=5
   readonly threadNumber="$1"
   local i=0
-  while [[ "$i" -le seconds ]]; do
+  while [[ "$i" -lt seconds ]]; do
     sleep 1s
     echo "threadNumber $threadNumber sleeping $i..." | tee -a /tmp/parallel/processes
     i=$((i + 1))

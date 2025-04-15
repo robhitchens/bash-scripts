@@ -164,6 +164,12 @@ for fd in $indexDiff; do
         echo "$fd" >> "$indexFileLocation"
         originalFileSizeInBytes=$(stat -c %s "/$fd")
         newFileSizeInBytes=$(stat -c %s "$mp3Filename")
+        if [[ "$?" -eq "1" ]]; then
+          # FIXME: hacky way to address the problem
+          # if stat -c of compressedFile errored out then just set newFileSizeInBytes to original for net zero effect on calculations
+          newFileSizeInBytes=$originalFileSizeInBytes
+        fi
+
 
         orgFSizeMB=$(echo "$originalFileSizeInBytes/1024/1024" | bc)
         newFSizeMB=$(echo "$newFileSizeInBytes/1024/1024" | bc)
