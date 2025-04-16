@@ -42,4 +42,4 @@ folders='
 /tmp/parallel/garbo 15-test
 /tmp/parallel/garbo 16-test'
   
-parallel --verbose --colsep '-' --delimiter='\n' 'echo {#} {2} && mkdir -p {1}' ::: $(printf '%s\n' $folders)
+parallel --verbose --colsep '-' --delimiter='\n' 'echo {#} {2} && mkdir -p {1}' ::: $folders
