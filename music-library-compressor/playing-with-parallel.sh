@@ -25,21 +25,21 @@ export -f wait
 
 IFS=$'\n'
 folders='
-/tmp/parallel/garbo 1
-/tmp/parallel/garbo 2
-/tmp/parallel/garbo 3
-/tmp/parallel/garbo 4
-/tmp/parallel/garbo 5
-/tmp/parallel/garbo 6
-/tmp/parallel/garbo 7
-/tmp/parallel/garbo 8
-/tmp/parallel/garbo 9
-/tmp/parallel/garbo 10
-/tmp/parallel/garbo 11
-/tmp/parallel/garbo 12
-/tmp/parallel/garbo 13
-/tmp/parallel/garbo 14
-/tmp/parallel/garbo 15
-/tmp/parallel/garbo 16'
+/tmp/parallel/garbo 1-test
+/tmp/parallel/garbo 2-test
+/tmp/parallel/garbo 3-test
+/tmp/parallel/garbo 4-test
+/tmp/parallel/garbo 5-test
+/tmp/parallel/garbo 6-test
+/tmp/parallel/garbo 7-test
+/tmp/parallel/garbo 8-test
+/tmp/parallel/garbo 9-test
+/tmp/parallel/garbo 10-test
+/tmp/parallel/garbo 11-test
+/tmp/parallel/garbo 12-test
+/tmp/parallel/garbo 13-test
+/tmp/parallel/garbo 14-test
+/tmp/parallel/garbo 15-test
+/tmp/parallel/garbo 16-test'
   
-parallel --verbose --delimiter='\n' 'echo {#} && mkdir -p {}' ::: $(printf '%s\n' $folders)
+parallel --verbose --colsep '-' --delimiter='\n' 'echo {#} {2} && mkdir -p {1}' ::: $(printf '%s\n' $folders)
