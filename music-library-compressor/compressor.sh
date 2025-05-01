@@ -5,20 +5,11 @@
 #     --no-cache -> run but ignore cache file.
 #     --source-dir 
 #     --target-dir
-# BUG: error occurred during full compression run resulting in compression ratio information
-#      and total new file size to be lost.
-# TODO: implement cache file to reduce lookup times when determining which files have already been processed.
-# TODO: Introduce GNU parallel to compression to fully utilize CPU threads.
-# TODO: Refactor logging script to include initial setup/exports to reduce
-#       time it might take to intialize associate array data.
-# TODO: add conditionals to logging at the end for displaying more relevant execution information.
 
 # NOTE: Dependencies
-# FIXME: below doesn't appear to work in subshells (at least with my limited knowledge)
-# alias log='../utils/logger.sh'
-# FIXME: aliasing script using function declaration, also assuming similar folder structure on all machines.
-# FIXME: replace usage with source ~/projects/bash-scripts/utils/logger.sh refactor logger.sh to export function.
-function log { bash ~/projects/bash-scripts/utils/logger.sh "$@"; }
+
+source ~/projects/bash-scripts/utils/logger.sh
+setLogLevel info 
 
 readonly scriptName=$(basename "$0")
 readonly supportedFormats=("flac" "wav")
@@ -29,11 +20,13 @@ readonly indexFileLocation=~/.cache/compressor.idx
 if [[ ! -e "$indexFileLocation" ]]; then
   touch "$indexFileLocation"
 fi
+export indexFileLocation
 
 # PARAMS:
 # fileName ($1 string) - fileName to add to cache
 function addFileToCache {
   local fileName="$1"
+  log debug "adding filename [$filename] to cache"
   echo "$fileName" >> "$indexFileLocation"
 }
 
@@ -42,18 +35,20 @@ function addFileToCache {
 # RETURNS:
 # path (string) - path to the created tmp file
 function makeTmpFile {
-  readonly fileName="$1"
-  readonly directory="/tmp/compressor/"
+  local fileName="$1"
+  local directory="/tmp/compressor"
   local tempFile="$directory/$fileName"
 
   if [[ ! -e "$tempFile" ]]; then
-    mkdir -p directory
+    log debug "making temp file: $tempFile"
+    mkdir -p "$directory"
     touch "$tempFile"
   else
+    log debug "clearing temp file: $tempFile"
     > $tempFile
   fi
   
-  echo "$directory/$fileName"
+  echo "$tempFile" 
 }
 
 # PARAMS:
@@ -77,7 +72,7 @@ function compressFile {
 # RETURNS:
 # (string) - 'exists' if the file exists or '' if the file does not exist   
 function compressedFileExists {
-  filename="$1"
+  local filename="$1"
   if [[ -e "$filename" ]]; then
     # "return"
     echo 'exists'
@@ -88,20 +83,25 @@ function compressedFileExists {
 }
 
 # PARAMS:
-# sourceFile ($1 string) - source file name
-# targetFile ($2 string) - target file name
+# thread ($1 int) - the thread number currently being executed
+# sourceFile ($2 string) - source file name
+# targetFile ($3 string) - target file name
 function compressFileExt {
-  local sourceFile="$1" 
-  local targetFile="$2"
-  local mp3Filename=$(echo "$targetFile" | sed -E -e 's:(.*)(.flac|.wav):\1.mp3:g')
+  local thread="$1"
+  local sourceFile="$2" 
+  local mp3Filename="$3"
+
+  log info "Thread[$thread] compressing source[$sourceFile] to target[$mp3Filename]"
   fileExists=$(compressedFileExists "$mp3Filename" | tail -n1)
   
   if [[ -n "$fileExists" ]]; then
-    log warn "Compressed file already exists ($targetFile) skipping."
-    addFileToCache "$sourceFile"
+    log warn "Thread[$thread] Compressed file already exists ($mp3Filename) skipping."
+    log debug "adding file [$sourceFile] to cache"
+    echo "$sourceFile" >> "$indexFileLocation"
   else
     compressFile "$sourceFile" "$mp3Filename"
-    addFileToCache "$sourceFile"
+    log debug "adding file [$sourceFile] to cache"
+    echo "$sourceFile" >> "$indexFileLocation"
   fi
 }
 
@@ -139,10 +139,12 @@ function targetName {
   log info "Current Dir: $currentDir"
   log debug "Source Path: $sourcePath"
 
-  local targetName=$(echo "$sourcePath" | sed -E -e "s:^$currentDir::g" -e "s:(.*):$targetDir\1:g")
+  local tName=$(echo "$sourcePath" | sed -E -e "s:^$currentDir::g" -e "s:(.*):$targetDir\1:g")
+  
+  log debug "generated target name[$tName]"
 
   # "return"
-  echo "$targetName"
+  echo "$tName"
 }
 
 # PARAMS:
@@ -159,34 +161,35 @@ function copyUnsupportedFile {
   fi
 }
 
-# it'll probably make this easier to reason about if we filter supported and unsupported into two separate files.
-# then copy over the unsupported files
-# then deal with the supported files.
-
 # TODO might just update to take in file of folders and target directory?
 # PARAMS:
 # files ($@ string list) - list of files to process.
 # RETURNS:
 # supportedFilesPath (string path) - path to file of supported files
 function filterSupportedAndUnsupported {
-  local files="$@"
-  local supportedFile=$(makeTmpFile "supported")
-  local unsupportedFile=$(makeTmpFile "unsupported")
-  for file in $files; do
+  local inputFiles="$@"
+  local supportedFile=$(makeTmpFile "supported" | tail -n1)
+  local unsupportedFile=$(makeTmpFile "unsupported" | tail -n1)
+  for file in $inputFiles; do
     local newTargetFileName=$(targetName "$file" "$targetDirectory" | tail -n1)
-    if [[ -d "$fd" ]]; then
-      addFileToCache "$fd"
+    if [[ -d "$file" ]]; then
+      if [[ $(cat "$indexFileLocation" | grep -o "$file" | wc -w) -eq 1 ]]; then
+        log debug "Directory [$file] already exists in cache, skipping."
+      else
+        addFileToCache "$file"
+      fi
     else
       # NOTE: due to log function utilizing echo, need to pipe to tail to get the last line for assignment
-      supported=$(isSupportedFormat "$fd" | tail -n1)
+      supported=$(isSupportedFormat "$file" | tail -n1)
       if [[ -n $supported ]]; then
         echo "$file" >> "$supportedFile"
       else
         echo "$file" >> "$unsupportedFile"
+        addFileToCache "$file"
       fi
+    fi
   done
-  echo "$supportedFile
-$unsupportedFile"
+  echo "$supportedFile::$unsupportedFile"
 }
 
 # PARAMS:
@@ -195,7 +198,9 @@ $unsupportedFile"
 # processedFilePath (string path) - path to file containing the processed output.
 function generateTargetNames {
   local file="$1"
-  local outputFile=$(makeTmpFile "$(basename "$file")-processed")
+  local outputFile=$(makeTmpFile "$(basename "$file")-processed" | tail -n1)
+  
+  log debug "generating targetNames in [$outputFile]"
 
   for item in $(cat "$file"); do
     local target=$(targetName "$item" "$targetDirectory" | tail -n1)
@@ -205,12 +210,29 @@ function generateTargetNames {
   echo "$outputFile"
 }
 
+function generateCompressedNames {
+  local file="$1"
+  local outputFile=$(makeTmpFile "$(basename "$file")-compressed" | tail -n1)
+
+  log debug "generating compressed file names in [$outputFile]"
+  for item in $(cat "$file"); do
+    local split=(${item//::/$'\n'})
+    local mp3Filename=$(echo "${split[1]}" | sed -E -e 's:(.*)(.flac|.wav):\1.mp3:g')
+    log debug "generated mp3Filename [$mp3Filename]"
+    echo "${split[0]}::$mp3Filename" >> "$outputFile"
+  done
+
+  echo "$outputFile"
+}
+
 function makeTargetDirs {
   local inputFile="$1"
   for item in $(cat "$inputFile"); do
+    log debug "processing $item for target dir"
     local split=(${item//::/$'\n'})
     local target="${split[1]}"
     local targetDir=$(dirname "$target")
+    log debug "making target dir [$targetDir]"
     mkdir -p "$targetDir"
   done
 }
@@ -225,11 +247,11 @@ function printStatistics {
   for item in $(cat "$compressedFilesList"); do
     #TODO not sure if this is going to work.
     local split=(${item//::/$'\n'})
-    local orgFSizeMB=$(stat -c %s "$split[0]")
+    local orgFSizeMB=$(stat -c %s "${split[0]}")
     if [[ "$?" -eq "1" ]]; then
       orgFSizeMB="0"
     fi
-    local newFSizeMB=$(stat -c %s "$split[1]")
+    local newFSizeMB=$(stat -c %s "${split[1]}")
     if [[ "$?" -eq "1" ]]; then
       newFSizeMB="0"
     fi
@@ -241,11 +263,17 @@ function printStatistics {
 
   readonly end=`date +%s`
   log info "Job took $(expr $end - $start) second(s) to run."
-  totalCompressionRatio=$(echo "scale=2; ($totalNewFSizeMB/$totalOrgFSizeMB)*100" | bc)
+  if [[ "$totalOrgFSizeMB" -eq '0' ]]; then
+    totalCompressionRatio="0.00"
+  else
+    totalCompressionRatio=$(echo "scale=2; ($totalNewFSizeMB/$totalOrgFSizeMB)*100" | bc)
+  fi
   log info "Total original file size: $totalOrgFSizeMB (MiB)"
   log info "Total new file size: $totalNewFSizeMB (MiB)"
   log info "Total compression ratio: $totalCompressionRatio%" 
 }
+
+# TODO: should probably wrap some of below into functions for readability
 
 # Guard clause for inputs
 if [[ $# -ne 2 ]]; then
@@ -264,100 +292,43 @@ readonly start=`date +%s`
 # FIXME: need to figure out way to escape output from subshell separated by newline
 # Temporarily setting internal field separator to be new line only
 IFS=$'\n'
-
 # NOTE: shouldn't need to override the internal field separator by using NUL terminated IO
+
 # Getting fully qualified source file paths.
 readonly files=$(find ./ -print0 | xargs -0 realpath --relative-to=/)
 readonly indexDiff=$(echo "$files" | awk '{ print "/" $0 }' | diff --changed-group-format='%<' --unchanged-group-format='' - "$indexFileLocation")
+readonly filteredFiles=$(filterSupportedAndUnsupported "$indexDiff" | tail -n1)
+readonly splitFiltered=(${filteredFiles//::/$'\n'})
+readonly supportedFiles=$(generateTargetNames "${splitFiltered[0]}" | tail -n1)
+readonly unsupportedFiles=$(generateTargetNames "${splitFiltered[1]}" | tail -n1)
+readonly mp3Files=$(generateCompressedNames "$supportedFiles" | tail -n1)
 
-#totalOrgFSizeMB="0"
-#totalNewFSizeMB="0"
-
-# PLAN:
-#   need to create multiple loops.
-#   - create file of old:new filenames "${new::old##*::}" or sed -E -e 's/(.*)::(.*)/\1/' or \2
-#   - determine which files need to be copied over and filter out supported into new file.
-#   - iterate file from previous step and run compressFile in parallel.
-#   - Loop over same file to calculate metrics.
-#   # old
-#   1. determine which files need to be copied over. Use parallel to copy them over?
-#   2. Remaining files generate compressed file name
-#   3. Execute compressFile using parallel and output of step 2.
-#   4. Loop over output of step 2 and compute metrics.
-
-# TODO don't know if this works
-readonly filteredFiles=($(filterSupportedAndUnsupported "$indexDiff"))
-readonly supportedFiles=$(generateTargetNames "$filteredFiles[1]")
-readonly unsupportedFiles=$(generateTargetNames "$filteredFiles[2]")
-makeTargetDirs "$supportedFiles"
+makeTargetDirs "$mp3Files"
 makeTargetDirs "$unsupportedFiles"
+
 # TODO could handle this with parallel.
-for file in $(cat $filterFiles[2]); do
-  copyUnsupportedFile "$file" "targetFile"
-done
+readonly unsupportedCount=$(wc -l "$unsupportedFiles" | cut -d $' ' -f 1)
+if [[ "$unsupportedCount" -eq '0' ]]; then 
+  log info "File: $unsupportedFiles  has no entries, skipping copy"
+else
+  log info "copying existing files over"
+  for item in $(cat "$unsupportedFiles"); do
+    split=(${item//::/$'\n'})
+    copyUnsupportedFile "${split[0]}" "${split[1]}"
+  done
+fi
 
 # TODO in order for this to work may need to export more functions for parallel to make use of them
-export -f compressFileExt
+export -f compressFileExt compressFile compressedFileExists addFileToCache log
 
-parallel --col-sep '::' --delimiter '\n' 'compressFileExt {1} {2}' ::: $(cat supportedFiles)
+readonly mp3Count=$(wc -l "$mp3Files" | cut -d $' ' -f 1)
+if [[ "$mp3Count" -eq '0' ]]; then
+  log info "File: $mp3Files has no entries, skipping compression"
+else
+  log info "starting parallel execution of compression"
+  parallel --verbose --col-sep '::' --delimiter '\n' 'compressFileExt {#} {1} {2}' ::: "$(cat "$mp3Files")"
+fi
 
-printStatistics "$supportedFiles"
+printStatistics "$mp3Files"
 
-# TODO: this loop is starting to grow and could probably be refactored into a couple small functions
-#for fd in $indexDiff; do
-#  if [[ -d "$fd" ]]; then
-#    log warn "Encountered directory [$fd] skipping" 
-#    echo "$fd" >> "$indexFileLocation"
-#  else
-#    # Fixme: should probably just alias fd with /$fd
-#    log info "found $fd"
-#
-#    # NOTE: due to log function utilizing echo, need to pipe to tail to get the last line for assignment
-#    supported=$(isSupportedFormat "$fd" | tail -n1)
-#    newTargetFilename=$(targetName "$fd" "$targetDirectory" | tail -n1)
-#
-#    targetDir=$(dirname $newTargetFilename)
-#    log trace "Executing: mkdir -p \"$targetDir\""
-#    mkdir -p "$targetDir"
-#    
-#    if [[ -n $supported ]]; then
-#      # TODO this function could be broken out with mp3Filename as the return value
-#      mp3Filename=$(echo "$newTargetFilename" | sed -E -e 's:(.*)(.flac|.wav):\1.mp3:g')
-#      fileExists=$(compressedFileExists "$mp3Filename" | tail -n1)
-#      if [[ -n $fileExists ]]; then
-#        log warn "Compressed file already exists ($newTargetFilename) skipping."
-#        echo "$fd" >> "$indexFileLocation"
-#      else
-#        compressFile "$fd" "$mp3Filename"
-#        echo "$fd" >> "$indexFileLocation"
-#        originalFileSizeInBytes=$(stat -c %s "/$fd")
-#        newFileSizeInBytes=$(stat -c %s "$mp3Filename")
-#        if [[ "$?" -eq "1" ]]; then
-#          # FIXME: hacky way to address the problem
-#          # if stat -c of compressedFile errored out then just set newFileSizeInBytes to original for net zero effect on calculations
-#          newFileSizeInBytes=$originalFileSizeInBytes
-#        fi
-#
-#        orgFSizeMB=$(echo "$originalFileSizeInBytes/1024/1024" | bc)
-#        newFSizeMB=$(echo "$newFileSizeInBytes/1024/1024" | bc)
-#        log debug "File size in bytes before [$orgFSizeMB]MiB after [$newFSizeMB]MiB"
-#
-#        compressionRatio=$(echo "scale=4; $newFileSizeInBytes/$originalFileSizeInBytes" | bc)
-#        log debug "Compression factor: $compressionRatio"
-#
-#        totalOrgFSizeMB=$(echo "$totalOrgFSizeMB+$orgFSizeMB" | bc)
-#        totalNewFSizeMB=$(echo "$totalNewFSizeMB+$newFSizeMB" | bc)
-#      fi
-#    else
-#      echo "$fd" >> "$indexFileLocation"
-#      copyUnsupportedFile "$fd" "$newTargetFilename"
-#    fi
-#  fi
-#done
-#
-#readonly end=`date +%s`
-#log info "Job took $(expr $end - $start) second(s) to run."
-#totalCompressionRatio=$(echo "scale=2; ($totalNewFSizeMB/$totalOrgFSizeMB)*100" | bc)
-#log info "Total original file size: $totalOrgFSizeMB (MiB)"
-#log info "Total new file size: $totalNewFSizeMB (MiB)"
-#log info "Total compression ratio: $totalCompressionRatio%"
+unset -f compressFileExt compressFile compressedFileExists addFileToCache log
