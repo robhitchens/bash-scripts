@@ -54,7 +54,7 @@ function log {
   fi
   local level=$(echo "$1" | tr '[:lower:]' '[:upper:]')
   local message="$2"
-  local timestamp=$(date +%Y-%d-%mT%H:%M:%S)
+  local timestamp=$(date +%Y-%m-%dT%H:%M:%S)
   if [[ ${_logLevels[$level]} -ge ${_logLevels[$_loggingLevel]} ]]; then
     if [[ -n "$_logFileLocation" ]]; then
       echo "$timestamp - $level: $message" >> "$_logFileLocation"
