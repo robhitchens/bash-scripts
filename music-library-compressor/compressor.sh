@@ -10,7 +10,7 @@
 # NOTE: Dependencies
 
 source ~/projects/bash-scripts/utils/logger.sh
-setLogLevel log 
+setLogLevel info 
 setLogLocation /tmp/compressor/logFile.log
 
 readonly scriptName=$(basename "$0")
@@ -263,14 +263,14 @@ function printStatistics {
     #TODO not sure if this is going to work.
     local split=(${item//::/$'\n'})
     local orgFSizeMB=$(stat -c %s "${split[0]}")
-    # TODO don't know if below actually works.
-    if [[ -n $? ]]; then
-      orgFSizeMB="0"
-    fi
+    # FIXME below checks for errors is bugged.
+    #if [[ -n $? ]]; then
+    #  orgFSizeMB="0"
+    #fi
     local newFSizeMB=$(stat -c %s "${split[1]}")
-    if [[ -n $? ]]; then
-      newFSizeMB="0"
-    fi
+    #if [[ -n $? ]]; then
+    #  newFSizeMB="0"
+    #fi
     orgFSizeMB=$(echo "$orgFSizeMB/1024/1024" | bc)
     newFSizeMB=$(echo "$newFSizeMB/1024/1024" | bc)
     totalOrgFSizeMB=$(echo "$totalOrgFSizeMB+$orgFSizeMB" | bc)
