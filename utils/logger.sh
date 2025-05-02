@@ -65,3 +65,4 @@ function log {
 }
 
 export -f log setLogLevel setLogLocation
+export _logFileLocation _loggingLevel _logLevels
