@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-#FIXME: Can't figure out a way to make variables encapsulated.
+# TODO: should expose a function that starts a background process that reads from a fifo file.
+#       Process would be an infinite loop that read from fifo and writes to a file until killed?
+
+# FIXME: Can't figure out a way to make variables encapsulated.
 # Setting default loggingLevel
 declare -g _loggingLevel="INFO"
 
@@ -25,6 +28,22 @@ function setLogLevel {
   fi
 }
 
+declare -g _logFileLocation
+function setLogLocation {
+  if [[ $# -ne 1 ]]; then
+    echo "Parameters doesn't match length of 1. Expected form 'setLogLocation \$location'" >&2
+# TODO: below doesn't quite work if file doesn't already exist
+#  elif [[ ! -f "$1" ]]; then
+#    echo "file [$1] is not a valid file" >&2
+  fi
+  _logFileLocation="$1"
+
+  if [[ ! -e "$_logFileLocation" ]]; then
+    mkdir -p "$(dirname "$_logFileLocation")"
+    touch "$_logFileLocation"
+  fi
+}
+
 # PARAMS: 
 # level ($1 string) - the level of the log message
 # message ($2 string) - the message to be logged
@@ -37,8 +56,12 @@ function log {
   local message="$2"
   local timestamp=$(date +%Y-%d-%mT%H:%M:%S)
   if [[ ${_logLevels[$level]} -ge ${_logLevels[$_loggingLevel]} ]]; then
-    echo "$timestamp - $level: $message"
+    if [[ -n "$_logFileLocation" ]]; then
+      echo "$timestamp - $level: $message" >> "$_logFileLocation"
+    else
+      echo "$timestamp - $level: $message" >&1
+    fi
   fi
 }
 
-export -f log setLogLevel
+export -f log setLogLevel setLogLocation

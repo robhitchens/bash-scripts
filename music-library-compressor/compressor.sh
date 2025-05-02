@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# BUG: issue cropping up where some entries in compressor.log is still getting through diff.
 # TODO: Add the following options:
 #     --dry-run -> run and output actions, but don't perform them
 #     --no-cache -> run but ignore cache file.
@@ -9,26 +10,13 @@
 # NOTE: Dependencies
 
 source ~/projects/bash-scripts/utils/logger.sh
-setLogLevel info 
+setLogLevel log 
+setLogLocation /tmp/compressor/logFile.log
 
 readonly scriptName=$(basename "$0")
 readonly supportedFormats=("flac" "wav")
 # FIXME: I don't think the below is used
 readonly supportedOutputFormats=("mp3")
-
-readonly indexFileLocation=~/.cache/compressor.log
-if [[ ! -e "$indexFileLocation" ]]; then
-  touch "$indexFileLocation"
-fi
-export indexFileLocation
-
-# PARAMS:
-# fileName ($1 string) - fileName to add to cache
-function addFileToCache {
-  local fileName="$1"
-  log debug "adding filename [$filename] to cache"
-  echo "$fileName" >> "$indexFileLocation"
-}
 
 # PARAMS:
 # fileName ($1 string) - fileName for tempFile
@@ -50,6 +38,30 @@ function makeTmpFile {
   
   echo "$tempFile" 
 }
+
+
+readonly indexFileLocation=~/.cache/compressor.log
+if [[ ! -e "$indexFileLocation" ]]; then
+  log debug "cache file [$indexFileLocation] doesn't exist, creating"
+  touch "$indexFileLocation"
+else
+  log info "sorting cache file entries"
+  # TODO not sure if this will workout like I expect it to
+  readonly temp=$(makeTmpFile "cache-sorted")
+  cat "$indexFileLocation" | sort -h - > "$temp"
+  mv "$temp" "$indexFileLocation"
+fi
+export indexFileLocation
+
+# PARAMS:
+# fileName ($1 string) - fileName to add to cache
+function addFileToCache {
+  local fileName="$1"
+  # BUG: for some reason more often than not, $filename will be blank, but the value will still be added to the cache. Maybe it's a scoping issue?
+  log debug "adding filename [$filename] to cache"
+  echo "$fileName" >> "$indexFileLocation"
+}
+
 
 # PARAMS:
 # sourceFile ($1 string) - Fully qualified path to source file.
@@ -136,8 +148,8 @@ function targetName {
   local targetDir="$2"
   local currentDir=$(pwd)
 
-  log info "Current Dir: $currentDir"
-  log debug "Source Path: $sourcePath"
+  log trace "Current Dir: $currentDir"
+  log trace "Source Path: $sourcePath"
 
   local tName=$(echo "$sourcePath" | sed -E -e "s:^$currentDir::g" -e "s:(.*):$targetDir\1:g")
   
@@ -243,16 +255,20 @@ function printStatistics {
   local compressedFilesList="$1"
   local totalOrgFSizeMB="0"
   local totalNewFSizeMB="0"
+  local numberOfFilesProcessed=$(cat "$compressedFilesList" | wc -l)
+  readonly end=`date +%s`
 
+  log debug "calculating stats"
   for item in $(cat "$compressedFilesList"); do
     #TODO not sure if this is going to work.
     local split=(${item//::/$'\n'})
     local orgFSizeMB=$(stat -c %s "${split[0]}")
-    if [[ "$?" -eq "1" ]]; then
+    # TODO don't know if below actually works.
+    if [[ -n $? ]]; then
       orgFSizeMB="0"
     fi
     local newFSizeMB=$(stat -c %s "${split[1]}")
-    if [[ "$?" -eq "1" ]]; then
+    if [[ -n $? ]]; then
       newFSizeMB="0"
     fi
     orgFSizeMB=$(echo "$orgFSizeMB/1024/1024" | bc)
@@ -261,8 +277,7 @@ function printStatistics {
     totalNewFSizeMB=$(echo "$totalNewFSizeMB+$newFSizeMB" | bc)
   done
 
-  readonly end=`date +%s`
-  log info "Job took $(expr $end - $start) second(s) to run."
+  log info "Job took $(expr $end - $start) second(s) to run on $numberOfFilesProcessed files."
   if [[ "$totalOrgFSizeMB" -eq '0' ]]; then
     totalCompressionRatio="0.00"
   else
@@ -282,7 +297,6 @@ if [[ $# -ne 2 ]]; then
 fi
 
 log info "Provided directory $1"
-log debug "Listing subdirectories"
 log trace "changing to directory \"$1\""
 cd "$1"
 
@@ -295,17 +309,26 @@ IFS=$'\n'
 # NOTE: shouldn't need to override the internal field separator by using NUL terminated IO
 
 # Getting fully qualified source file paths.
-readonly files=$(find ./ -print0 | xargs -0 realpath --relative-to=/)
+log debug "Listing subdirectories"
+readonly files=$(find ./ -print0 | sort -z -h - | xargs -0 realpath --relative-to=/)
+
+log debug "diffing with cache file"
 readonly indexDiff=$(echo "$files" | awk '{ print "/" $0 }' | diff --changed-group-format='%<' --unchanged-group-format='' - "$indexFileLocation")
+
+log debug "filtering files"
 readonly filteredFiles=$(filterSupportedAndUnsupported "$indexDiff" | tail -n1)
 readonly splitFiltered=(${filteredFiles//::/$'\n'})
+
+log debug "generating names"
 readonly supportedFiles=$(generateTargetNames "${splitFiltered[0]}" | tail -n1)
 readonly unsupportedFiles=$(generateTargetNames "${splitFiltered[1]}" | tail -n1)
 readonly mp3Files=$(generateCompressedNames "$supportedFiles" | tail -n1)
 
+log debug "making target dirs"
 makeTargetDirs "$mp3Files"
 makeTargetDirs "$unsupportedFiles"
 
+log debug "copying unsupported files"
 # TODO could handle this with parallel.
 readonly unsupportedCount=$(wc -l "$unsupportedFiles" | cut -d $' ' -f 1)
 if [[ "$unsupportedCount" -eq '0' ]]; then 
@@ -319,6 +342,7 @@ else
 fi
 
 # TODO in order for this to work may need to export more functions for parallel to make use of them
+export _loggingLevel _logFileLocation
 export -f compressFileExt compressFile compressedFileExists addFileToCache log
 
 readonly mp3Count=$(wc -l "$mp3Files" | cut -d $' ' -f 1)
@@ -326,9 +350,10 @@ if [[ "$mp3Count" -eq '0' ]]; then
   log info "File: $mp3Files has no entries, skipping compression"
 else
   log info "starting parallel execution of compression"
-  parallel --verbose --col-sep '::' --delimiter '\n' 'compressFileExt {#} {1} {2}' ::: "$(cat "$mp3Files")"
+  parallel --verbose --col-sep '::' --delimiter '\n' 'compressFileExt {#} {1} {2}' :::: "$mp3Files"
 fi
 
 printStatistics "$mp3Files"
 
 unset -f compressFileExt compressFile compressedFileExists addFileToCache log
+unset _loggingLevel _logFileLocation
