@@ -49,6 +49,17 @@ function manage {
         vim "$HOME/journal/$date"
       fi
       ;;
+    overwrite)
+      # TODO: should probably prompt to confirm overwrite
+      # NOTE: replace template contents and rewrite to file.
+      cat "$HOME/journal/entry-template.md" > "$fileName"
+      cat "$fileName" | sed -E "s:\{date\}:$(date '+%m-%d-%Y'):g" > "$fileName"
+
+      # NOTE: splicing in currentGoals
+      spliceGoals "$fileName"
+      vim "$fileName"
+
+      ;;
     *)
       echo "Unknown action: $action" >&2
       exit 1
