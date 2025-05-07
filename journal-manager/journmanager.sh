@@ -18,7 +18,7 @@ function manage {
   local date="$2"
 
   local directory=$(date '+%B-%Y' | tr '[:upper:]' '[:lower:]')
-  local fileName="$HOME/journal/$directory/entry-$(date '+%Y%d%m').md"
+  local fileName="$HOME/journal/$directory/entry-$(date '+%Y%m%d').md"
 
   case "$action" in
     # TODO should add option to new to create new files for different days. default to today.
