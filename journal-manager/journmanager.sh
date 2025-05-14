@@ -46,7 +46,14 @@ function manage {
       if [[ "$date" == "today" ]]; then
         vim "$fileName"
       else
-        vim "$HOME/journal/$date"
+        if [[ -e "$HOME/journal/$date" ]]; then
+            vim "$HOME/journal/$date"
+        else 
+            # TODO should just break out the logic for new and put function call here.
+            cp "$HOME/journal/entry-template.md" "$HOME/journal/$date"
+            spliceGoals "$HOME/journal/$date"
+            vim "$HOME/journal/$date"
+        fi
       fi
       ;;
     overwrite)
