@@ -7,6 +7,16 @@
 #     --source-dir 
 #     --target-dir
 
+if [[ "$1" == '--help' ]]; then
+  cat <<EOF
+Usage:
+  ./compressor.sh source_dir dest_dir
+  
+  Due to the multi-threaded nature consider tailing the log file using the below
+  ./compressor.sh source_dir dest_dir & tail -f /tmp/compressor/logFile.log
+EOF
+  exit 0
+fi
 # NOTE: Dependencies
 
 source ~/projects/bash-scripts/utils/logger.sh
