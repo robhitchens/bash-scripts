@@ -13,7 +13,7 @@ Usage:
   ./compressor.sh source_dir dest_dir
   
   Due to the multi-threaded nature consider tailing the log file using the below
-  ./compressor.sh source_dir dest_dir & tail -f /tmp/compressor/logFile.log
+  ./compressor.sh source_dir dest_dir & tail -F /tmp/compressor/logFile.log
 EOF
   exit 0
 fi
