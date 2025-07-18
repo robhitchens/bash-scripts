@@ -14,3 +14,14 @@ Following that logic would need to be updated to iterate through the new and old
 to get file sizes and calculate file sizes and compression ratios.
 
 Alternatively, could create a function that handles splitting input, compressing and calculating new and old file sizes. Could echo file sizes gather and reduce the values? Maybe that would be better.
+
+# CD MetaData Preparer
+
+- Create script that scrapes discogs searching information utilizing isbn number of cd.
+- output in file of format `artist->album->track#->title`? may utilize different format.
+- Download cover art and do necessary conversions for embedding in track data.
+- Format can then be used to populate metadata for CD tracks when wrapping into flac file.
+
+# Updates to scripts
+- source can pull from standard locations and PATH
+    - Create script to optionally "install" imported bash scripts into `/usr/local/bin`. Maybe even add auto option for setting execution permissions as well.
