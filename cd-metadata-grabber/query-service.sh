@@ -5,3 +5,5 @@ response=$(curl -i -H 'Accept: application/vnd.discogs.v2.discogs+json' -X 'GET'
 lines=$(echo "$response" | wc -l)
 echo "$(echo "$response" | head -n$(($lines-1)))"
 echo "$response" | tail -n1 | jq '.'
+
+# Link to search api on discogs: https://www.discogs.com/developers#page:database,header:database-search
