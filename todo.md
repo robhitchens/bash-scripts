@@ -22,6 +22,11 @@ Alternatively, could create a function that handles splitting input, compressing
 - Download cover art and do necessary conversions for embedding in track data.
 - Format can then be used to populate metadata for CD tracks when wrapping into flac file.
 
+## Additional distributed pieces
+
+- phone app (or PWA) to scan barcodes and grab upc from barcode
+- relay service to take that information and send it to a consumer to pull down the meta data. (this part can be written in go and hosted on some cheap service.)
+
 # Updates to scripts
 - source can pull from standard locations and PATH
     - Create script to optionally "install" imported bash scripts into `/usr/local/bin`. Maybe even add auto option for setting execution permissions as well.
