@@ -43,3 +43,5 @@ Alternative:
 [-] /tmp/queue/3c77dcdf-7c63-42a2-8193-c4dfee97841b [working]
 [!] /tmp/queue/1bc53960-f5ef-47d7-8693-f9813c1a000e [failed]
 ```
+
+[Example to follow for creating queue](https://maximerobeyns.com/fragments/job_queue)
