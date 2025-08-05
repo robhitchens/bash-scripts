@@ -23,4 +23,12 @@ May look at utilizing FIFO files to act as the queues for the end-to-end process
 
 Since most of this process can be asynchronous message passing; we might be able to utilize multiple queues. How that scales from local concept to cloud services idk. I guess I'll have to workshop that idea.
 
-Command for creating named pipes is `mkfifo`
+Command for creating named pipes is `mkfifo`. Looking at named pipes in linux it appears that they may not be exactly what I want to use, but will work for a simple POC for IPC.
+Another alternative would be to create a helper script to manage a file as a queue with the following syntax:
+```text
+[ ] {jsonl} ([status])?
+# below are example uses
+[x] {jsonl} [completed]
+[-] {jsonl} [working]
+[!] {jsonl} [failed]
+```
