@@ -28,7 +28,18 @@ Another alternative would be to create a helper script to manage a file as a que
 ```text
 [ ] {jsonl} ([status])?
 # below are example uses
+[ ] {jsonl} [queued]
 [x] {jsonl} [completed]
 [-] {jsonl} [working]
 [!] {jsonl} [failed]
+```
+
+Alternative:
+```text
+[ ] file-name ([status])?
+# below are example uses
+[ ] b84e0580-bd5b-4296-87ff-a97f330770a9 [queued]
+[x] a9fea722-0d48-4060-abc6-b36dc0e880b0 [completed]
+[-] 3c77dcdf-7c63-42a2-8193-c4dfee97841b [working]
+[-] 1bc53960-f5ef-47d7-8693-f9813c1a000e [failed]
 ```
