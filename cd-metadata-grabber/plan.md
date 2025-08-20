@@ -43,5 +43,8 @@ Alternative:
 [-] /tmp/queue/3c77dcdf-7c63-42a2-8193-c4dfee97841b [working]
 [!] /tmp/queue/1bc53960-f5ef-47d7-8693-f9813c1a000e [failed]
 ```
+additional thought, don't know how separate process reading and writing to the same file will work out. For the reader part I might want to include a line end token. This would allolw the reader to know which lines are okay to pick up and process. I'm probably overthinking this a bit, I could just rely on the standard `\n` character. I would just have to make the writer adhere to this, which probably would be standard behavior in bash.
+
+I should probably write a small example to prove out this logic by writing up a script that handles a queue file.
 
 [Example to follow for creating queue](https://maximerobeyns.com/fragments/job_queue)
