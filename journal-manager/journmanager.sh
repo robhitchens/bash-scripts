@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# TODO add help message
 function spliceGoals {
   local fileName="$1"
 
