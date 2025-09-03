@@ -3,6 +3,7 @@
 function spliceGoals {
   local fileName="$1"
 
+  # TODO refactor to use awk to replace the {goals} section in the header
   local head=$(cat "$fileName" | head -n9)
   local content=$(cat "$HOME/journal/currentGoals.md")
   local tail=$(cat "$fileName" | tail -n3)
@@ -13,7 +14,11 @@ ${content}
 ${tail}" > "$fileName"
 }
 
+# TODO could action 'view' with options to view individual entry or concatenate entries into a view
+# TODO could add action for archiving months of entries.
 function manage {
+# TODO could update logic with different types of journal templates and logic.
+# E.g. could add functionality to start new idea journal entries with fuzzy matching for entries.
   local action=$(echo "$1" | tr '[:upper:]' '[:lower:]')
   local date="$2"
 
@@ -27,7 +32,11 @@ function manage {
         mkdir -p "$HOME/journal/$directory"
       fi
 
-      if [[ ! -e "$fileName" ]]; then
+      if [[ -e "$fileName" ]]; then
+        echo "Entry already exists for [$fileName]
+Consider running: journal edit {option}" >&2
+        return -1
+      else
         cp "$HOME/journal/entry-template.md" "$fileName"
       fi
 
@@ -36,6 +45,7 @@ function manage {
       #       find ~/journal/ | grep -E '.*/journal/(january|february|march|april|may|june|july|august|september|october|november|december)\-[0-9]{4}/entry.*' | sort
       
       # NOTE: replace template contents and rewrite to file.
+      # TODO: could simplify logic by using awk to perform replacement
       cat "$fileName" | sed -E "s:\{date\}:$(date '+%m-%d-%Y'):g" > "$fileName"
 
       # NOTE: splicing in currentGoals
@@ -46,10 +56,14 @@ function manage {
       if [[ "$date" == "today" ]]; then
         vim "$fileName"
       else
-        if [[ -e "$HOME/journal/$date" ]]; then
-            vim "$HOME/journal/$date"
+        # TODO should add some simple date parsing logic here
+        # TODO this logic is slightly broken, doesn't take into account the parent directory structure month-year
+        local parentDir=$(date --date="$date" +"%B-%Y" | tr '[:upper:]' '[:lower:]')
+        local parsedDate="entry-$(date --date="$date" +'%Y%m%d').md"
+        if [[ -e "$HOME/journal/$parentDir/$parsedDate" ]]; then
+            vim "$HOME/journal/$parentDir/$parsedDate"
         else 
-            # TODO should just break out the logic for new and put function call here.
+            # FIXME: should just break out the logic for new and put function call here.
             cp "$HOME/journal/entry-template.md" "$HOME/journal/$date"
             spliceGoals "$HOME/journal/$date"
             vim "$HOME/journal/$date"
