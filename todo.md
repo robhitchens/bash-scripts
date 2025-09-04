@@ -27,6 +27,8 @@ Alternatively, could create a function that handles splitting input, compressing
 - phone app (or PWA) to scan barcodes and grab upc from barcode
 - relay service to take that information and send it to a consumer to pull down the meta data. (this part can be written in go and hosted on some cheap service.)
 
-# Updates to scripts
+# Installer script
+
 - source can pull from standard locations and PATH
     - Create script to optionally "install" imported bash scripts into `/usr/local/bin`. Maybe even add auto option for setting execution permissions as well.
+    - Should also refactor compression script and other tools to point to `/usr/local/bin`
