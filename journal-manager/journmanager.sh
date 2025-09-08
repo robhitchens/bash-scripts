@@ -16,6 +16,7 @@ ${tail}" > "$fileName"
 }
 
 # TODO add action edit goals, as a shortcut to editing the currentGoals template.
+# TODO add action archive and setup config for archive location. archive action could accept an additional argument to specify which folder or entry to archive.
 # TODO add support for config file for locations of journal and templates
 # TODO could action 'view' with options to view individual entry or concatenate entries into a view
 # TODO could add action for archiving months of entries.
