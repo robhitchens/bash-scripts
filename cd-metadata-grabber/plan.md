@@ -48,3 +48,5 @@ additional thought, don't know how separate process reading and writing to the s
 I should probably write a small example to prove out this logic by writing up a script that handles a queue file.
 
 [Example to follow for creating queue](https://maximerobeyns.com/fragments/job_queue)
+
+While working through the query service script, might want to look at adding some json schema validation based on the example I have already. That way I can validate that the payloads are the same structure between albums, and if there are differences then I can have a better defined structure or something. Idk, this was a thought I had a few days ago didn't quite remember where I was going with it.
