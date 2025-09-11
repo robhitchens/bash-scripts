@@ -20,6 +20,7 @@ ${tail}" > "$fileName"
 # TODO add support for config file for locations of journal and templates
 # TODO could action 'view' with options to view individual entry or concatenate entries into a view
 # TODO could add action for archiving months of entries.
+# TODO could add action 'search' to run simple grep commands against journal entries + archives.
 function manage {
 # TODO could update logic with different types of journal templates and logic.
 # E.g. could add functionality to start new idea journal entries with fuzzy matching for entries.
