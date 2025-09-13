@@ -39,7 +39,9 @@ function manage {
 
       if [[ -e "$fileName" ]]; then
         echo "Entry already exists for [$fileName]
-Consider running: journal edit {option}" >&2
+auto running: journal edit today" >&2
+        sleep 2
+        bash $0 edit today
         return -1
       else
         cp "$HOME/journal/entry-template.md" "$fileName"
