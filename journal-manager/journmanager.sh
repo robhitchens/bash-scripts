@@ -62,6 +62,10 @@ auto running: journal edit today" >&2
     edit)
       if [[ "$date" == "today" ]]; then
         vim "$fileName"
+      elif [[ "$date" == '' ]]; then
+        echo "value for \$date not provided assuming default of today" >&2
+        sleep 2
+        vim "$fileName"
       else
         # TODO should add some simple date parsing logic here
         # TODO this logic is slightly broken, doesn't take into account the parent directory structure month-year
