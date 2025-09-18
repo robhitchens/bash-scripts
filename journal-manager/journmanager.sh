@@ -1,6 +1,26 @@
 #!/usr/bin/env bash
 
-# TODO add help message
+if [[ "$1" == '--help' ]]; then
+# TODO add config file 
+  cat <<EOF
+Usage:
+  journmanager command [subcommand] 
+
+Commands:
+  new                   creates a new journal entry in default location ~/journal/{mmm-YYYY} and opens the entry with default \$EDITOR
+  edit [subcommand]     opens up journal entry for editing using editor provided by \$EDITOR.
+
+Sub Commands:
+  edit:
+    today:              shorthand for opening up journal entry at location ~/\$journals/{mmm-YYYY}/entry-YYYYmmdd.md
+    {date}:             opens up journal entry for editing using date string parsible via `date` command.
+      - e.g.            journmanager edit 2025-01-01
+  
+EOF
+  exit 0
+fi
+
+
 function spliceGoals {
   local fileName="$1"
 
