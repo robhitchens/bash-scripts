@@ -20,7 +20,7 @@ EOF
   exit 0
 fi
 
-
+# TODO should add generic templating logic using awk or something and then make that configurable.
 function spliceGoals {
   local fileName="$1"
 
