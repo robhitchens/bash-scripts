@@ -8,6 +8,8 @@
 
 > TLDR; receives barcode, querys discogs, assembles message, publishes to queue
 
+_Note:_ For the schema of the metadata information, would it be best to unwind the data and organize the information by track? i.e. one track info object would contain album, artist, coverImage, disc number, title, etc. Might be simpler that way for processing. 
+
 ## Local service
 
 > TLDR; local linux service that runs, pulls messages off of queue, assembles them into format for processing locally "manually".
