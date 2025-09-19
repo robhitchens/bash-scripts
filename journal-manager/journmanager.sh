@@ -35,6 +35,7 @@ ${content}
 ${tail}" > "$fileName"
 }
 
+# TODO could add option to configuration to add encryption and decryption provided by user keys.
 # TODO add action edit goals, as a shortcut to editing the currentGoals template.
 # TODO add action archive and setup config for archive location. archive action could accept an additional argument to specify which folder or entry to archive.
 # TODO add support for config file for locations of journal and templates
