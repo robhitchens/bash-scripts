@@ -88,8 +88,6 @@ auto running: journal edit today" >&2
         sleep 2
         vim "$fileName"
       else
-        # TODO should add some simple date parsing logic here
-        # TODO this logic is slightly broken, doesn't take into account the parent directory structure month-year
         local parentDir=$(date --date="$date" +"%B-%Y" | tr '[:upper:]' '[:lower:]')
         local parsedDate="entry-$(date --date="$date" +'%Y%m%d').md"
         if [[ -e "$HOME/journal/$parentDir/$parsedDate" ]]; then
