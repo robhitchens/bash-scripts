@@ -7,14 +7,17 @@ colorscheme elflord
 call plug#begin()
 
 "Japanese input method plugin"
-"Plug 'tyru/eskk.vim'"
+"Plug 'tyru/eskk.vim'
 "Material color themes"
 Plug 'kaicataldo/material.vim', { 'branch': 'main' }
 call plug#end()
 
 let g:material_theme_style = 'ocean'
 "colorscheme material"
+"autocmd BufWritePost *.go silent! %!gofmt"
 
+"TODO need to figure out how to run a function on the buffer before writing to
+"file.
 augroup restore_cursor_on_write_after_format
   autocmd! 
   autocmd BufWritePost *.go call FormatGoCode()
