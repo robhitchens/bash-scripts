@@ -16,11 +16,9 @@ let g:material_theme_style = 'ocean'
 "colorscheme material"
 "autocmd BufWritePost *.go silent! %!gofmt"
 
-"TODO need to figure out how to run a function on the buffer before writing to
-"file.
 augroup restore_cursor_on_write_after_format
   autocmd! 
-  autocmd BufWritePost *.go call FormatGoCode()
+  autocmd BufWritePre *.go call FormatGoCode()
 augroup END
 
 function! FormatGoCode()
