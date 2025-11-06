@@ -57,11 +57,10 @@ output application/java
 }
 
 function httpRequest {
-    # TODO need to take all elements from 2 on
-    readonly subAction="${@:2}"
+    readonly subActions="${@:2}"
     declare -A children
 
-    for item in $subAction; do
+    for item in $subActions; do
         case "$item" in
             body)
                 children['body']="$(httpRequestBody)"
@@ -119,19 +118,24 @@ function main {
     readonly action="$1"
 
     case "$action" in
+        # TODO use split operation on arguments here before passing to functions.
         http:request)
             echo "$(httpRequest "$@")"
-#            echo "http:request(method     = METHOD
-#             doc:name   = 'NAME'
-#             config-ref = CONFIG-REF
-#             path       = PATH
-#             target     = VARIABLE)
-#{
-#    $(httpRequest "$@") 
-#}
-#"
             ;;        
+        transform)
+            echo "$(transform "$@")"
+            ;;
+        choiceRouter)
+            echo "$(choiceRouter "$@")"
+            ;;
+        scatterGather)
+            echo "$(scatterGather "$@")"
+            ;;
+        jsonLogger)
+            echo "$(jsonLogger "$@")"
+            ;;
         munit)
+            echo "$(munit "$@")"
             ;;
         *)
             echo "Unknown action $action" >&2
