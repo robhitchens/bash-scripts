@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [[ "$1" == '--help' ]]; then
-# TODO add config file 
+# FIXME update help doc
   cat <<EOF
 Usage:
   poop command [subcommand...] 
@@ -20,6 +20,7 @@ EOF
   exit 0
 fi
 
+################################################################################
 function httpRequestBody {
     echo "http:body = '''#[%dw 2.0
 output application/json skipNullOn=\"everywhere\"
@@ -93,27 +94,32 @@ function httpRequest {
 }
 "
 }
-
+################################################################################
 function choiceRouter {
     # TODO fill out
     echo "Not Implemented"
 }
+################################################################################
 function transform {
     # TODO fill out
     echo "Not Implemented"
 }
+################################################################################
 function scatterGather {
     # TODO fill out
     echo "Not Implemented"
 }
+################################################################################
 function jsonLogger {
     # TODO fill out
     echo "Not Implemented"
 }
+################################################################################
 function munit {
     # TODO fill out
     echo "Not Implemented"
 }
+################################################################################
 function main {
     readonly action="$1"
 
