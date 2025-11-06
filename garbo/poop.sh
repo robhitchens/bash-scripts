@@ -80,7 +80,19 @@ function httpRequest {
                 exit 1
         esac
     done
-    echo "${children['body']}" "${children['queryParams']}" "${children['uriParams']}" "${children['headers']}"
+
+    echo "http:request(method     = METHOD
+             doc:name   = 'NAME'
+             config-ref = CONFIG-REF
+             path       = PATH
+             target     = VARIABLE)
+{
+    ${children['body']}
+    ${children['queryParams']}
+    ${children['uriParams']}
+    ${children['headers']}
+}
+"
 }
 
 function choiceRouter {
@@ -108,16 +120,16 @@ function main {
 
     case "$action" in
         http:request)
-            # TODO need to set some default props
-            echo "http:request(method     = METHOD
-             doc:name   = 'NAME'
-             config-ref = CONFIG-REF
-             path       = PATH
-             target     = VARIABLE)
-{
-    $(httpRequest "$@") 
-}
-"
+            echo "$(httpRequest "$@")"
+#            echo "http:request(method     = METHOD
+#             doc:name   = 'NAME'
+#             config-ref = CONFIG-REF
+#             path       = PATH
+#             target     = VARIABLE)
+#{
+#    $(httpRequest "$@") 
+#}
+#"
             ;;        
         munit)
             ;;
