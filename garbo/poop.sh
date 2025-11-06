@@ -2,6 +2,7 @@
 # TODO will probably have to symlink this into /usr/local/share to be able to use in vim.
 # TODO might be better to structure this with context based help messages.
 # TODO could add a function to handle routing of common flows, for simple embedding child elements
+# TODO could add shorthand for common snippets
 
 if [[ "$1" == '--help' || -z "$1" ]]; then
 # FIXME update help doc
@@ -345,13 +346,6 @@ description = 'test description')
 }
 
 function munitSetEvent {
-#            munit:set-event(doc:name = 'Set applCde to "CIB"'
-# 15                             doc:id   = f9144504-540b-4203-94b5-8137615d4f5b)                                                                                                             16             {
-# 17                 munit:variables {
-# 18                     munit:variable(key       = dynamicProfile
-# 19                                    value     = '{"Entity": {"customersDynamicProfile": {"applCde": "CIB"}}}'
-# 20                                    mediaType = application/json)                                                                                                                         21                 }
-# 22             }
     local subActions="${@:2}"
     declare -A children
     for item in $subActions; do
@@ -399,10 +393,6 @@ function munitAssert {
     for item in $subActions; do
         case $item in 
             equals)
-#                munit-tools:assert-equals(doc:name = 'enrolledInOnlineBanking is true'
-# 29                                       doc:id   = 7a598903-c79f-4453-abce-3f3248daf920
-# 30                                       actual   = #[vars.enrolledInOnlineBanking]
-# 31                                       expected = #[true])
                 children+="munit-tools:assert-equals(doc:name = 'assert equals'
 actual = #[true]
 expected = #[true])
@@ -455,33 +445,6 @@ munit-tools:error(typeId = id)
         esac
     done
     echo "$children"
-    # <munit-tools:payload/>
-#    <munit:behavior >
-#			<munit-tools:mock-when doc:name="Request One; Return 500" doc:id="d3a9c658-e3ff-4a67-8cb2-494556e4744d" processor="http:request">
-#				<munit-tools:with-attributes >
-#					<munit-tools:with-attribute whereValue="c2304ce6-7bd3-4678-ba85-19a365750727" attributeName="doc:id" />
-#				</munit-tools:with-attributes>
-#				<munit-tools:then-return >
-#					<munit-tools:error typeId="HTTP:INTERNAL_SERVER_ERROR" />
-#				</munit-tools:then-return>
-#			</munit-tools:mock-when>
-#			<munit-tools:mock-when doc:name="Request Two; Return 404" doc:id="91068ed8-eec7-4b6a-be03-805317b66d91" processor="http:request" >
-#				<munit-tools:with-attributes >
-#					<munit-tools:with-attribute whereValue="cef94f38-b1e1-4c94-872f-c5ec9364851f" attributeName="doc:id" />
-#				</munit-tools:with-attributes>
-#				<munit-tools:then-return >
-#					<munit-tools:error typeId="HTTP:NOT_FOUND" />
-#				</munit-tools:then-return>
-#			</munit-tools:mock-when>
-#			<munit-tools:mock-when doc:name="Request Three; Return 400" doc:id="3075764b-0255-4dab-b35e-28c2ff79e22b" processor="http:request" >
-#				<munit-tools:with-attributes >
-#					<munit-tools:with-attribute whereValue="c1523003-d284-429e-b6c3-88fbbe5bf5a3" attributeName="doc:id" />
-#				</munit-tools:with-attributes>
-#				<munit-tools:then-return >
-#					<munit-tools:error typeId="HTTP:BAD_REQUEST" />
-#				</munit-tools:then-return>
-#			</munit-tools:mock-when>
-#		</munit:behavior>
 }
 ################################################################################
 function muleConfigTemplate {
