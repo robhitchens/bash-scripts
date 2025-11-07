@@ -3,17 +3,19 @@
 # TODO might be better to structure this with context based help messages.
 # TODO could add a function to handle routing of common flows, for simple embedding child elements
 # TODO could add shorthand for common snippets
+# TODO should add tab complete for commands and sub commands. maybe
 
-if [[ "$1" == '--help' || -z "$1" ]]; then
+if [[ "$1" == '--help' || "$1" == 'help' || -z "$1" ]]; then
 # FIXME update help doc
   cat <<EOF
 Usage:
-  poop parent [children...] 
+  poop [--help | help | parent [children...]] 
 
 Description:
   poop generates xmq snippets for Mulesoft elements
 
 Commands:
+  --help|help                       Prints help doc to stdout
   muleTemplate                      Generates mule root element
   munitTemplate                     Generates munit root element
   http:request [children...]        Generates http:request template with the provided valid child element templates.
@@ -64,6 +66,9 @@ EOF
   exit 0
 fi
 
+# if [[ "$1" == "--help-short" ]]; then
+# fi
+
 ################################################################################
 function httpRequestBody {
     echo "http:body = '''#[%dw 2.0
@@ -107,16 +112,16 @@ function httpRequest {
 
     for item in $subActions; do
         case "$item" in
-            body)
+            body | b)
                 children['body']="$(httpRequestBody)"
                 ;;
-            queryParams)
+            queryParams | q)
                 children['queryParams']="$(httpRequestQueryParams)"
                 ;;
-            uriParams)
+            uriParams | u)
                 children['uriParams']="$(httpRequestUriParams)"
                 ;;
-            headers)
+            headers | h)
                 children['headers']="$(httpRequestHeaders)"
                 ;;
             *)
@@ -201,15 +206,15 @@ function transform {
     declare -A children
     for item in $subActions; do
         case "$item" in
-            payload)
+            payload | p)
                 children['payload']="$(transformPayload 1)"
                 ;;
-            variables)
+            variables | v)
                 # TODO advance pointer and pass count variable if present.
                 # TODO may just be simpler to include = 3 instead of worrying about advancing
                 children['variables']="$(transformVariables)"
                 ;;
-            attributes)
+            attributes | a)
                 # TODO advance pointer and pass count variable if present.
                 # TODO may just be simpler to include = 3 instead of worrying about advancing
                 children['attributes']="$(transformAttributes)"
@@ -284,7 +289,7 @@ function tryScope {
     local children=""
     for item in subActions; do
         case $item in
-            errorhandler)
+            errorhandler | eh)
                 # TODO figure out to include name for referenced error handler
                 children+="error-handler(ref = global-error-handler)"
                 ;;
@@ -312,19 +317,19 @@ function munitTest {
     declare -A children
     for item in $subActions; do
         case $item in
-            execution)
+            execution | e)
                 children['execution']="$(echo 'munit:execution
 {
 }
 ')"
                 ;;
-            validation)
+            validation | v)
                 children['validation']="$(echo 'munit:validation
 {
 }
 ')"
                 ;;
-            behavior)
+            behavior | b)
                 children['behavior']="$(echo 'munit:behavior
 {
 }
@@ -351,12 +356,12 @@ function munitSetEvent {
     for item in $subActions; do
         # FIXME: elements may not be 100% accurate and will probably need to be refactored.
         case $item in
-            payload)
+            payload | p)
                 children['payload']="munit:payload(value = '{}'
 mediaType = application/json)
 "
                 ;;
-            variables)
+            variables | v)
                 # TODO figure out how to deal with subAction parameters
                 children['variables']="munit:variables {
     munit:variable(key = KEY
@@ -365,7 +370,7 @@ mediaType = application/json)
 }
 "
                 ;;
-            attributes)
+            attributes | a)
                 # TODO figure out how to deal with subAction parameters
                 children['attributes']="munit:attributes {
     munit:attribute(key = KEY
@@ -392,7 +397,7 @@ function munitAssert {
     local children=""
     for item in $subActions; do
         case $item in 
-            equals)
+            equals | eq)
                 children+="munit-tools:assert-equals(doc:name = 'assert equals'
 actual = #[true]
 expected = #[true])
@@ -412,7 +417,7 @@ function munitMock {
     local children=""
     for item in $subActions; do
         case $item in
-            when)
+            when | w)
                 children+="munit-tools:mock-when(doc:name = 'doc name'
 processor = 'processor')
 {
@@ -420,14 +425,14 @@ processor = 'processor')
 }
 "
                 ;;
-            attribute)
+            attribute | a)
                 # TODO need to add option for generating multipl or without parent
                 children+="munit-tools:with-attributes {
 munit-tools:with-attribute(attributeName = name
 whereValue = value)
 }"
                 ;;
-            return)
+            return | r)
                 # TODO need to handle type.
                 children+="munit-tools:then-return {
 munit-tools:payload(value = '''#[{}]''')
@@ -475,55 +480,55 @@ function main {
 
     case "$element" in
         # TODO use split operation on arguments here before passing to functions.
-        muleTemplate)
+        muleTemplate | mtmpl)
             echo "$(muleConfigTemplate)"
             ;;
-        munitTemplate)
+        munitTemplate | mutmpl)
             echo "$(munitConfigTemplate)"
             ;;
-        http:request)
+        http:request | hr)
             echo "$(httpRequest "$@")"
             ;;        
-        transform)
+        transform | tr)
             echo "$(transform "$@")"
             ;;
-        choiceRouter)
+        choiceRouter | cr)
             echo "$(choiceRouter "$@")"
             ;;
-        scatterGather)
+        scatterGather | sg)
             echo "$(scatterGather "$@")"
             ;;
-        jsonLogger)
+        jsonLogger | jl)
             echo "$(jsonLogger "$@")"
             ;;
-        log)
+        log | l)
             echo "$(log "$@")"
             ;;
-        flow)
+        flow | f)
             echo "$(flow "$@")"
             ;;
-        sub-flow)
+        sub-flow | sf)
             echo "$(subFlow "$@")"
             ;;
-        flow-ref)
+        flow-ref | fr)
             echo "$(flowRef "$@")"
             ;;
-        try)
+        try | t)
             echo "$(tryScope "$@")"
             ;;
-        munit:config)
+        munit:config | muc)
             echo "$(munitConfig "$@")"
             ;;
-        munit:test)
+        munit:test | mut)
             echo "$(munitTest "$@")"
             ;;
-        munit:set-event)
+        munit:set-event | mus)
             echo "$(munitSetEvent "$@")"
             ;;
-        munit:assert)
+        munit:assert | mua)
             echo "$(munitAssert "$@")"
             ;;
-        munit:mock)
+        munit:mock | mum)
             echo "$(munitMock "$@")"
             ;;
         *)
