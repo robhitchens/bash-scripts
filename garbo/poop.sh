@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
-# TODO will probably have to symlink this into /usr/local/share to be able to use in vim.
 # TODO might be better to structure this with context based help messages.
 # TODO could add a function to handle routing of common flows, for simple embedding child elements
 # TODO could add shorthand for common snippets
 # TODO should add tab complete for commands and sub commands. maybe. Or at least a double tap tab to list the possible commands at this state.
 # TODO could template things and add a separator to help make things more composable.
 # TODO add "install" step to symlink script to mule under /usr/local/bin
-
+# TODO add flags to support dumping out full or minimal attributes for elements.
 # TODO can utilize 'shift [n]' to deal with arguments that take parameters 
 
 if [[ "$1" == '--help' || "$1" == 'help' || -z "$1" ]]; then
@@ -111,6 +110,7 @@ output application/java
 }
 
 function httpRequest {
+    # FIXME refactor to not subarray, move logic higher up in stack.
     readonly subActions="${@:2}"
     declare -A children
 
@@ -168,6 +168,7 @@ function transformVariables {
     if [[ -z $instances ]]; then
         instances=1
     else
+        # TODO is this line/conversion even necessary?
         instances=$(("$instances"))
     fi
     local children=""
@@ -206,6 +207,7 @@ output application/json
 "
 }
 function transform {
+    # FIXME refactor to not subarray, move logic higher up in stack.
     readonly subActions="${@:2}"
     declare -A children
     for item in $subActions; do
@@ -289,6 +291,7 @@ name = $name)
 }
 ################################################################################
 function tryScope {
+    # FIXME refactor to not subarray, move logic higher up in stack.
     local subActions="${@:2}"
     local children=""
     for item in subActions; do
@@ -317,6 +320,7 @@ function munitConfig {
     echo "munit:config(name = $name)"
 }
 function munitTest {
+    # FIXME refactor to not subarray, move logic higher up in stack.
     local subActions="${@:2}"
     declare -A children
     for item in $subActions; do
@@ -355,6 +359,7 @@ description = 'test description')
 }
 
 function munitSetEvent {
+    # FIXME refactor to not subarray, move logic higher up in stack.
     local subActions="${@:2}"
     declare -A children
     for item in $subActions; do
@@ -397,6 +402,7 @@ mediaType = application/json)
 "
 }
 function munitAssert {
+    # FIXME refactor to not subarray, move logic higher up in stack.
     local subActions="${@:2}"
     local children=""
     for item in $subActions; do
