@@ -4,6 +4,10 @@
 # TODO could add a function to handle routing of common flows, for simple embedding child elements
 # TODO could add shorthand for common snippets
 # TODO should add tab complete for commands and sub commands. maybe. Or at least a double tap tab to list the possible commands at this state.
+# TODO could template things and add a separator to help make things more composable.
+# TODO add "install" step to symlink script to mule under /usr/local/bin
+
+# TODO can utilize 'shift [n]' to deal with arguments that take parameters 
 
 if [[ "$1" == '--help' || "$1" == 'help' || -z "$1" ]]; then
 # FIXME update help doc
@@ -418,30 +422,32 @@ function munitMock {
     for item in $subActions; do
         case $item in
             when | w)
-                children+="munit-tools:mock-when(doc:name = 'doc name'
+                children+="
+munit-tools:mock-when(doc:name = 'doc name'
 processor = 'processor')
 {
 
-}
-"
+}"
                 ;;
             attribute | a)
                 # TODO need to add option for generating multipl or without parent
-                children+="munit-tools:with-attributes {
-munit-tools:with-attribute(attributeName = name
-whereValue = value)
+                children+="
+munit-tools:with-attributes {
+    munit-tools:with-attribute(attributeName = name
+    whereValue = value)
 }"
                 ;;
             return | r)
                 # TODO need to handle type.
-                children+="munit-tools:then-return {
-munit-tools:payload(value = '''#[{}]''')
-munit-tools:variables {
-munit-tools:variable(key = name
-value     = '''#[true]'''
-mediaType = application/json)
-}
-munit-tools:error(typeId = id)
+                children+="
+munit-tools:then-return {
+    munit-tools:payload(value = '''#[{}]''')
+    munit-tools:variables {
+    munit-tools:variable(key = name
+    value     = '''#[true]'''
+    mediaType = application/json)
+    }
+    munit-tools:error(typeId = id)
 }"
                 ;;
             *)
