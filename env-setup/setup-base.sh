@@ -15,5 +15,7 @@ sudo apt install \
   vifm \
   abcde \
   ffmpeg \
-  parallel
+  parallel \
+  shellcheck \
+  shfmt
 # NOTE: cool-retro-term may not be available in all distros package managers
