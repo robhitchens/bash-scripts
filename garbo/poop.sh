@@ -3,7 +3,7 @@
 # TODO might be better to structure this with context based help messages.
 # TODO could add a function to handle routing of common flows, for simple embedding child elements
 # TODO could add shorthand for common snippets
-# TODO should add tab complete for commands and sub commands. maybe
+# TODO should add tab complete for commands and sub commands. maybe. Or at least a double tap tab to list the possible commands at this state.
 
 if [[ "$1" == '--help' || "$1" == 'help' || -z "$1" ]]; then
 # FIXME update help doc
@@ -15,53 +15,53 @@ Description:
   poop generates xmq snippets for Mulesoft elements
 
 Commands:
-  --help|help                       Prints help doc to stdout
-  muleTemplate                      Generates mule root element
-  munitTemplate                     Generates munit root element
-  http:request [children...]        Generates http:request template with the provided valid child element templates.
+  --help|help                           Prints help doc to stdout
+  muleTemplate|mtmpl                    Generates mule root element
+  munitTemplate|mutmpl                  Generates munit root element
+  http:request|ht [children...]         Generates http:request template with the provided valid child element templates.
     children:
-        - body                      Generates an http:body child element within the parent element.
-        - queryParams               Generates an http:query-params child element within the parent element.
-        - uriParams                 Generates an http:uri-params child element within the parent element.
-        - headers                   Generants an http:headers child element with a dataweave template within the parent element.
-  transform [children...]           WIP: Generates ee:template element with the provided child element templates.
+        - body|b                        Generates an http:body child element within the parent element.
+        - queryParams|q                 Generates an http:query-params child element within the parent element.
+        - uriParams|u                   Generates an http:uri-params child element within the parent element.
+        - headers|h                     Generants an http:headers child element with a dataweave template within the parent element.
+  transform|tr [children...]            Generates ee:template element with the provided child element templates.
     children:
-        - payload                   Generates the ee:message and ee:set-payload templates with a default dataweave expression within the parent element.
-        - variables [#]             Generates a ee:variables template with the given (number) of ee:set-variable element templates.
-        - attributes [#]            Generates the ee:attributes tempalte with the given (number) of ee:set-attribute element templates.
-  choiceRouter [children...]        WIP: Generates a choice template with the provided child element templates.
+        - payload|p                     Generates the ee:message and ee:set-payload templates with a default dataweave expression within the parent element.
+        - variables|v [#]               Generates a ee:variables template with the given (number) of ee:set-variable element templates.
+        - attributes|a [#]              Generates the ee:attributes tempalte with the given (number) of ee:set-attribute element templates.
+  choiceRouter|cr [children...]         WIP: Generates a choice template with the provided child element templates.
     children:
-        - when [#]                  WIP: Generates the given (number) of when templates within the parent element.
-        - otherwise                 WIP: Generates a otherwise template within the parent element.
-  scatterGather [children...]       WIP: Generates a scatter-gather tempalte with the provided child elements.
+        - when|w [#]                    WIP: Generates the given (number) of when templates within the parent element.
+        - otherwise|o                   WIP: Generates a otherwise template within the parent element.
+  scatterGather|sg [children...]        WIP: Generates a scatter-gather tempalte with the provided child elements.
     children:
-        - route [#]                 WIP: Generates the given (number) of route templates within the parent element.
-  jsonLoger [children...]           WIP: Generates a jsonlogger template with the provided children.
+        - route|r [#]                   WIP: Generates the given (number) of route templates within the parent element.
+  jsonLogger|jl [children...]           WIP: Generates a jsonlogger template with the provided children.
     children:
-  log                               WIP: Generates a log template
-  flow [name]                       WIP: Generates a flow template with the given flow name
-  sub-flow [name]                   WIP: Generates a sub-flow template with the given sub-flow name
-  flow-ref [name]                   WIP: Generates a flow-ref template with the given referenced flow name
-  try                               WIP: Generates a try scope
-  munit:config [name]               WIP: Generates an munit config template with the given name
-  munit:test [children...]          WIP: Generates an munit test
+  log|l                                 WIP: Generates a log template
+  flow|f [name]                         Generates a flow template with the given flow name
+  sub-flow|sf [name]                    Generates a sub-flow template with the given sub-flow name
+  flow-ref|fr [name]                    Generates a flow-ref template with the given referenced flow name
+  try|t                                 WIP: Generates a try scope
+  munit:config|muc [name]               Generates an munit config template with the given name
+  munit:test|mut [children...]          Generates an munit test
     children:
-        - execution                 WIP: Generates an munit:execution template within the parent
-        - validate                  WIP: Generates an munit:validate template within the parent
-        - mock                      WIP: Generates an munit:mock template within the parent
-  munit:set-event [children...]     WIP: Generates an munit:set-event template with valid child elements
+        - execution|e                   Generates an munit:execution template within the parent
+        - validate|v                    Generates an munit:validate template within the parent
+        - behavior|b                    Generates an munit:behavior template within the parent
+  munit:set-event|mus [children...]     Generates an munit:set-event template with valid child elements
     children:
-        - payload                   WIP: Generates an munit:set-payload template within the parent
-        - variables [#]             WIP: Generates an munit:set-variables template with the given number of munit:variable templates within the parent
-        - attributes [#]            WIP: Generates an munit:set-attribute template with the given number of munit:attribute templates within the parent
-  munit:assert [type...]            WIP: Generates an munit assert template for the given type.
+        - payload|p                     Generates an munit:set-payload template within the parent
+        - variables|v [#]               Generates an munit:set-variables template with the given number of munit:variable templates within the parent
+        - attributes|a [#]              Generates an munit:set-attribute template with the given number of munit:attribute templates within the parent
+  munit:assert|mua [type...]            Generates an munit assert template for the given type.
     type:
-        - equals [params]           WIP: Generates an munit-tools:assert-equals template with the provided params.
-  munit:mock [children...]          WIP: Generates an muit:mock template with the provided children
+        - equals|eq [params]            Generates an munit-tools:assert-equals template with the provided params.
+  munit:mock|mum [children...]          Generates an muit:mock template with the provided children
     children:
-        - when                      WIP: Generates a munit-tools:mock-when template
-        - attribute                 WIP: Generates a munit-tools:with-attributes template
-        - return [type]             WIP: Generates a munit-tools:then-return template
+        - when|w                        Generates a munit-tools:mock-when template
+        - attribute|a                   Generates a munit-tools:with-attributes template
+        - return|r [type]               Generates a munit-tools:then-return template
 EOF
   exit 0
 fi
@@ -481,59 +481,59 @@ function main {
     case "$element" in
         # TODO use split operation on arguments here before passing to functions.
         muleTemplate | mtmpl)
-            echo "$(muleConfigTemplate)"
+            muleConfigTemplate
             ;;
         munitTemplate | mutmpl)
-            echo "$(munitConfigTemplate)"
+            munitConfigTemplate
             ;;
         http:request | hr)
-            echo "$(httpRequest "$@")"
+            httpRequest "$@"
             ;;        
         transform | tr)
-            echo "$(transform "$@")"
+            transform "$@"
             ;;
         choiceRouter | cr)
-            echo "$(choiceRouter "$@")"
+            choiceRouter "$@"
             ;;
         scatterGather | sg)
-            echo "$(scatterGather "$@")"
+            scatterGather "$@"
             ;;
         jsonLogger | jl)
-            echo "$(jsonLogger "$@")"
+            jsonLogger "$@"
             ;;
         log | l)
-            echo "$(log "$@")"
+            log "$@"
             ;;
         flow | f)
-            echo "$(flow "$@")"
+            flow "$@"
             ;;
         sub-flow | sf)
-            echo "$(subFlow "$@")"
+            subFlow "$@"
             ;;
         flow-ref | fr)
-            echo "$(flowRef "$@")"
+            flowRef "$@"
             ;;
         try | t)
-            echo "$(tryScope "$@")"
+            tryScope "$@"
             ;;
         munit:config | muc)
-            echo "$(munitConfig "$@")"
+            munitConfig "$@"
             ;;
         munit:test | mut)
-            echo "$(munitTest "$@")"
+            munitTest "$@"
             ;;
         munit:set-event | mus)
-            echo "$(munitSetEvent "$@")"
+            munitSetEvent "$@"
             ;;
         munit:assert | mua)
-            echo "$(munitAssert "$@")"
+            munitAssert "$@"
             ;;
         munit:mock | mum)
-            echo "$(munitMock "$@")"
+            munitMock "$@"
             ;;
         *)
             echo "Unknown element: $element" >&2
             exit 1
     esac
 }
-main $@
+main "$@"
