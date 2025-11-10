@@ -6,11 +6,11 @@
 # TODO could template things and add a separator to help make things more composable.
 # TODO add "install" step to symlink script to mule under /usr/local/bin
 # TODO add flags to support dumping out full or minimal attributes for elements.
-# TODO can utilize 'shift [n]' to deal with arguments that take parameters 
+# TODO can utilize 'shift [n]' to deal with arguments that take parameters
 
 if [[ "$1" == '--help' || "$1" == 'help' || -z "$1" ]]; then
-# FIXME update help doc
-  cat <<EOF
+	# FIXME update help doc
+	cat <<EOF
 Usage:
   poop [--help | help | parent [children...]] 
 
@@ -66,7 +66,7 @@ Commands:
         - attribute|a                   Generates a munit-tools:with-attributes template
         - return|r [type]               Generates a munit-tools:then-return template
 EOF
-  exit 0
+	exit 0
 fi
 
 # if [[ "$1" == "--help-short" ]]; then
@@ -74,7 +74,7 @@ fi
 
 ################################################################################
 function httpRequestBody {
-    echo "http:body = '''#[%dw 2.0
+	echo "http:body = '''#[%dw 2.0
 output application/json skipNullOn=\"everywhere\"
 ---
 {}]'''    
@@ -82,7 +82,7 @@ output application/json skipNullOn=\"everywhere\"
 }
 
 function httpRequestHeaders {
-    echo "http:headers = '''#[%dw 2.0
+	echo "http:headers = '''#[%dw 2.0
 import p from Mule
 output application/java
 ---
@@ -94,7 +94,7 @@ output application/java
 }
 
 function httpRequestQueryParams {
-    echo "http:query-params = '''#[%dw 2.0
+	echo "http:query-params = '''#[%dw 2.0
 output application/java
 ---
 {}]'''
@@ -102,7 +102,7 @@ output application/java
 }
 
 function httpRequestUriParams {
-    echo "http:uri-params = '''#[%dw 2.0
+	echo "http:uri-params = '''#[%dw 2.0
 output application/java
 ---
 {}]'''
@@ -110,31 +110,32 @@ output application/java
 }
 
 function httpRequest {
-    # FIXME refactor to not subarray, move logic higher up in stack.
-    readonly subActions="${@:2}"
-    declare -A children
+	# FIXME refactor to not subarray, move logic higher up in stack.
+	readonly subActions="${@:2}"
+	declare -A children
 
-    for item in $subActions; do
-        case "$item" in
-            body | b)
-                children['body']="$(httpRequestBody)"
-                ;;
-            queryParams | q)
-                children['queryParams']="$(httpRequestQueryParams)"
-                ;;
-            uriParams | u)
-                children['uriParams']="$(httpRequestUriParams)"
-                ;;
-            headers | h)
-                children['headers']="$(httpRequestHeaders)"
-                ;;
-            *)
-                echo "Unsupported operation: $item" >&2
-                exit 1
-        esac
-    done
+	for item in $subActions; do
+		case "$item" in
+		body | b)
+			children['body']="$(httpRequestBody)"
+			;;
+		queryParams | q)
+			children['queryParams']="$(httpRequestQueryParams)"
+			;;
+		uriParams | u)
+			children['uriParams']="$(httpRequestUriParams)"
+			;;
+		headers | h)
+			children['headers']="$(httpRequestHeaders)"
+			;;
+		*)
+			echo "Unsupported operation: $item" >&2
+			exit 1
+			;;
+		esac
+	done
 
-    echo "http:request(method     = METHOD
+	echo "http:request(method     = METHOD
              doc:name   = 'NAME'
              config-ref = CONFIG-REF
              path       = PATH
@@ -149,11 +150,11 @@ function httpRequest {
 }
 ################################################################################
 function transformPayload {
-    local isEmpty="$1"
-    if [[ $isEmpty == "1" ]]; then
-        echo "ee:message"
-    else
-        echo "ee:message
+	local isEmpty="$1"
+	if [[ $isEmpty == "1" ]]; then
+		echo "ee:message"
+	else
+		echo "ee:message
 {
     ee:set-payload = '''#[%dw 2.0
 output application/json
@@ -161,72 +162,74 @@ output application/json
 {}]'''
 }
 "
-    fi 
+	fi
 }
 function transformVariables {
-    local instances="$1"
-    if [[ -z $instances ]]; then
-        instances=1
-    else
-        # TODO is this line/conversion even necessary?
-        instances=$(("$instances"))
-    fi
-    local children=""
-    for ((i=0; i < $instances; i++)); do
-        children+="ee:set-variable(variableName=NAME) = '''#[%dw 2.0
+	local instances="$1"
+	if [[ -z $instances ]]; then
+		instances=1
+	else
+		# TODO is this line/conversion even necessary?
+		instances=$(("$instances"))
+	fi
+	local children=""
+	for ((i = 0; i < $instances; i++)); do
+		children+="ee:set-variable(variableName=NAME) = '''#[%dw 2.0
 output application/json
 ---
 {}]'''
 "
-    done
-    echo "ee:variables
+	done
+	echo "ee:variables
 {
     $children
 }
 "
 }
 function transformAttributes {
-    local instances="$1"
-    if [[ -z $instances ]]; then
-        instances=1
-    else
-        instances=$(("$instances"))
-    fi
-    local children=""
-    for ((i=0; i < $instances; i++)); do
-        children+="ee:set-attribute(name=NAME) = '''#[%dw 2.0
+	local instances="$1"
+	if [[ -z $instances ]]; then
+		instances=1
+	else
+		instances=$(("$instances"))
+	fi
+	local children=""
+	for ((i = 0; i < $instances; i++)); do
+		children+="ee:set-attribute(name=NAME) = '''#[%dw 2.0
 output application/json
 ---
 {}]'''
 "
-    done
-    echo "ee:attributes
+	done
+	echo "ee:attributes
 {
     $children
 }
 "
 }
 function transform {
-    # FIXME refactor to not subarray, move logic higher up in stack.
-    readonly subActions="${@:2}"
-    declare -A children
-    for item in $subActions; do
-        case "$item" in
-            payload | p)
-                children['payload']="$(transformPayload 1)"
-                ;;
-            variables | v)
-                # TODO advance pointer and pass count variable if present.
-                # TODO may just be simpler to include = 3 instead of worrying about advancing
-                children['variables']="$(transformVariables)"
-                ;;
-            attributes | a)
-                # TODO advance pointer and pass count variable if present.
-                # TODO may just be simpler to include = 3 instead of worrying about advancing
-                children['attributes']="$(transformAttributes)"
-        esac
-    done
-    echo "ee:transform(doc:name = 'Transform Message')
+	# FIXME refactor to not subarray, move logic higher up in stack.
+	readonly subActions="${@:2}"
+	declare -A children
+	for item in $subActions; do
+		case "$item" in
+		payload | p)
+			# TODO this needs some work
+			children['payload']="$(transformPayload 1)"
+			;;
+		variables | v)
+			# TODO advance pointer and pass count variable if present.
+			# TODO may just be simpler to include = 3 instead of worrying about advancing
+			children['variables']="$(transformVariables)"
+			;;
+		attributes | a)
+			# TODO advance pointer and pass count variable if present.
+			# TODO may just be simpler to include = 3 instead of worrying about advancing
+			children['attributes']="$(transformAttributes)"
+			;;
+		esac
+	done
+	echo "ee:transform(doc:name = 'Transform Message')
 {
     ${children['payload']}
     ${children['variables']}
@@ -236,32 +239,32 @@ function transform {
 }
 ################################################################################
 function choiceRouter {
-    # TODO fill out
-    echo "Not Implemented"
+	# TODO fill out
+	echo "Not Implemented"
 }
 ################################################################################
 function scatterGather {
-    # TODO fill out
-    echo "Not Implemented"
+	# TODO fill out
+	echo "Not Implemented"
 }
 ################################################################################
 function jsonLogger {
-    # TODO fill out
-    echo "Not Implemented"
+	# TODO fill out
+	echo "Not Implemented"
 }
 ################################################################################
 function log {
-    # TODO fill out
-    echo "Not Implemented"
+	# TODO fill out
+	echo "Not Implemented"
 }
 ################################################################################
 function flow {
-    # TODO may have to refactor if adding support for error-handler
-    local name="$2"
-    if [[ -n "$name" ]]; then
-        name="NAME"
-    fi
-    echo "flow(doc:name = '$name'
+	# TODO may have to refactor if adding support for error-handler
+	local name="$2"
+	if [[ -n "$name" ]]; then
+		name="NAME"
+	fi
+	echo "flow(doc:name = '$name'
 name = $name)
 {
 }
@@ -269,11 +272,11 @@ name = $name)
 }
 ################################################################################
 function subFlow {
-    local name="$2"
-    if [[ -n "$name" ]]; then
-        name="NAME"
-    fi
-    echo "sub-flow(doc:name = '$name'
+	local name="$2"
+	if [[ -n "$name" ]]; then
+		name="NAME"
+	fi
+	echo "sub-flow(doc:name = '$name'
 name = $name)
 {
 }
@@ -281,31 +284,32 @@ name = $name)
 }
 ################################################################################
 function flowRef {
-    local name="$2"
-    if [[ -n "$name" ]]; then
-        name="NAME"
-    fi
-    echo "flow-ref(doc:name = '$name'
+	local name="$2"
+	if [[ -n "$name" ]]; then
+		name="NAME"
+	fi
+	echo "flow-ref(doc:name = '$name'
 name = $name)
 "
 }
 ################################################################################
 function tryScope {
-    # FIXME refactor to not subarray, move logic higher up in stack.
-    local subActions="${@:2}"
-    local children=""
-    for item in subActions; do
-        case $item in
-            errorhandler | eh)
-                # TODO figure out to include name for referenced error handler
-                children+="error-handler(ref = global-error-handler)"
-                ;;
-            *)
-                echo "Unsupported try scope element: $item" >&2
-                exit 1
-        esac
-    done
-    echo "try(doc:name = Try)
+	# FIXME refactor to not subarray, move logic higher up in stack.
+	local subActions="${@:2}"
+	local children=""
+	for item in $subActions; do
+		case $item in
+		errorhandler | eh)
+			# TODO figure out to include name for referenced error handler
+			children+="error-handler(ref = global-error-handler)"
+			;;
+		*)
+			echo "Unsupported try scope element: $item" >&2
+			exit 1
+			;;
+		esac
+	done
+	echo "try(doc:name = Try)
 {
     $children
 }
@@ -313,42 +317,43 @@ function tryScope {
 }
 ################################################################################
 function munitConfig {
-    local name="$2"
-    if [[ -z "$name" ]]; then
-        name="NAME"
-    fi
-    echo "munit:config(name = $name)"
+	local name="$2"
+	if [[ -z "$name" ]]; then
+		name="NAME"
+	fi
+	echo "munit:config(name = $name)"
 }
 function munitTest {
-    # FIXME refactor to not subarray, move logic higher up in stack.
-    local subActions="${@:2}"
-    declare -A children
-    for item in $subActions; do
-        case $item in
-            execution | e)
-                children['execution']="$(echo 'munit:execution
+	# FIXME refactor to not subarray, move logic higher up in stack.
+	local subActions="${@:2}"
+	declare -A children
+	for item in $subActions; do
+		case $item in
+		execution | e)
+			children['execution']="$(echo 'munit:execution
 {
 }
 ')"
-                ;;
-            validation | v)
-                children['validation']="$(echo 'munit:validation
+			;;
+		validation | v)
+			children['validation']="$(echo 'munit:validation
 {
 }
 ')"
-                ;;
-            behavior | b)
-                children['behavior']="$(echo 'munit:behavior
+			;;
+		behavior | b)
+			children['behavior']="$(echo 'munit:behavior
 {
 }
 ')"
-                ;;
-            *)
-                echo "child element: $item not supported" >&2
-                exit 1
-        esac
-    done
-    echo "munit:test(name = 'test-name'
+			;;
+		*)
+			echo "child element: $item not supported" >&2
+			exit 1
+			;;
+		esac
+	done
+	echo "munit:test(name = test-name
 description = 'test description')
 {
     ${children['behavior']}
@@ -359,41 +364,51 @@ description = 'test description')
 }
 
 function munitSetEvent {
-    # FIXME refactor to not subarray, move logic higher up in stack.
-    local subActions="${@:2}"
-    declare -A children
-    for item in $subActions; do
-        # FIXME: elements may not be 100% accurate and will probably need to be refactored.
-        case $item in
-            payload | p)
-                children['payload']="munit:payload(value = '{}'
+	# FIXME refactor to not subarray, move logic higher up in stack.
+	local subActions="${@:2}"
+	declare -A children
+	for item in $subActions; do
+		# FIXME: elements may not be 100% accurate and will probably need to be refactored.
+		case $item in
+		payload | p)
+			children['payload']="munit:payload(value = '''#[%dw 2.0
+output application/json
+---
+{}]'''
 mediaType = application/json)
 "
-                ;;
-            variables | v)
-                # TODO figure out how to deal with subAction parameters
-                children['variables']="munit:variables {
+			;;
+		variables | v)
+			# TODO figure out how to deal with subAction parameters
+			children['variables']="munit:variables {
     munit:variable(key = KEY
-    value = '{}'
+    value = '''#[%dw 2.0
+output application/json
+---
+{}]'''
     mediaType = application/json)
 }
 "
-                ;;
-            attributes | a)
-                # TODO figure out how to deal with subAction parameters
-                children['attributes']="munit:attributes {
+			;;
+		attributes | a)
+			# TODO figure out how to deal with subAction parameters
+			children['attributes']="munit:attributes {
     munit:attribute(key = KEY
-    value = '{}'
+    value = '''#[%dw 2.0
+output application/json
+---
+{}]'''
     mediaType = application/json)
 }
 "
-                ;;
-            *)
-                echo "Unsupported element: $item" >&2
-                exit 1
-        esac
-    done
-    echo "munit:set-event(doc:name = 'set event')
+			;;
+		*)
+			echo "Unsupported element: $item" >&2
+			exit 1
+			;;
+		esac
+	done
+	echo "munit:set-event(doc:name = 'set event')
 {
     ${children['payload']}
     ${children['variables']}
@@ -402,50 +417,105 @@ mediaType = application/json)
 "
 }
 function munitAssert {
-    # FIXME refactor to not subarray, move logic higher up in stack.
-    local subActions="${@:2}"
-    local children=""
-    for item in $subActions; do
-        case $item in 
-            equals | eq)
-                children+="munit-tools:assert-equals(doc:name = 'assert equals'
+	# FIXME refactor to not subarray, move logic higher up in stack.
+	local subActions="${@:2}"
+	local children=""
+	for item in $subActions; do
+		case $item in
+		equals | eq)
+			children+="munit-tools:assert-equals(doc:name = 'assert equals'
 actual = #[true]
 expected = #[true])
 "
-                ;;
-            *)
-                echo "Unsupported assert element: $item" >&2
-                exit 1
-        esac
-    done
-    echo "$children"
+			;;
+		that | th)
+			children+="munit-tools:assert-that(doc:name = 'assert that'
+expression = #[payload]
+is = '#[MunitTools::notNullValue()]'
+message = 'message')
+"
+			;;
+		*)
+			echo "Unsupported assert element: $item" >&2
+			exit 1
+			;;
+		esac
+	done
+	echo "$children"
+}
+function munitVerify {
+	local subActions="${@:2}"
+	local children=""
+	for item in $subActions; do
+		case $item in
+		call | c)
+			children+="
+munit-tools:verify-call(doc:name = 'Verify Call'
+atLeast = 0
+atMost = 1
+times = 1
+processor = processor
+)"
+			;;
+		attributes | a)
+			echo "attributes not yet supported" >&2
+			exit 1
+			;;
+		*)
+			echo "Unsupported assert element: $item" >&2
+			exit 1
+			;;
+		esac
+	done
+	echo "$children"
+}
+function munitWithAttributes {
+	# TODO expand with expressions to repeat number of attributes.
+	echo "
+munit-tools:with-attributes {
+    munit-tools:with-attribute(attributeName = name
+    whereValue = value)
+}
+"
+}
+function munitVariables {
+	# TODO expane with expressions to repeat number of variables.
+	echo "
+munit-tools:variables {
+    munit-tools:variable(key = key
+                         value = '''#[%dw 2.0
+                                    output application/json
+                                    ---
+                                    {}]'''
+                         mediaType = 'application/json')
+}"
 }
 function munitMock {
-    # TODO implement
-    # TODO keeping implementation simple for now and just allowing generation of sub snippets.
-    local subActions="${@:2}"
-    local children=""
-    for item in $subActions; do
-        case $item in
-            when | w)
-                children+="
+	# TODO implement
+	# TODO keeping implementation simple for now and just allowing generation of sub snippets.
+	local subActions="${@:2}"
+	local children=""
+	for item in $subActions; do
+		case $item in
+		when | w)
+			children+="
 munit-tools:mock-when(doc:name = 'doc name'
 processor = 'processor')
 {
 
 }"
-                ;;
-            attribute | a)
-                # TODO need to add option for generating multipl or without parent
-                children+="
+			;;
+		attribute | a)
+			# TODO need to add option for generating multipl or without parent
+			children+="
 munit-tools:with-attributes {
     munit-tools:with-attribute(attributeName = name
     whereValue = value)
 }"
-                ;;
-            return | r)
-                # TODO need to handle type.
-                children+="
+			;;
+		return | r)
+			# TODO need to handle type.
+			children+="
 munit-tools:then-return {
     munit-tools:payload(value = '''#[{}]''')
     munit-tools:variables {
@@ -455,17 +525,18 @@ munit-tools:then-return {
     }
     munit-tools:error(typeId = id)
 }"
-                ;;
-            *)
-                echo "Unsupported mock snippet: $item" >&2
-                exit 1
-        esac
-    done
-    echo "$children"
+			;;
+		*)
+			echo "Unsupported mock snippet: $item" >&2
+			exit 1
+			;;
+		esac
+	done
+	echo "$children"
 }
 ################################################################################
 function muleConfigTemplate {
-    echo "mule(xsi:schemaLocation = 'http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd'
+	echo "mule(xsi:schemaLocation = 'http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd'
      xmlns:xsi          = http://www.w3.org/2001/XMLSchema-instance
      xmlns:ee           = http://www.mulesoft.org/schema/mule/ee/core
      xmlns:http         = http://www.mulesoft.org/schema/mule/http
@@ -477,7 +548,7 @@ function muleConfigTemplate {
 "
 }
 function munitConfigTemplate {
-    echo "mule(xsi:schemaLocation = '   http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd   http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd   http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd'
+	echo "mule(xsi:schemaLocation = '   http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd   http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd   http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd'
      xmlns:xsi          = http://www.w3.org/2001/XMLSchema-instance
      xmlns:munit        = http://www.mulesoft.org/schema/mule/munit
      xmlns:munit-tools  = http://www.mulesoft.org/schema/mule/munit-tools
@@ -488,64 +559,78 @@ function munitConfigTemplate {
 "
 }
 function main {
-    readonly element="$1"
+	readonly element="$1"
 
-    case "$element" in
-        # TODO use split operation on arguments here before passing to functions.
-        muleTemplate | mtmpl)
-            muleConfigTemplate
-            ;;
-        munitTemplate | mutmpl)
-            munitConfigTemplate
-            ;;
-        http:request | hr)
-            httpRequest "$@"
-            ;;        
-        transform | tr)
-            transform "$@"
-            ;;
-        choiceRouter | cr)
-            choiceRouter "$@"
-            ;;
-        scatterGather | sg)
-            scatterGather "$@"
-            ;;
-        jsonLogger | jl)
-            jsonLogger "$@"
-            ;;
-        log | l)
-            log "$@"
-            ;;
-        flow | f)
-            flow "$@"
-            ;;
-        sub-flow | sf)
-            subFlow "$@"
-            ;;
-        flow-ref | fr)
-            flowRef "$@"
-            ;;
-        try | t)
-            tryScope "$@"
-            ;;
-        munit:config | muc)
-            munitConfig "$@"
-            ;;
-        munit:test | mut)
-            munitTest "$@"
-            ;;
-        munit:set-event | mus)
-            munitSetEvent "$@"
-            ;;
-        munit:assert | mua)
-            munitAssert "$@"
-            ;;
-        munit:mock | mum)
-            munitMock "$@"
-            ;;
-        *)
-            echo "Unknown element: $element" >&2
-            exit 1
-    esac
+	case "$element" in
+	# TODO use split operation on arguments here before passing to functions.
+	muleTemplate | mtmpl)
+		muleConfigTemplate
+		;;
+	munitTemplate | mutmpl)
+		munitConfigTemplate
+		;;
+	http:request | hr)
+		httpRequest "$@"
+		;;
+	transform | tr)
+		transform "$@"
+		;;
+	# FIXME: temporary shortcut
+	transform:set-payload | trp)
+		transformPayload 0
+		;;
+	choiceRouter | cr)
+		choiceRouter "$@"
+		;;
+	scatterGather | sg)
+		scatterGather "$@"
+		;;
+	jsonLogger | jl)
+		jsonLogger "$@"
+		;;
+	log | l)
+		log "$@"
+		;;
+	flow | f)
+		flow "$@"
+		;;
+	sub-flow | sf)
+		subFlow "$@"
+		;;
+	flow-ref | fr)
+		flowRef "$@"
+		;;
+	try | t)
+		tryScope "$@"
+		;;
+	munit:config | muc)
+		munitConfig "$@"
+		;;
+	munit:test | mut)
+		munitTest "$@"
+		;;
+	munit:set-event | mus)
+		munitSetEvent "$@"
+		;;
+	munit:assert | mua)
+		munitAssert "$@"
+		;;
+	munit:verify | muv)
+		munitVerify "$@"
+		;;
+	munit:attributes | muat)
+		munitWithAttributes
+		;;
+	munit:variables | muvar)
+		munitVariables
+		;;
+	munit:mock | mum)
+		munitMock "$@"
+		;;
+	*)
+		echo "Unknown element: $element" >&2
+		exit 1
+		;;
+	esac
 }
 main "$@"
