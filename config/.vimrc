@@ -22,6 +22,7 @@ let g:material_theme_style = 'ocean'
 augroup restore_cursor_on_write_after_format
   autocmd! 
   autocmd BufWritePre *.go call FormatGoCode()
+  autocmd BufWritePre *.sh call FormatShellCode()
 augroup END
 
 function! FormatGoCode()
@@ -31,6 +32,12 @@ function! FormatGoCode()
   " Or, to run a Vim command:
   " normal G
   call winrestview(l:saved_view) " Restore the saved view
+endfunction
+
+function! FormatShellCode()
+    let l:saved_view = winsaveview()
+    silent! %!shfmt
+    call winrestview(l:saved_view)
 endfunction
 
 " TODO add a script to bash scripts for installing vim plugin if not
