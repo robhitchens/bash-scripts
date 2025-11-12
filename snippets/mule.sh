@@ -32,6 +32,7 @@ Commands:
         - payload|p                     Generates the ee:message and ee:set-payload templates with a default dataweave expression within the parent element.
         - variables|v [#]               Generates a ee:variables template with the given (number) of ee:set-variable element templates.
         - attributes|a [#]              Generates the ee:attributes tempalte with the given (number) of ee:set-attribute element templates.
+  transform:set-payload|trp             Temporary shortcut for transform payload
   choiceRouter|cr [children...]         WIP: Generates a choice template with the provided child element templates.
     children:
         - when|w [#]                    WIP: Generates the given (number) of when templates within the parent element.
@@ -60,11 +61,18 @@ Commands:
   munit:assert|mua [type...]            Generates an munit assert template for the given type.
     type:
         - equals|eq [params]            Generates an munit-tools:assert-equals template with the provided params.
+        - that|th                       Generatese an munit-tools assert-that template.
   munit:mock|mum [children...]          Generates an muit:mock template with the provided children
     children:
         - when|w                        Generates a munit-tools:mock-when template
         - attribute|a                   Generates a munit-tools:with-attributes template
         - return|r [type]               Generates a munit-tools:then-return template
+  munit:verify|muv [children...]        Generates a munit-tools:verify template with the provided children
+    children:
+        - call|c                        Generates a munit-tools:verify-call template within the parent
+        - attributes|a [#]              WIP: Generates a munit-tools:with-attributes template with the given number of munit-tools:attribute templates within the parent.
+  munit:attributes|muat                 Generates a munit-tools:with-attributes template with a single munit-tools:attribute template
+  munit:variables|muvar                 Generates a munit-tools:variables template with a single munit-tools:variable template
 EOF
 	exit 0
 fi
