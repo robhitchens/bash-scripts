@@ -5,6 +5,8 @@
     * make executable
     * move to folder
     *  add desktop entry
+2. bash snippets script
+    - A small snippet script similar to the Mule snippets for common bash statements and idioms.
 
 # Compressor parallel proposal
 
