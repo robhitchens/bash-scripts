@@ -24,9 +24,9 @@ Commands:
   http:request|ht [children...]         Generates http:request template with the provided valid child element templates.
     children:
         - body|b                        Generates an http:body child element within the parent element.
+        - headers|h                     Generants an http:headers child element with a dataweave template within the parent element.
         - queryParams|q                 Generates an http:query-params child element within the parent element.
         - uriParams|u                   Generates an http:uri-params child element within the parent element.
-        - headers|h                     Generants an http:headers child element with a dataweave template within the parent element.
   transform|tr [children...]            Generates ee:template element with the provided child element templates.
     children:
         - payload|p                     Generates the ee:message and ee:set-payload templates with a default dataweave expression within the parent element.
@@ -150,9 +150,9 @@ function httpRequest {
              target     = VARIABLE)
 {
     ${children['body']}
-    ${children['queryParams']}
-    ${children['uriParams']}
     ${children['headers']}
+    ${children['uriParams']}
+    ${children['queryParams']}
 }
 "
 }
