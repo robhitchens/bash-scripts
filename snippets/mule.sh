@@ -12,13 +12,15 @@ if [[ "$1" == '--help' || "$1" == 'help' || -z "$1" ]]; then
 	# FIXME update help doc
 	cat <<EOF
 Usage:
-  poop [--help | help | parent [children...]] 
+  mule [--help | help | parent [children...]] 
 
 Description:
-  poop generates xmq snippets for Mulesoft elements
+  mule generates xmq snippets for Mulesoft elements
 
 Commands:
   --help|help                           Prints help doc to stdout
+  test [name [method]]                  Not a snippet, shortcut for running munit test.
+  run                                   Not a snippet, shortcut for running application with common configuration.
   muleTemplate|mtmpl                    Generates mule root element
   munitTemplate|mutmpl                  Generates munit root element
   http:request|ht [children...]         Generates http:request template with the provided valid child element templates.
@@ -566,11 +568,40 @@ function munitConfigTemplate {
 }
 "
 }
+
+function runMunitTest {
+	local args=(${@:2})
+	local command=""
+	if [[ -n ${args[0]} ]]; then
+		command+="-Dmunit.test=${args[0]}"
+	fi
+	if [[ -n ${args[1]} ]]; then
+		command+="#${args[1]}"
+	fi
+	echo "running: mvn test $command"
+	mvn test "$command"
+}
+
+function run {
+	echo "not yet supported" >&2
+	# TODO will probably need to do the following:
+	# * set MULE_HOME and MULE_BASE
+	# * run ~/tools/AnypointStudio/plugins/org.mule.tooling.server.4.9.ee_7.21.0.202507071837/mule/bin/mule start
+	# * provide the properties use in the anypoint configuration.
+	exit 1
+}
+
 function main {
 	readonly element="$1"
 
 	case "$element" in
 	# TODO use split operation on arguments here before passing to functions.
+	test)
+		runMunitTest $@
+		;;
+	run)
+		runMule
+		;;
 	muleTemplate | mtmpl)
 		muleConfigTemplate
 		;;
