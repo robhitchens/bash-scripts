@@ -7,6 +7,7 @@
 # TODO add "install" step to symlink script to mule under /usr/local/bin
 # TODO add flags to support dumping out full or minimal attributes for elements.
 # TODO can utilize 'shift [n]' to deal with arguments that take parameters
+# TODO might refactor the interface to make it composable by making the last argument to any function a string for the body of the element. This would allow composability utilizing existing bash idioms, but downside will be that composition will require multiple subprocesses which will be slower.
 
 if [[ "$1" == '--help' || "$1" == 'help' || -z "$1" ]]; then
 	# FIXME update help doc
