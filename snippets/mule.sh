@@ -8,6 +8,8 @@
 # TODO add flags to support dumping out full or minimal attributes for elements.
 # TODO can utilize 'shift [n]' to deal with arguments that take parameters
 # TODO might refactor the interface to make it composable by making the last argument to any function a string for the body of the element. This would allow composability utilizing existing bash idioms, but downside will be that composition will require multiple subprocesses which will be slower.
+#      or another way would be to accept strings of subcommands for composability and maybe a small syntax to avoid adding multiple quotes. Then if detected could then just pass the arguments through main again without subprocessing. With a generic way of handinling it in place  could refactor higher level components to be a composition rather than hard coded logic
+#      would need to figure out solution for emitting nested docs or would need to list all commands in help doc.
 
 if [[ "$1" == '--help' || "$1" == 'help' || -z "$1" ]]; then
 	# FIXME update help doc
