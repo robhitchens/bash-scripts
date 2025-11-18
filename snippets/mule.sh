@@ -51,7 +51,9 @@ Commands:
   flow|f [name]                         Generates a flow template with the given flow name
   sub-flow|sf [name]                    Generates a sub-flow template with the given sub-flow name
   flow-ref|fr [name]                    Generates a flow-ref template with the given referenced flow name
-  try|t                                 WIP: Generates a try scope
+  try|t  [children]                     Generates a try scope template
+    children:
+        - errorhandler|eh              Generates an error-handler template within the parent element
   munit:config|muc [name]               Generates an munit config template with the given name
   munit:test|mut [children...]          Generates an munit test
     children:
