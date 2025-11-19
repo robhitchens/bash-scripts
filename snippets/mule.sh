@@ -598,7 +598,7 @@ function runMunitTest {
 		command+="#${args[1]}"
 	fi
 	echo "running: mvn test $command"
-	mvn test "$command"
+	mvn test $command
 }
 
 function run {
