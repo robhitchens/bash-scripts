@@ -26,7 +26,7 @@ Commands:
   run                                   Not a snippet, shortcut for running application with common configuration.
   muleTemplate|mtmpl                    Generates mule root element
   munitTemplate|mutmpl                  Generates munit root element
-  http:request|ht [children...]         Generates http:request template with the provided valid child element templates.
+  http:request|hr [children...]         Generates http:request template with the provided valid child element templates.
     children:
         - body|b                        Generates an http:body child element within the parent element.
         - headers|h                     Generants an http:headers child element with a dataweave template within the parent element.
@@ -34,7 +34,7 @@ Commands:
         - uriParams|u                   Generates an http:uri-params child element within the parent element.
   transform|tr [children...]            Generates ee:template element with the provided child element templates.
     children:
-        - payload|p                     Generates the ee:message and ee:set-payload templates with a default dataweave expression within the parent element.
+        - payload|p [#]                 Generates the ee:message and ee:set-payload templates with a default dataweave expression within the parent element.
         - variables|v [#]               Generates a ee:variables template with the given (number) of ee:set-variable element templates.
         - attributes|a [#]              Generates the ee:attributes tempalte with the given (number) of ee:set-attribute element templates.
   transform:set-payload|trp             Temporary shortcut for transform payload
@@ -102,8 +102,8 @@ import p from Mule
 output application/java
 ---
 {
-    client_id: p('system-api.{system}.client_id'),
-    client_secret: p('system-api.{system}.client_secret')
+    client_id: p('secure::{api}.{system}.client-id'),
+    client_secret: p('secure::{api}.{system}.client-secret')
 }]'''
 "
 }
@@ -150,11 +150,14 @@ function httpRequest {
 		esac
 	done
 
-	echo "http:request(method     = METHOD
-             doc:name   = 'NAME'
-             config-ref = CONFIG-REF
-             path       = PATH
-             target     = VARIABLE)
+	echo "http:request(method     = '{method}'
+             doc:name   = '{name}'
+             doc:id     = $(uuidgen)
+             config-ref = '{config-ref}'
+             path       = '{path}'
+             sendCorrelationId = ALWAYS
+             correlationId = #[correlationId]
+             target     = '{target}')
 {
     ${children['body']}
     ${children['headers']}
@@ -166,7 +169,7 @@ function httpRequest {
 ################################################################################
 function transformPayload {
 	local isEmpty="$1"
-	if [[ $isEmpty == "1" ]]; then
+	if [[ $isEmpty == "0" ]]; then
 		echo "ee:message"
 	else
 		echo "ee:message
@@ -180,16 +183,17 @@ output application/json
 	fi
 }
 function transformVariables {
-	local instances="$1"
+	local params="$1"
+	local instances="0"
+	if [[ -n "$(echo "$params" | grep -E '[0-9]')" ]]; then
+		instances="$params"
+	fi
 	if [[ -z $instances ]]; then
-		instances=1
-	else
-		# TODO is this line/conversion even necessary?
-		instances=$(("$instances"))
+		instances="1"
 	fi
 	local children=""
-	for ((i = 0; i < $instances; i++)); do
-		children+="ee:set-variable(variableName=NAME) = '''#[%dw 2.0
+	for ((i = 0; i < instances; i++)); do
+		children+="ee:set-variable(variableName={name}-$i) = '''#[%dw 2.0
 output application/json
 ---
 {}]'''
@@ -202,15 +206,17 @@ output application/json
 "
 }
 function transformAttributes {
-	local instances="$1"
+	local params="$1"
+	local instances="0"
+	if [[ -n "$(echo "$params" | grep -E '[0-9]')" ]]; then
+		instances="$params"
+	fi
 	if [[ -z $instances ]]; then
-		instances=1
-	else
-		instances=$(("$instances"))
+		instances="1"
 	fi
 	local children=""
-	for ((i = 0; i < $instances; i++)); do
-		children+="ee:set-attribute(name=NAME) = '''#[%dw 2.0
+	for ((i = 0; i < instances; i++)); do
+		children+="ee:set-attribute(name={name}-$i) = '''#[%dw 2.0
 output application/json
 ---
 {}]'''
@@ -224,26 +230,44 @@ output application/json
 }
 function transform {
 	# FIXME refactor to not subarray, move logic higher up in stack.
-	readonly subActions="${@:2}"
+	readonly subActions=(${@:2})
 	declare -A children
-	for item in $subActions; do
-		case "$item" in
+	# FIXME this loop needs to have knowledge of the index it's looking at
+
+	local length="${#subActions[@]}"
+	for ((i = 0; i < length; i++)); do
+		#for item in $subActions; do
+		case "${subActions[((i))]}" in
 		payload | p)
-			# TODO this needs some work
-			children['payload']="$(transformPayload 1)"
+			if [[ -n "$(echo "${subActions[((i + 1))]}" | grep -E '[0-1]')" ]]; then
+				local instances="${subActions[((i + 1))]}"
+				((i = i + 1))
+			else
+				local instances=1
+			fi
+			children['payload']="$(transformPayload "$instances")"
 			;;
 		variables | v)
-			# TODO advance pointer and pass count variable if present.
-			# TODO may just be simpler to include = 3 instead of worrying about advancing
-			children['variables']="$(transformVariables)"
+			if [[ -n "$(echo "${subActions[((i + 1))]}" | grep -E '[0-9]')" ]]; then
+				local instances="${subActions[((i + 1))]}"
+				((i = i + 1))
+			fi
+			children['variables']="$(transformVariables "$instances")"
 			;;
 		attributes | a)
-			# TODO advance pointer and pass count variable if present.
-			# TODO may just be simpler to include = 3 instead of worrying about advancing
-			children['attributes']="$(transformAttributes)"
+			if [[ -n "$(echo "${subActions[((i + 1))]}" | grep -E '[0-9]')" ]]; then
+				local instances="${subActions[((i + 1))]}"
+				((i = i + 1))
+			fi
+			children['attributes']="$(transformAttributes "$instances")"
 			;;
 		esac
 	done
+
+	if [[ -z "${children['payload']}" ]]; then
+		children['payload']="$(transformPayload 0)"
+	fi
+
 	echo "ee:transform(doc:name = 'Transform Message')
 {
     ${children['payload']}
