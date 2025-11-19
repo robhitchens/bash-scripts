@@ -545,7 +545,6 @@ munit-tools:with-attributes {
 "
 }
 function munitVariables {
-	# TODO expane with expressions to repeat number of variables.
 	local params="$1"
 	if [[ -n "$(echo "$params" | grep -E '[0-9]')" ]]; then
 		local instances="$params"
@@ -555,7 +554,7 @@ function munitVariables {
 	fi
 	local children=""
 	for ((i = 0; i < instances; i++)); do
-		children+="munit-tools:variable(key = '{key}'
+		children+="munit-tools:variable(key = '{key-$i}'
 value = '''#[%dw 2.0
            output application/json
            ---
@@ -726,10 +725,12 @@ function main {
 		munitVerify "$@"
 		;;
 	munit:attributes | muat)
+		# TODO roll up into munit:verify
 		munitWithAttributes
 		;;
 	munit:variables | muvar)
-		munitVariables
+		# TODO roll up into munit:verify
+		munitVariables "${@:2}"
 		;;
 	munit:mock | mum)
 		munitMock "$@"
