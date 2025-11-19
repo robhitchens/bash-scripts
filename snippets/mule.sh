@@ -11,6 +11,7 @@
 #      or another way would be to accept strings of subcommands for composability and maybe a small syntax to avoid adding multiple quotes. Then if detected could then just pass the arguments through main again without subprocessing. With a generic way of handinling it in place  could refactor higher level components to be a composition rather than hard coded logic
 #      would need to figure out solution for emitting nested docs or would need to list all commands in help doc.
 
+# TODO could introduce a flag for declaring a single command and another flag for nesting a secondary command into the first or process the elements inside out to build the output string
 if [[ "$1" == '--help' || "$1" == 'help' || -z "$1" ]]; then
 	# FIXME update help doc
 	cat <<EOF
