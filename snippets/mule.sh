@@ -50,10 +50,10 @@ Commands:
   log|l                                 WIP: Generates a log template
   flow|f [name]                         Generates a flow template with the given flow name
   sub-flow|sf [name]                    Generates a sub-flow template with the given sub-flow name
-  flow-ref|fr [name]                    Generates a flow-ref template with the given referenced flow name
+  flow-ref|fr [#] [name]                Generates a flow-ref template with the given referenced flow name
   try|t  [children]                     Generates a try scope template
     children:
-        - errorhandler|eh              Generates an error-handler template within the parent element
+        - errorhandler|eh               Generates an error-handler template within the parent element
   munit:config|muc [name]               Generates an munit config template with the given name
   munit:test|mut [children...]          Generates an munit test
     children:
@@ -299,13 +299,27 @@ name = $name)
 }
 ################################################################################
 function flowRef {
-	local name="$2"
-	if [[ -n "$name" ]]; then
-		name="NAME"
+	local subActions=(${@:2})
+	local repeat="1"
+	local name=""
+	#TODO this should really be an either or, but whatever
+	if ((${#subActions[@]} == 2)); then
+		repeat="${subActions[0]}"
+		name="${subActions[1]}"
+	else
+		firstOption="${subActions[0]}"
+		if [[ -n "$(echo "$firstOption" | grep -E '[0-9]')" ]]; then
+			repeat="$firstOption"
+			name="placeholder"
+		elif [[ -z "$name" || "$name" -eq '' ]]; then
+			name="placeholder"
+		fi
 	fi
-	echo "flow-ref(doc:name = '$name'
-name = $name)
+	for ((i = 0; i < repeat; i++)); do
+		echo "flow-ref(doc:name = $name-$i
+name = $name-$i)
 "
+	done
 }
 ################################################################################
 function tryScope {
