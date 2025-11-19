@@ -185,16 +185,15 @@ output application/json
 }
 function transformVariables {
 	local params="$1"
-	local instances="0"
 	if [[ -n "$(echo "$params" | grep -E '[0-9]')" ]]; then
-		instances="$params"
+		local instances="$params"
 	fi
 	if [[ -z $instances ]]; then
-		instances="1"
+		local instances="1"
 	fi
 	local children=""
 	for ((i = 0; i < instances; i++)); do
-		children+="ee:set-variable(variableName={name}-$i) = '''#[%dw 2.0
+		children+="ee:set-variable(variableName = '{name-$i}') = '''#[%dw 2.0
 output application/json
 ---
 {}]'''
@@ -217,7 +216,7 @@ function transformAttributes {
 	fi
 	local children=""
 	for ((i = 0; i < instances; i++)); do
-		children+="ee:set-attribute(name={name}-$i) = '''#[%dw 2.0
+		children+="ee:set-attribute(name = '{name-$i}') = '''#[%dw 2.0
 output application/json
 ---
 {}]'''
@@ -237,7 +236,6 @@ function transform {
 
 	local length="${#subActions[@]}"
 	for ((i = 0; i < length; i++)); do
-		#for item in $subActions; do
 		case "${subActions[((i))]}" in
 		payload | p)
 			if [[ -n "$(echo "${subActions[((i + 1))]}" | grep -E '[0-1]')" ]]; then
@@ -265,6 +263,7 @@ function transform {
 		esac
 	done
 
+	# TODO also include variables and attributes in check, if not null then include message.
 	if [[ -z "${children['payload']}" ]]; then
 		children['payload']="$(transformPayload 0)"
 	fi
@@ -302,9 +301,9 @@ function flow {
 	# TODO may have to refactor if adding support for error-handler
 	local name="$2"
 	if [[ -n "$name" ]]; then
-		name="NAME"
+		name="'{name}'"
 	fi
-	echo "flow(doc:name = '$name'
+	echo "flow(doc:name = $name
 name = $name)
 {
 }
@@ -314,9 +313,9 @@ name = $name)
 function subFlow {
 	local name="$2"
 	if [[ -n "$name" ]]; then
-		name="NAME"
+		name="'{name}'"
 	fi
-	echo "sub-flow(doc:name = '$name'
+	echo "sub-flow(doc:name = $name
 name = $name)
 {
 }
@@ -341,8 +340,8 @@ function flowRef {
 		fi
 	fi
 	for ((i = 0; i < repeat; i++)); do
-		echo "flow-ref(doc:name = $name-$i
-name = $name-$i)
+		echo "flow-ref(doc:name = '{$name-$i}'
+name = '{$name-$i}')
 "
 	done
 }
@@ -373,7 +372,7 @@ function tryScope {
 function munitConfig {
 	local name="$2"
 	if [[ -z "$name" ]]; then
-		name="NAME"
+		name="'{name}'"
 	fi
 	echo "munit:config(name = $name)"
 }
@@ -407,8 +406,8 @@ function munitTest {
 			;;
 		esac
 	done
-	echo "munit:test(name = test-name
-description = 'test description')
+	echo "munit:test(name = '{name}'
+description = '{description}')
 {
     ${children['behavior']}
     ${children['execution']}
@@ -435,7 +434,7 @@ mediaType = application/json)
 		variables | v)
 			# TODO figure out how to deal with subAction parameters
 			children['variables']="munit:variables {
-    munit:variable(key = KEY
+    munit:variable(key = '{key}'
     value = '''#[%dw 2.0
 output application/json
 ---
@@ -447,7 +446,7 @@ output application/json
 		attributes | a)
 			# TODO figure out how to deal with subAction parameters
 			children['attributes']="munit:attributes {
-    munit:attribute(key = KEY
+    munit:attribute(key = '{key}'
     value = '''#[%dw 2.0
 output application/json
 ---
@@ -478,15 +477,15 @@ function munitAssert {
 		case $item in
 		equals | eq)
 			children+="munit-tools:assert-equals(doc:name = 'assert equals'
-actual = #[true]
-expected = #[true])
+actual = '#[{actual}]'
+expected = '#[{true}]')
 "
 			;;
 		that | th)
 			children+="munit-tools:assert-that(doc:name = 'assert that'
 expression = #[payload]
 is = '#[MunitTools::notNullValue()]'
-message = 'message')
+message = '{message}')
 "
 			;;
 		*)
@@ -508,7 +507,7 @@ munit-tools:verify-call(doc:name = 'Verify Call'
 atLeast = 0
 atMost = 1
 times = 1
-processor = processor
+processor = '{processor}'
 )"
 			;;
 		attributes | a)
@@ -525,23 +524,48 @@ processor = processor
 }
 function munitWithAttributes {
 	# TODO expand with expressions to repeat number of attributes.
+	local params="$1"
+	local instances="0"
+	if [[ -n "$(echo "$params" | grep -E '[0-9]')" ]]; then
+		instances="$params"
+	fi
+	if [[ -z $instances ]]; then
+		instances="1"
+	fi
+	local children=""
+	for ((i = 0; i < instances; i++)); do
+		children+="munit-tools:with-attribute(attributeName = '{attributeName}'
+whereValue = '{whereValue-$i}')
+"
+	done
 	echo "
 munit-tools:with-attributes {
-    munit-tools:with-attribute(attributeName = name
-    whereValue = value)
+    ${children}
 }
 "
 }
 function munitVariables {
 	# TODO expane with expressions to repeat number of variables.
+	local params="$1"
+	if [[ -n "$(echo "$params" | grep -E '[0-9]')" ]]; then
+		local instances="$params"
+	fi
+	if [[ -z $instances ]]; then
+		local instances="1"
+	fi
+	local children=""
+	for ((i = 0; i < instances; i++)); do
+		children+="munit-tools:variable(key = '{key}'
+value = '''#[%dw 2.0
+           output application/json
+           ---
+           {}]'''
+mediaType = 'application/json')
+"
+	done
 	echo "
 munit-tools:variables {
-    munit-tools:variable(key = key
-                         value = '''#[%dw 2.0
-                                    output application/json
-                                    ---
-                                    {}]'''
-                         mediaType = 'application/json')
+    ${children}
 }"
 }
 function munitMock {
@@ -553,8 +577,8 @@ function munitMock {
 		case $item in
 		when | w)
 			children+="
-munit-tools:mock-when(doc:name = 'doc name'
-processor = 'processor')
+munit-tools:mock-when(doc:name = '{doc:name}'
+processor = '{processor}')
 {
 
 }"
@@ -563,8 +587,8 @@ processor = 'processor')
 			# TODO need to add option for generating multipl or without parent
 			children+="
 munit-tools:with-attributes {
-    munit-tools:with-attribute(attributeName = name
-    whereValue = value)
+    munit-tools:with-attribute(attributeName = '{attributeName}'
+    whereValue = '{whereValue}')
 }"
 			;;
 		return | r)
@@ -573,11 +597,11 @@ munit-tools:with-attributes {
 munit-tools:then-return {
     munit-tools:payload(value = '''#[{}]''')
     munit-tools:variables {
-    munit-tools:variable(key = name
+    munit-tools:variable(key = '{key}' 
     value     = '''#[true]'''
     mediaType = application/json)
     }
-    munit-tools:error(typeId = id)
+    munit-tools:error(typeId = '{typeId}')
 }"
 			;;
 		*)
