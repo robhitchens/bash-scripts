@@ -232,7 +232,6 @@ function transform {
 	# FIXME refactor to not subarray, move logic higher up in stack.
 	readonly subActions=(${@:2})
 	declare -A children
-	# FIXME this loop needs to have knowledge of the index it's looking at
 
 	local length="${#subActions[@]}"
 	for ((i = 0; i < length; i++)); do
@@ -416,13 +415,63 @@ description = '{description}')
 "
 }
 
+function munitSetEventVariables {
+	local params="$1"
+	if [[ -n "$(echo "$params" | grep -E '[0-9]')" ]]; then
+		local instances="$params"
+	fi
+	if [[ -z $instances ]]; then
+		local instances="1"
+	fi
+	local children=""
+	for ((i = 0; i < instances; i++)); do
+		children+="munit:variable(key = '{key-$i}'
+    value = '''#[%dw 2.0
+output application/json
+---
+{}]'''
+    mediaType = application/json)
+"
+	done
+	echo "munit:variables
+{
+    $children
+}
+"
+}
+
+function munitSetEventAttributes {
+	local params="$1"
+	if [[ -n "$(echo "$params" | grep -E '[0-9]')" ]]; then
+		local instances="$params"
+	fi
+	if [[ -z $instances ]]; then
+		local instances="1"
+	fi
+	local children=""
+	for ((i = 0; i < instances; i++)); do
+		children+="munit:attribute(key = '{key-$i}'
+    value = '''#[%dw 2.0
+output application/json
+---
+{}]'''
+    mediaType = application/json)
+"
+	done
+	echo "munit:attributes 
+{
+    $children
+}
+"
+}
+
 function munitSetEvent {
 	# FIXME refactor to not subarray, move logic higher up in stack.
-	local subActions="${@:2}"
+	local subActions=(${@:2})
 	declare -A children
-	for item in $subActions; do
-		# FIXME: elements may not be 100% accurate and will probably need to be refactored.
-		case $item in
+	local length="${#subActions[@]}"
+	for ((i = 0; i < length; i++)); do
+		case "${subActions[((i))]}" in
 		payload | p)
 			children['payload']="munit:payload(value = '''#[%dw 2.0
 output application/json
@@ -432,28 +481,18 @@ mediaType = application/json)
 "
 			;;
 		variables | v)
-			# TODO figure out how to deal with subAction parameters
-			children['variables']="munit:variables {
-    munit:variable(key = '{key}'
-    value = '''#[%dw 2.0
-output application/json
----
-{}]'''
-    mediaType = application/json)
-}
-"
+			if [[ -n "$(echo "${subActions[((i + 1))]}" | grep -E '[0-9]')" ]]; then
+				local instances="${subActions[((i + 1))]}"
+				((i = i + 1))
+			fi
+			children['variables']="$(munitSetEventVariables "$instances")"
 			;;
 		attributes | a)
-			# TODO figure out how to deal with subAction parameters
-			children['attributes']="munit:attributes {
-    munit:attribute(key = '{key}'
-    value = '''#[%dw 2.0
-output application/json
----
-{}]'''
-    mediaType = application/json)
-}
-"
+			if [[ -n "$(echo "${subActions[((i + 1))]}" | grep -E '[0-9]')" ]]; then
+				local intances="${subActions[((i + 1))]}"
+				((i = i + 1))
+			fi
+			children['attributes']="$(munitSetEventAttributes "$instances")"
 			;;
 		*)
 			echo "Unsupported element: $item" >&2
