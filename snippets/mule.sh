@@ -46,8 +46,7 @@ Commands:
   scatterGather|sg [children...]        WIP: Generates a scatter-gather tempalte with the provided child elements.
     children:
         - route|r [#]                   WIP: Generates the given (number) of route templates within the parent element.
-  jsonLogger|jl [children...]           WIP: Generates a jsonlogger template with the provided children.
-    children:
+  jsonLogger|jl                         Generates a jsonlogger template
   log|l                                 WIP: Generates a log template
   flow|f [name]                         Generates a flow template with the given flow name
   sub-flow|sf [name]                    Generates a sub-flow template with the given sub-flow name
@@ -77,8 +76,8 @@ Commands:
         - return|r [type]               Generates a munit-tools:then-return template
   munit:verify|muv [children...]        Generates a munit-tools:verify template with the provided children
     children:
-        - call|c                        Generates a munit-tools:verify-call template within the parent
-        - attributes|a [#]              WIP: Generates a munit-tools:with-attributes template with the given number of munit-tools:attribute templates within the parent.
+        - call|c [#]                    Generates a munit-tools:verify-call template with the given number of munit-tools:verify-call templates  within the parent
+        - attributes|a [#]              Generates a munit-tools:with-attributes template with the given number of munit-tools:attribute templates within the parent
   munit:attributes|muat                 Generates a munit-tools:with-attributes template with a single munit-tools:attribute template
   munit:variables|muvar                 Generates a munit-tools:variables template with a single munit-tools:variable template
 EOF
@@ -281,14 +280,54 @@ function choiceRouter {
 	echo "Not Implemented"
 }
 ################################################################################
+function scatterGatherRoute {
+	# Assuming type check has been performed ahead of invocation.
+	local params="$1"
+	if [[ -z "$params" ]]; then
+		params="1"
+	fi
+	local children=""
+	for ((i = 0; i < params; i++)); do
+		children+="route {
+}
+"
+	done
+	echo "$children"
+}
 function scatterGather {
-	# TODO fill out
-	echo "Not Implemented"
+	local subActions="${@:2}"
+	local length="${#subActions[@]}"
+	declare -A children
+	for ((i = 0; i < length; i++)); do
+		case "${subActions[((i))]}" in
+		route | r)
+			if [[ -n "$(echo "${subActions[((i + 1))]}" | grep -E '[0-9]')" ]]; then
+				local instances="${subActions[((i + 1))]}"
+				((i = i + 1))
+			fi
+			children['route']="$(scatterGatherRoute "$instances")"
+			;;
+		*)
+			echo "Unsupported action: ${subActions[((i))]}" >&2
+			exit 1
+			;;
+		esac
+	done
+	echo "scatter-gather(doc:name = Scatter-Gather)
+{
+    ${children['route']}
+}
+"
+	#       scatter-gather(doc:name = Scatter-Gather
+	#                        doc:id   = 0a6cff33-437e-4a9a-b8c0-1aef9072635f)
+	#         {
 }
 ################################################################################
 function jsonLogger {
-	# TODO fill out
-	echo "Not Implemented"
+	echo "json-logger:logger(doc:name   = '{doc:name}'
+        config-ref = JSON_Logger_Config
+        message    = '{doc:name}')
+"
 }
 ################################################################################
 function log {
@@ -296,10 +335,11 @@ function log {
 	echo "Not Implemented"
 }
 ################################################################################
+# TODO add instance parameter
 function flow {
 	# TODO may have to refactor if adding support for error-handler
 	local name="$2"
-	if [[ -n "$name" ]]; then
+	if [[ -z $name ]]; then
 		name="'{name}'"
 	fi
 	echo "flow(doc:name = $name
@@ -309,9 +349,10 @@ name = $name)
 "
 }
 ################################################################################
+# TODO add instance parameter
 function subFlow {
 	local name="$2"
-	if [[ -n "$name" ]]; then
+	if [[ -z $name ]]; then
 		name="'{name}'"
 	fi
 	echo "sub-flow(doc:name = $name
@@ -333,9 +374,9 @@ function flowRef {
 		firstOption="${subActions[0]}"
 		if [[ -n "$(echo "$firstOption" | grep -E '[0-9]')" ]]; then
 			repeat="$firstOption"
-			name="placeholder"
+			name="name"
 		elif [[ -z "$name" || "$name" -eq '' ]]; then
-			name="placeholder"
+			name="name"
 		fi
 	fi
 	for ((i = 0; i < repeat; i++)); do
@@ -535,34 +576,7 @@ message = '{message}')
 	done
 	echo "$children"
 }
-function munitVerify {
-	local subActions="${@:2}"
-	local children=""
-	for item in $subActions; do
-		case $item in
-		call | c)
-			children+="
-munit-tools:verify-call(doc:name = 'Verify Call'
-atLeast = 0
-atMost = 1
-times = 1
-processor = '{processor}'
-)"
-			;;
-		attributes | a)
-			echo "attributes not yet supported" >&2
-			exit 1
-			;;
-		*)
-			echo "Unsupported assert element: $item" >&2
-			exit 1
-			;;
-		esac
-	done
-	echo "$children"
-}
 function munitWithAttributes {
-	# TODO expand with expressions to repeat number of attributes.
 	local params="$1"
 	local instances="0"
 	if [[ -n "$(echo "$params" | grep -E '[0-9]')" ]]; then
@@ -606,8 +620,56 @@ munit-tools:variables {
     ${children}
 }"
 }
+
+function munitVerifyCall {
+	local params="$1"
+	if [[ -n "$(echo "$params" | grep -E '[0-9]')" ]]; then
+		local instances="$params"
+	fi
+	if [[ -z "$instances" ]]; then
+		local intances="1"
+	fi
+	local children=""
+	for ((i = 0; i < instances; i++)); do
+		children+="munit-tools:verify-call(doc:name = 'Verify Call'
+atLeast = 0
+atMost = 1
+times = 1
+processor = '{processor}'
+)"
+	done
+	echo "$children"
+}
+function munitVerify {
+	local subActions="${@:2}"
+	local children=""
+	local length="${#subActions[@]}"
+	#for item in $subActions; do
+	for ((i = 0; i < length; i++)); do
+		case "${subActions[((i))]}" in
+		call | c)
+			if [[ -n "$(echo "${subActions[((i + 1))]}" | grep -E '[0-9]')" ]]; then
+				local instances="${subActions[((i + 1))]}"
+				((i = i + 1))
+			fi
+			children+="$(munitVerifyCall "$instances")"
+			;;
+		attributes | a)
+			if [[ -n "$(echo "${subActions[((i + 1))]}" | grep -E '[0-9]')" ]]; then
+				local instances="${subActions[((i + 1))]}"
+				((i = i + 1))
+			fi
+			children+="$(munitWithAttributes "$instances")"
+			;;
+		*)
+			echo "Unsupported assert element: $item" >&2
+			exit 1
+			;;
+		esac
+	done
+	echo "$children"
+}
 function munitMock {
-	# TODO implement
 	# TODO keeping implementation simple for now and just allowing generation of sub snippets.
 	local subActions="${@:2}"
 	local children=""
@@ -631,6 +693,7 @@ munit-tools:with-attributes {
 			;;
 		return | r)
 			# TODO need to handle type.
+			# also expand with call to munitVariables
 			children+="
 munit-tools:then-return {
     munit-tools:payload(value = '''#[{}]''')
