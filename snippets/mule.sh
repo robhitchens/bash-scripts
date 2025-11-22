@@ -12,6 +12,9 @@
 #      would need to figure out solution for emitting nested docs or would need to list all commands in help doc.
 
 # TODO could introduce a flag for declaring a single command and another flag for nesting a secondary command into the first or process the elements inside out to build the output string
+# TODO Add support for reading from stdin
+# TODO Add support for nesting children and commands using {} syntax, that should work without interference with standard bash commands.
+# TODO if adding support for stdin, might as well add a -w flag to allow stdin to be wrapped with another element
 if [[ "$1" == '--help' || "$1" == 'help' || -z "$1" ]]; then
 	# FIXME update help doc
 	cat <<EOF
