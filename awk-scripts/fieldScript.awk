@@ -1,8 +1,8 @@
-/^[ ]*Outbound Request.*$/ { 
+/^[ ]*Outbound Request|Outgoing Request.*$/ { 
     isRequest = 1 
     print ""
 }
-/^[ ]*Outbound Response.*$/ { 
+/^[ ]*Outbound Response|Outgoing Response.*$/ { 
     isRequest = 0 
     print ""
 }
