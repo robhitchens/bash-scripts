@@ -278,9 +278,57 @@ function transform {
 "
 }
 ################################################################################
+function choiceWhen {
+	local params="$1"
+	if [[ -z "$params" ]]; then
+		local instances="1"
+	fi
+	local children=""
+	for ((i = 0; i < instances; i++)); do
+		children+="when(expression='#[{expression}]')
+{
+}
+"
+	done
+	echo "$children"
+}
+function choiceOtherwise {
+	echo "otherwise {
+}"
+}
 function choiceRouter {
 	# TODO fill out
-	echo "Not Implemented"
+	# children:
+	#     - when|w [#]                    WIP: Generates the given (number) of when templates within the parent element.
+	#     - otherwise|o                   WIP: Generates a otherwise template within the parent element.
+	local subActions="${@:2}"
+	local children=""
+	local length="${#subActions[@]}"
+	for ((i = 0; i < length; i++)); do
+		case "${subActions[((i))]}" in
+		when | w)
+			if [[ -n "$(echo "${subActions[((i + 1))]}" | grep -E '[0-9]')" ]]; then
+				local instances="${subActions[((i + 1))]}"
+				((i = i + 1))
+			fi
+			children['when']="$(choiceWhen "$instances")"
+			;;
+
+		otherwise | o)
+			children['otherwise']="$(choiceOtherwise)"
+			;;
+		*)
+			echo "Unsupported choice option: ${subActions[((i))]}"
+			exit 1
+			;;
+		esac
+	done
+	echo "choice(doc:name='{doc:name}')
+{
+    ${children['when']}
+    ${children['otherwise']}
+}
+"
 }
 ################################################################################
 function scatterGatherRoute {
@@ -717,6 +765,14 @@ munit-tools:then-return {
 	echo "$children"
 }
 ################################################################################
+function dataweave {
+	echo "%dw 2.0
+output application/json
+---
+{}
+"
+}
+################################################################################
 function muleConfigTemplate {
 	echo "mule(xsi:schemaLocation = 'http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd'
      xmlns:xsi          = http://www.w3.org/2001/XMLSchema-instance
@@ -839,6 +895,9 @@ function main {
 		;;
 	munit:mock | mum)
 		munitMock "$@"
+		;;
+	dataweave | dw)
+		dataweave
 		;;
 	*)
 		echo "Unknown element: $element" >&2
