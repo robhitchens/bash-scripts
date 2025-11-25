@@ -15,8 +15,7 @@
 # TODO Add support for reading from stdin
 # TODO Add support for nesting children and commands using {} syntax, that should work without interference with standard bash commands.
 # TODO if adding support for stdin, might as well add a -w flag to allow stdin to be wrapped with another element
-if [[ "$1" == '--help' || "$1" == 'help' || -z "$1" ]]; then
-	# FIXME update help doc
+function fullDoc {
 	cat <<EOF
 Usage:
   mule [--help | help | parent [children...]] 
@@ -84,8 +83,7 @@ Commands:
   munit:attributes|muat                 Generates a munit-tools:with-attributes template with a single munit-tools:attribute template
   munit:variables|muvar                 Generates a munit-tools:variables template with a single munit-tools:variable template
 EOF
-	exit 0
-fi
+}
 
 # if [[ "$1" == "--help-short" ]]; then
 # fi
@@ -129,7 +127,7 @@ output application/java
 
 function httpRequest {
 	# FIXME refactor to not subarray, move logic higher up in stack.
-	readonly subActions="${@:2}"
+	local subActions="${@:2}"
 	declare -A children
 
 	for item in $subActions; do
@@ -232,7 +230,7 @@ output application/json
 }
 function transform {
 	# FIXME refactor to not subarray, move logic higher up in stack.
-	readonly subActions=(${@:2})
+	local subActions=(${@:2})
 	declare -A children
 
 	local length="${#subActions[@]}"
@@ -774,6 +772,10 @@ output application/json
 }
 ################################################################################
 function muleConfigTemplate {
+	local params="$1"
+	if [[ "$1" == "c" ]]; then
+		local childTemplate='{children}'
+	fi
 	echo "mule(xsi:schemaLocation = 'http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd'
      xmlns:xsi          = http://www.w3.org/2001/XMLSchema-instance
      xmlns:ee           = http://www.mulesoft.org/schema/mule/ee/core
@@ -782,10 +784,15 @@ function muleConfigTemplate {
      xmlns              = http://www.mulesoft.org/schema/mule/core
      xmlns:doc          = http://www.mulesoft.org/schema/mule/documentation)
 {
+    ${childTemplate}
 }
 "
 }
 function munitConfigTemplate {
+	local params="$1"
+	if [[ "$1" == "c" ]]; then
+		local childTemplate='{children}'
+	fi
 	echo "mule(xsi:schemaLocation = '   http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd   http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd   http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd'
      xmlns:xsi          = http://www.w3.org/2001/XMLSchema-instance
      xmlns:munit        = http://www.mulesoft.org/schema/mule/munit
@@ -793,6 +800,7 @@ function munitConfigTemplate {
      xmlns              = http://www.mulesoft.org/schema/mule/core
      xmlns:doc          = http://www.mulesoft.org/schema/mule/documentation)
 {
+    ${childTemplate}
 }
 "
 }
@@ -819,8 +827,8 @@ function run {
 	exit 1
 }
 
-function main {
-	readonly element="$1"
+function processCommand {
+	local element="$1"
 
 	case "$element" in
 	# TODO use split operation on arguments here before passing to functions.
@@ -831,9 +839,11 @@ function main {
 		runMule
 		;;
 	muleTemplate | mtmpl)
+		# TODO add processing for c flag for child template processing
 		muleConfigTemplate
 		;;
 	munitTemplate | mutmpl)
+		# TODO add processing for c flag for child template processing
 		munitConfigTemplate
 		;;
 	http:request | hr)
@@ -904,5 +914,29 @@ function main {
 		exit 1
 		;;
 	esac
+}
+
+function main {
+	# is args 'help' sub command?
+	if [[ "$1" == '--help' || "$1" == 'help' ]]; then
+		fullDoc
+		exit 0
+	fi
+	# is first argument empty and input connected to terminal?
+	if [[ "$1" == '' && -t 0 ]]; then
+		fullDoc
+		exit 0
+	fi
+
+	# FIXME need to deal with mixed arguments+pipe for expression replacement in existing document and/or wrap stdin with argument
+	local argLength="$#"
+	if ((argLength > 0)); then
+		processCommand "$@"
+		# is process connected to pipe/redirected input?
+	elif [[ ! -t 0 ]]; then
+		while read -r line; do
+			processCommand $line
+		done
+	fi
 }
 main "$@"
