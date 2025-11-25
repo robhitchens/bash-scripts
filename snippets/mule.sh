@@ -15,6 +15,8 @@
 # TODO Add support for reading from stdin
 # TODO Add support for nesting children and commands using {} syntax, that should work without interference with standard bash commands.
 # TODO if adding support for stdin, might as well add a -w flag to allow stdin to be wrapped with another element
+# TODO add examples command for snippets of how to use (including examples for reading into stdin)
+# TODO add support for reading project local config for attribute defaults.
 function fullDoc {
 	cat <<EOF
 Usage:
@@ -23,8 +25,11 @@ Usage:
 Description:
   mule generates xmq snippets for Mulesoft elements
 
+Options:
+  --help                                Prints help doc to stdout
+  -w|--wrap                             WIP: Wrap flag, wraps content read from stdin with snippet provided as args.
 Commands:
-  --help|help                           Prints help doc to stdout
+  help                                  Prints help doc to stdout
   test [name [method]]                  Not a snippet, shortcut for running munit test.
   run                                   Not a snippet, shortcut for running application with common configuration.
   muleTemplate|mtmpl                    Generates mule root element
@@ -84,9 +89,6 @@ Commands:
   munit:variables|muvar                 Generates a munit-tools:variables template with a single munit-tools:variable template
 EOF
 }
-
-# if [[ "$1" == "--help-short" ]]; then
-# fi
 
 ################################################################################
 function httpRequestBody {
@@ -380,8 +382,8 @@ function jsonLogger {
 }
 ################################################################################
 function log {
-	# TODO fill out
-	echo "Not Implemented"
+	echo "logger(level='{level}'
+message = '{message}')"
 }
 ################################################################################
 # TODO add instance parameter
