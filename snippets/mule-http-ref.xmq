@@ -1,0 +1,249 @@
+mule(xsi:schemaLocation = 'http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd'
+     xmlns:ee           = http://www.mulesoft.org/schema/mule/ee/core
+     xmlns:core         = http://www.mulesoft.org/schema/mule/core
+     xmlns:http         = http://www.mulesoft.org/schema/mule/http
+     xmlns              = http://www.mulesoft.org/schema/mule/core
+     xmlns:doc          = http://www.mulesoft.org/schema/mule/documentation
+     xmlns:xsi          = http://www.w3.org/2001/XMLSchema-instance)
+{
+    flow(name   = refFlow
+         doc:id = 308d6bf7-6be4-434a-80f3-576c5f2335dd)
+    {
+        http:basic-security-filter(doc:name          = 'Basic security filter'
+                                   doc:id            = 6676deda-e58b-4d64-941d-1300fe55f8ad
+                                   attributes        = '#[{attributes}]'
+                                   securityProviders = something
+                                   errorMappings
+                                   realm)
+    }
+    flow(name   = refFlow2
+         doc:id = 77f64331-d0b1-43bf-ba89-a459d3cdf2f1)
+    {
+        http:load-static-resource(doc:name         = 'Load static resource'
+                                  doc:id           = c06dd006-cdba-4931-be83-7324275da54f
+                                  attributes
+                                  defaultFile
+                                  errorMappings
+                                  outputEncoding
+                                  outputMimeType
+                                  resourceBasePath
+                                  target
+                                  targetValue)
+    }
+    flow(name   = refFlow3
+         doc:id = 0df6bf37-0a22-446f-824b-4900f022eebe)
+    {
+        http:polling-source(doc:name                  = 'Polling source'
+                            doc:id                    = 1c206363-184a-43b1-b86c-d35dc97208f5
+                            config-ref
+                            idExpression
+                            method
+                            onCapacityOverload
+                            outputMimeType
+                            path
+                            pollingRequestHeaders
+                            pollingRequestQueryParams
+                            pollingRequestUriParams
+                            primaryNodeOnly
+                            responseValidator
+                            splitExpression
+                            watermarkExpression)
+        {
+            scheduling-strategy(doc:description
+                                doc:name)
+            {
+                fixed-frequency(doc:description
+                                doc:name
+                                frequency
+                                startDelay
+                                timeUnit)
+            }
+            http:polling-request-body
+            http:polling-request-headers(doc:description
+                                         doc:name)
+            http:polling-request-query-params(doc:description
+                                              doc:name)
+            http:polling-request-uri-params(doc:description
+                                            doc:name)
+            http:response-validator(doc:description
+                                    doc:name)
+            {
+                http:expression-response-validator(expression)
+                http:failure-status-code-validator(values)
+                http:success-status-code-validator(values)
+            }
+            non-repeatable-stream(doc:description
+                                  doc:name)
+            {
+                annotations
+            }
+            reconnect(blocking
+                      count
+                      doc:description
+                      doc:name
+                      frequency)
+            reconnect-forever(blocking
+                              doc:description
+                              doc:name
+                              frequency)
+            redelivery-policy(doc:description
+                              doc:name
+                              idExpression
+                              maxRedeliveryCount
+                              messageDigestAlgorithm
+                              objectStore
+                              useSecureHash)
+            ee:repeatable-file-store-stream(bufferUnit
+                                            doc:description
+                                            doc:name
+                                            inMemorySize)
+            repeatable-in-memory-stream(bufferSizeIncrement
+                                        bufferUnit
+                                        doc:description
+                                        doc:name
+                                        initialBufferSize
+                                        maxBufferSize)
+            scheduling-strategy(doc:description
+                                doc:name)
+            {
+                cron(expression
+                     doc:description
+                     doc:name
+                     timeZone)
+                fixed-frequency(doc:description
+                                doc:name
+                                frequency
+                                startDelay
+                                timeUnit)
+            }
+        }
+    }
+    flow(name   = refFlow4
+         doc:id = 93fc2724-abe7-4add-8fd0-f082a2e1276b)
+    {
+        http:request(method               = GET
+                     doc:name             = Request
+                     doc:id               = 5685606d-f6ea-4471-9084-551328156f3e
+                     config-ref
+                     correlationId
+                     followRedirects
+                     http-description
+                     outputEncoding
+                     outputMimeType
+                     path
+                     requestStreamingMode
+                     responseTimeout
+                     responseValidator
+                     sendBodyMode
+                     sendCorrelationId
+                     target
+                     targetValue
+                     url)
+        {
+            error-mapping(targetType
+                          doc:description
+                          doc:name
+                          sourceType)
+            http:body
+            http:headers
+            http:query-params
+            http:uri-params
+            http:response-validator {
+                http:expression-response-validator(expression
+                                                   doc:description
+                                                   doc:name
+                                                   name)
+                http:failure-status-code-validator(values
+                                                   doc:description
+                                                   doc:name
+                                                   name)
+                http:success-status-code-validator(values
+                                                   doc:description
+                                                   doc:name
+                                                   name)
+            }
+            non-repeatable-stream
+            reconnect(blocking
+                      count
+                      doc:description
+                      doc:name
+                      frequency)
+            reconnect-forever(blocking
+                              doc:description
+                              doc:name
+                              frequency)
+            ee:repeatable-file-store-stream(bufferUnit
+                                            doc:description
+                                            doc:name
+                                            inMemorySize)
+            repeatable-in-memory-stream(bufferSizeIncrement
+                                        bufferUnit
+                                        doc:description
+                                        doc:name
+                                        initialBufferSize
+                                        maxBufferSize)
+        }
+    }
+    flow(name   = refFlow1
+         doc:id = 85335ec0-3d6d-4c48-b97d-93f7c1a5a2b4)
+    {
+        http:listener(doc:name              = Listener
+                      doc:id                = 6198ba30-7a2c-4b6f-86d4-f540bc756045
+                      config-ref            = wsfs-clients-process-api
+                      allowedMethods
+                      outputEncoding
+                      outputMimeType
+                      path
+                      primaryNodeOnly
+                      responseStreamingMode)
+        {
+            http:error-response(doc:description
+                                doc:name
+                                reasonPhrase
+                                statusCode)
+            {
+                http:body
+                http:headers
+            }
+            http:response(doc:description
+                          doc:name
+                          reasonPhrase
+                          statusCode)
+            {
+                http:body
+                http:headers
+            }
+            non-repeatable-stream(doc:description
+                                  doc:name)
+            {
+                annotations
+            }
+            reconnect(blocking
+                      count
+                      doc:description
+                      doc:name
+                      frequency)
+            reconnect-forever(blocking
+                              doc:description
+                              doc:name
+                              frequency)
+            redelivery-policy(doc:description
+                              doc:name
+                              idExpression
+                              maxRedeliveryCount
+                              messageDigestAlgorithm
+                              objectStore
+                              useSecureHash)
+            ee:repeatable-file-store-stream(bufferUnit
+                                            doc:description
+                                            doc:name
+                                            inMemorySize)
+            repeatable-in-memory-stream(bufferSizeIncrement
+                                        bufferUnit
+                                        doc:description
+                                        doc:name
+                                        initialBufferSize
+                                        maxBufferSize)
+        }
+    }
+}
