@@ -1,0 +1,225 @@
+mule(xsi:schemaLocation = 'http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd'
+     xmlns:xsi          = http://www.w3.org/2001/XMLSchema-instance
+     xmlns:validation   = http://www.mulesoft.org/schema/mule/validation
+     xmlns              = http://www.mulesoft.org/schema/mule/core
+     xmlns:doc          = http://www.mulesoft.org/schema/mule/documentation)
+{
+    flow(name   = refFlow1
+         doc:id = bb962681-10a0-4c4e-87fd-48b5340eabdc)
+    {
+        validation:is-url(doc:name      = 'Is URL'
+                          doc:id        = c206344d-7d49-42bd-b0f9-808b256b4716
+                          config-ref
+                          errorMappings
+                          message
+                          url)
+    }
+    flow(name   = refFlow
+         doc:id = 914b5bfd-56d5-4372-9d82-232a0c454b9b)
+    {
+        validation:is-ip(doc:name      = 'Is IP'
+                         doc:id        = f6f8e7c9-5270-4556-9c55-2a2d39a56396
+                         config-ref
+                         errorMappings
+                         ip
+                         message)
+    }
+    flow(name   = refFlow2
+         doc:id = 2d2250e7-ece3-4809-9415-7954db029714)
+    {
+        validation:is-allowed-ip(doc:name      = 'Is allowed ip'
+                                 doc:id        = d76f996c-2a1c-44e7-8e29-d92a485f1c2c
+                                 allowList
+                                 config-ref
+                                 errorMappings
+                                 ipAddress
+                                 message)
+    }
+    flow(name   = refFlow3
+         doc:id = 0ef953da-07cb-4cb1-bd84-19cd218990aa)
+    {
+        validation:is-blank-string(doc:name      = 'Is blank string'
+                                   doc:id        = 4e538a57-bfab-41ad-9e7d-0e95507e15dc
+                                   config-ref
+                                   errorMappings
+                                   message
+                                   value)
+    }
+    flow(name   = refFlow4
+         doc:id = 20b2e6d0-4597-45bb-912d-5820af13bce1)
+    {
+        validation:is-elapsed(time          = 0
+                              timeUnit
+                              doc:name      = 'Is elapsed'
+                              doc:id        = a119b58f-28ff-4a49-9fb6-f30ba502719f
+                              config-ref
+                              errorMappings
+                              message
+                              since)
+    }
+    flow(name   = refFlow6
+         doc:id = e415f6fd-da96-427d-9be0-942d808180db)
+    {
+        validation:is-empty-collection(doc:name      = 'Is empty collection'
+                                       doc:id        = 12c836a3-b81e-421d-9f38-bc813326fe98
+                                       config-ref
+                                       errorMappings
+                                       message
+                                       values)
+    }
+    flow(name   = refFlow7
+         doc:id = 23cb6dc3-19a9-4e05-bbdb-f482a2989b26)
+    {
+        validation:is-false(doc:name      = 'Is false'
+                            doc:id        = 32012496-0f1a-4063-a0b6-7ba701b6d073
+                            config-ref
+                            errorMappings
+                            expression
+                            message)
+    }
+    flow(name   = refFlow8
+         doc:id = 795cf061-8644-4d71-b171-58c301db07b6)
+    {
+        validation:is-not-blank-string(doc:name      = 'Is not blank string'
+                                       doc:id        = a5237bc1-bb7f-47dc-a1e1-d23be542822c
+                                       config-ref
+                                       errorMappings
+                                       message
+                                       value)
+    }
+    flow(name   = refFlow9
+         doc:id = 8923856f-863d-4e8d-9064-750b80629561)
+    {
+        validation:is-not-denied-ip(doc:name      = 'Is not denied ip'
+                                    doc:id        = 77848aa7-f566-43d9-b9a8-a9142cb4f70e
+                                    config-ref
+                                    denyList
+                                    errorMappings
+                                    ipAddress
+                                    message)
+    }
+    flow(name   = refFlow10
+         doc:id = 2192b191-e8b3-4e1c-ab07-fcfe97085daa)
+    {
+        validation:is-not-elapsed(time          = 0
+                                  timeUnit
+                                  doc:name      = 'Is not elapsed'
+                                  doc:id        = 1ee44f08-429c-4d1f-8f12-54b242a481d4
+                                  config-ref
+                                  errorMappings
+                                  message
+                                  since)
+    }
+    flow(name   = refFlow11
+         doc:id = 381440d8-1b1c-4edf-a3f8-2017ab7d0abc)
+    {
+        validation:is-not-empty-collection(doc:name      = 'Is not empty collection'
+                                           doc:id        = 97b4d144-de1d-4fe6-af76-902b916492ad
+                                           config-ref
+                                           errorMappings
+                                           message
+                                           values)
+    }
+    flow(name   = refFlow12
+         doc:id = 9b04860c-5adc-49a7-a13c-c38d2a4904f3)
+    {
+        validation:is-not-null(doc:name      = 'Is not null'
+                               doc:id        = 62229205-daee-49f7-b4df-be9e0e1118ab
+                               config-ref
+                               errorMappings
+                               message
+                               value)
+    }
+    flow(name   = refFlow13
+         doc:id = 18891ad8-c72d-4127-bb7c-76071c321aad)
+    {
+        validation:is-null(doc:name      = 'Is null'
+                           doc:id        = 6f0c6c5f-9e4e-4af9-8397-95a313fdd56d
+                           config-ref
+                           errorMappings
+                           message
+                           value)
+    }
+    flow(name   = refFlow5
+         doc:id = 93707147-82d4-4c2a-a888-c03a6ba493c0)
+    {
+        validation:is-email(doc:name      = 'Is email'
+                            doc:id        = feddd063-b196-483c-83f0-809726ab2223
+                            config-ref
+                            email
+                            errorMappings
+                            message)
+    }
+    flow(name   = refFlow14
+         doc:id = 809d1672-0bc2-407e-becc-abc038cca3f7)
+    {
+        validation:is-number(numberType
+                             doc:name      = 'Is number'
+                             doc:id        = d29cc9d9-575b-470d-91f3-1b386cd2f27a
+                             config-ref
+                             errorMappings
+                             locale
+                             maxValue
+                             message
+                             minValue
+                             pattern
+                             value)
+    }
+    flow(name   = refFlow15
+         doc:id = 16a0e55e-9222-47f9-ae0e-e510f5840545)
+    {
+        validation:is-time(doc:name      = 'Is time'
+                           doc:id        = 1a10663f-409c-411a-b4a7-fcd259ebec75
+                           config-ref
+                           errorMappings
+                           locale
+                           message
+                           pattern
+                           time)
+    }
+    flow(name   = refFlow16
+         doc:id = f0ce9f91-7fd0-41fe-bcd6-1df9605d82c0)
+    {
+        validation:is-true(doc:name      = 'Is true'
+                           doc:id        = 7a4b7850-a6b8-44cb-902e-f7fa9e233de5
+                           config-ref
+                           errorMappings
+                           expression
+                           message)
+    }
+    flow(name   = refFlow17
+         doc:id = a38ad8bd-c801-451f-a3b9-775ab4fd3ceb)
+    {
+        validation:matches-regex(doc:name      = 'Matches regex'
+                                 doc:id        = b7c00b8e-c371-449f-987f-18476e8cc89c
+                                 caseSensitive
+                                 config-ref
+                                 errorMappings
+                                 message
+                                 regex
+                                 value)
+    }
+    flow(name   = refFlow2
+         doc:id = 755191c4-bfce-4b0f-9163-c7dd358f8dad)
+    {
+        validation:is-allowed-ip(doc:name      = 'Is allowed ip'
+                                 doc:id        = cfbd18eb-4e1c-4923-9c3c-a330d7b7dfb8
+                                 allowList
+                                 config-ref
+                                 errorMappings
+                                 ipAddress
+                                 message)
+    }
+    flow(name   = refFlow18
+         doc:id = 7ccee187-f4c7-43d0-92da-6972743a3111)
+    {
+        validation:validate-size(doc:name      = 'Validate size'
+                                 doc:id        = de608b55-0ee0-4f8b-aea7-07bf9bb8a4f1
+                                 config-ref
+                                 errorMappings
+                                 max
+                                 message
+                                 min
+                                 value)
+    }
+}
