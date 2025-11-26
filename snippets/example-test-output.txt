@@ -1,0 +1,99 @@
+[INFO] Running MULE_EE with version 4.9.0
+[INFO] --add-opens: java.base/java.lang.invoke=org.mule.runtime.jpms.utils
+[INFO] --add-opens: java.base/java.lang.reflect=org.mule.runtime.jpms.utils
+[INFO] --add-opens: java.base/java.lang=org.mule.runtime.jpms.utils
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+ERROR StatusConsoleListener Error processing element Log4J2CloudhubLogAppender ([Appenders: null]): CLASS_NOT_FOUND
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+ERROR StatusConsoleListener Unable to locate appender "CLOUDHUB" for logger config "root"
+
+
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+ERROR StatusConsoleListener Error processing element Log4J2CloudhubLogAppender ([Appenders: null]): CLASS_NOT_FOUND
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+ERROR StatusConsoleListener Unable to locate appender "CLOUDHUB" for logger config "root"
+INFO StatusConsoleListener Found logging config for application 'domain/default' at 'file:/home/rob/mule/impl/wsfs-clients-process-api/target/classes/log4j2.xml'
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+ERROR StatusConsoleListener Error processing element Log4J2CloudhubLogAppender ([Appenders: null]): CLASS_NOT_FOUND
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+ERROR StatusConsoleListener Unable to locate appender "CLOUDHUB" for logger config "root"
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+INFO StatusConsoleListener Found logging config for application 'domain/default/app/wsfs-clients-process-api' at 'file:/home/rob/mule/impl/wsfs-clients-process-api/target/munitworkingdir-14458193497039/container/apps/wsfs-clients-process-api/log4j2.xml'
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+ERROR StatusConsoleListener Error processing element Log4J2CloudhubLogAppender ([Appenders: null]): CLASS_NOT_FOUND
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+ERROR StatusConsoleListener Unable to locate appender "CLOUDHUB" for logger config "root"
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+Nov 26, 2025 12:27:28 PM org.mule.weave.v2.el.WeaveScriptingParser $anonfun$parseWithCache$2
+WARNING: Import directive `dw::core::Objects` is not being used. at WeaveLocation([index: 296, line: 12, column: 1],[index: 342, line: 12, column: 47],dw::util::Diff)
+Nov 26, 2025 12:27:28 PM org.mule.weave.v2.el.WeaveScriptingParser $anonfun$parseWithCache$2
+WARNING: `Internal` is experimental this means that it may change or even be removed in the future. Use it at your own risk. at WeaveLocation([index: 50, line: -1, column: -1],[index: 61, line: -1, column: -1],anonymous)
+Nov 26, 2025 12:27:28 PM org.mule.weave.v2.el.WeaveScriptingParser $anonfun$parseWithCache$2
+WARNING: Import directive `dw::core::Objects` is not being used. at WeaveLocation([index: 296, line: 12, column: 1],[index: 342, line: 12, column: 47],dw::util::Diff)
+Nov 26, 2025 12:27:28 PM org.mule.weave.v2.el.WeaveScriptingParser $anonfun$parseWithCache$2
+WARNING: `Internal` is experimental this means that it may change or even be removed in the future. Use it at your own risk. at WeaveLocation([index: 50, line: -1, column: -1],[index: 61, line: -1, column: -1],anonymous)
+Nov 26, 2025 12:27:28 PM org.mule.weave.v2.el.WeaveScriptingParser $anonfun$parseWithCache$2
+WARNING: Import directive `dw::core::Objects` is not being used. at WeaveLocation([index: 296, line: 12, column: 1],[index: 342, line: 12, column: 47],dw::util::Diff)
+Nov 26, 2025 12:27:28 PM org.mule.weave.v2.el.WeaveScriptingParser $anonfun$parseWithCache$2
+WARNING: `Internal` is experimental this means that it may change or even be removed in the future. Use it at your own risk. at WeaveLocation([index: 50, line: -1, column: -1],[index: 61, line: -1, column: -1],anonymous)
+Nov 26, 2025 12:27:28 PM org.mule.weave.v2.el.WeaveScriptingParser $anonfun$parseWithCache$2
+WARNING: Import directive `dw::core::Objects` is not being used. at WeaveLocation([index: 296, line: 12, column: 1],[index: 342, line: 12, column: 47],dw::util::Diff)
+Nov 26, 2025 12:27:28 PM org.mule.weave.v2.el.WeaveScriptingParser $anonfun$parseWithCache$2
+WARNING: `Internal` is experimental this means that it may change or even be removed in the future. Use it at your own risk. at WeaveLocation([index: 50, line: -1, column: -1],[index: 61, line: -1, column: -1],anonymous)
+Nov 26, 2025 12:27:28 PM org.mule.weave.v2.el.WeaveScriptingParser $anonfun$parseWithCache$2
+WARNING: Import directive `dw::core::Objects` is not being used. at WeaveLocation([index: 296, line: 12, column: 1],[index: 342, line: 12, column: 47],dw::util::Diff)
+Nov 26, 2025 12:27:28 PM org.mule.weave.v2.el.WeaveScriptingParser $anonfun$parseWithCache$2
+WARNING: `Internal` is experimental this means that it may change or even be removed in the future. Use it at your own risk. at WeaveLocation([index: 50, line: -1, column: -1],[index: 61, line: -1, column: -1],anonymous)
+Nov 26, 2025 12:27:28 PM org.mule.weave.v2.el.WeaveScriptingParser $anonfun$parseWithCache$2
+WARNING: Import directive `dw::core::Objects` is not being used. at WeaveLocation([index: 296, line: 12, column: 1],[index: 342, line: 12, column: 47],dw::util::Diff)
+Nov 26, 2025 12:27:28 PM org.mule.weave.v2.el.WeaveScriptingParser $anonfun$parseWithCache$2
+WARNING: `Internal` is experimental this means that it may change or even be removed in the future. Use it at your own risk. at WeaveLocation([index: 50, line: -1, column: -1],[index: 61, line: -1, column: -1],anonymous)
+Nov 26, 2025 12:27:28 PM org.mule.weave.v2.el.WeaveScriptingParser $anonfun$parseWithCache$2
+WARNING: Import directive `dw::core::Objects` is not being used. at WeaveLocation([index: 296, line: 12, column: 1],[index: 342, line: 12, column: 47],dw::util::Diff)
+Nov 26, 2025 12:27:28 PM org.mule.weave.v2.el.WeaveScriptingParser $anonfun$parseWithCache$2
+WARNING: `Internal` is experimental this means that it may change or even be removed in the future. Use it at your own risk. at WeaveLocation([index: 50, line: -1, column: -1],[index: 61, line: -1, column: -1],anonymous)
+================================================================================
+=== Running suite: put-organization-client-test-suite.xml                    ===
+================================================================================
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Running test: map-update-salesforce-account-request-body-happy-path-test - {d+
++ escription}                                                                  +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+================================================================================
+= Tests run: 1 - Failed: 0 - Errors: 0 - Skipped: 0 - Time elapsed: 0.25 sec   =
+================================================================================
+
+
+
+
+
+
+[INFO] ===============================================================================
+[INFO] MUnit Coverage Summary
+[INFO] ===============================================================================
+[INFO]  * Resources: 16 - Flows: 61 - Processors: 222
+[INFO]  * Application Coverage: 00.45%
+[INFO] ====================================================================================
+[INFO] MUnit Run Summary - Product: MULE_EE, Version: 4.9.0
+[INFO] ====================================================================================
+[INFO]  >> put-organization-client-test-suite.xml test result: Tests: 1, Errors: 0, Failures: 0, Skipped: 0
+[INFO]
+[INFO] ====================================================================================
+[INFO]  > Tests:        1
+[INFO]  > Errors:       0
+[INFO]  > Failures:     0
+[INFO]  > Skipped:      0
+[INFO] ====================================================================================
+[INFO]
+[INFO] >>> munit:3.3.2:coverage-report (test) > [munit]test @ wsfs-clients-process-api >>>
+

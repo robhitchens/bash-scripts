@@ -1,0 +1,372 @@
+mule(xsi:schemaLocation = 'http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd'
+     xmlns:json-logger  = http://www.mulesoft.org/schema/mule/json-logger
+     xmlns:validation   = http://www.mulesoft.org/schema/mule/validation
+     xmlns:tracking     = http://www.mulesoft.org/schema/mule/ee/tracking
+     xmlns:batch        = http://www.mulesoft.org/schema/mule/batch
+     xmlns:ee           = http://www.mulesoft.org/schema/mule/ee/core
+     xmlns:http         = http://www.mulesoft.org/schema/mule/http
+     xmlns              = http://www.mulesoft.org/schema/mule/core
+     xmlns:doc          = http://www.mulesoft.org/schema/mule/documentation
+     xmlns:xsi          = http://www.w3.org/2001/XMLSchema-instance)
+{
+    flow(name   = core-refFlow
+         doc:id = 3e39e194-c30c-4e1d-8491-8c73b55f38ae)
+    {
+        batch:job(jobName            = core-refBatch_Job
+                  doc:id             = a0fb162f-1c78-42a2-9ee9-33488c4db102
+                  blockSize
+                  doc:description
+                  doc:name
+                  jobInstanceId
+                  maxConcurrency
+                  maxFailedRecords
+                  schedulingStrategy
+                  target
+                  targetValue        = #[payload])
+        {
+            batch:process-records(doc:description
+                                  doc:name)
+            {
+                batch:step(name             = Batch_Step1
+                           doc:id           = 5e670eed-32af-464b-9327-962cab275e1b
+                           acceptExpression
+                           acceptPolicy
+                           doc:description
+                           doc:name)
+                batch:step(name   = Batch_Step
+                           doc:id = fb5f2a42-cfd3-4fb4-9456-43f9a4e9eed5)
+                {
+                    batch:aggregator(doc:name          = 'Batch Aggregator'
+                                     doc:id            = 7f7a4888-4b3e-4892-b8c1-1d5961a57b81
+                                     doc:description
+                                     preserveMimeTypes
+                                     size
+                                     streaming)
+                }
+            }
+        }
+    }
+    flow(name   = core-refFlow1
+         doc:id = 715e89b3-3092-4eda-a682-286f204bef5a)
+    {
+        tracking:custom-event(doc:name        = 'Custom Business Event'
+                              doc:id          = 11794d25-1ef9-4807-b5fd-64b3feb4515a
+                              doc:description
+                              event-name
+                              inherits)
+    }
+    flow(name   = core-refFlow3
+         doc:id = d26272f0-bc02-454b-95ef-c60a9018d94b)
+    {
+        flow-ref(doc:name = 'Flow Reference'
+                 doc:id   = 11db1de2-fa25-41ff-b8e9-3d2a95064c46)
+    }
+    flow(name   = core-refFlow4
+         doc:id = 369b877c-4454-437f-bf3b-26a08dcee772)
+    {
+        idempotent-message-validator(doc:name        = 'Idempotent Message Validator'
+                                     doc:id          = fdc4e1db-0698-4ffb-b889-4fd3bc9a45e8
+                                     doc:description
+                                     idExpression
+                                     objectStore
+                                     storePrefix
+                                     valueExpression)
+    }
+    flow(name   = core-refFlow5
+         doc:id = b2be0747-48c8-4502-a7f3-fcf6e3f15a4b)
+    {
+        ee:invalidate-cache(doc:name            = 'Invalidate Cache'
+                            doc:id              = b0cfc1d0-31a5-4a30-955c-5236e157077f
+                            cachingStrategy-ref
+                            doc:description)
+    }
+    flow(name   = core-refFlow6
+         doc:id = 5f96816c-145c-4f69-897b-69a592515188)
+    {
+        ee:invalidate-key(doc:name                = 'Invalidate Key'
+                          doc:id                  = 640203a4-ccd0-4354-8c54-42b77e99c95c
+                          cachingStrategy-ref
+                          doc:description
+                          keyGenerationExpression
+                          keyGenerator-ref)
+    }
+    flow(name   = core-refFlow7
+         doc:id = c2a6efc5-dfc4-4175-b38a-b9fa83e4c0a1)
+    {
+        logger(level           = INFO
+               doc:name        = Logger
+               doc:id          = 7a137bd0-45da-4746-b0c5-7042bc8ff3e7
+               category
+               doc:description
+               message)
+    }
+    flow(name   = core-refFlow8
+         doc:id = a53f6eec-9ce5-4491-baa0-ea53e53d442d)
+    {
+        parse-template(doc:name        = 'Parse Template'
+                       doc:id          = 2f530705-bcdf-4b3f-a75c-cd083f1ee8f6
+                       doc:description
+                       location
+                       outputEncoding
+                       outputMimeType
+                       target
+                       targetValue)
+    }
+    flow(name   = core-refFlow9
+         doc:id = 930f9152-13fb-4404-8a0d-9a19d179d77f)
+    {
+        // scope
+        tracking:transaction(doc:name        = 'Set Transaction Id'
+                             doc:id          = 1c200398-f860-4380-9ca3-5986526bbd18
+                             doc:description
+                             id)
+    }
+    flow(name   = core-refFlow10
+         doc:id = b149eff9-44df-45e9-acf2-9a0963c03a7d)
+    {
+        ee:transform(doc:name = 'Transform Message'
+                     doc:id   = 3637cf3e-9f26-4c07-a856-99a00d300bf7)
+        {
+            ee:message(doc:description
+                       doc:name)
+            {
+                ee:set-payload(doc:description
+                               doc:name
+                               resource) = '%dw 2.0
+                                            output application/java
+                                            ---
+                                            {
+                                            }'
+            }
+            ee:variables(doc:description
+                         doc:name)
+            {
+                ee:set-variable(variableName
+                                doc:description
+                                doc:name
+                                resource)
+            }
+        }
+    }
+    flow(name   = core-refFlow11
+         doc:id = b5c04b5b-ffad-4c9c-9ea5-7c694edab613)
+    {
+        scheduler(doc:name                    = Scheduler
+                  doc:id                      = 817b5421-dba2-423e-9f35-2297f9ea125c
+                  disallowConcurrentExecution = false)
+        {
+            scheduling-strategy(doc:description
+                                doc:name)
+            {
+                fixed-frequency(doc:description
+                                doc:name
+                                frequency
+                                startDelay
+                                timeUnit)
+            }
+        }
+    }
+    error-handler(name   = core-refError_Handler
+                  doc:id = e1a2ac9d-64b6-48cc-80c0-ec5d8fd72197)
+    {
+        on-error-continue(enableNotifications = true
+                          logException        = true
+                          doc:name            = 'On Error Continue'
+                          doc:id              = 7ebca2ba-eac6-4796-9318-da3f3d319949
+                          name
+                          type
+                          when)
+        on-error-propagate(enableNotifications = true
+                           logException        = true
+                           doc:name            = 'On Error Propagate'
+                           doc:id              = f81a32e4-52e7-47ef-bb6b-0303c2b9481a
+                           name
+                           type
+                           when)
+        {
+            raise-error(doc:name    = 'Raise error'
+                        doc:id      = ac8c5670-cf1b-4478-8fca-bdac59746527
+                        description
+                        type)
+        }
+    }
+    flow(name   = core-refFlow2
+         doc:id = 2e762755-5995-460e-9b81-79df38c488de)
+    {
+        // scope
+        ee:dynamic-evaluate(doc:name    = 'Dynamic Evaluate'
+                            doc:id      = 047a6e86-89e5-4216-ad1c-5587dbf59887
+                            expression
+                            target
+                            targetValue)
+    }
+    flow(name   = core-refFlow12
+         doc:id = 3d89c3ea-63a6-455b-88a0-8f7941ea644c)
+    {
+        // scope
+        choice(doc:name                       = Choice
+               doc:id                         = 2c76cc6d-517c-4f77-b922-d4fee8ce2c0b
+               tracking:enable-default-events
+               doc:description)
+        {
+            when
+            otherwise
+        }
+    }
+    flow(name   = core-refFlow13
+         doc:id = adf9c6ad-d26c-4932-8a99-80c4bf3683a6)
+    {
+        // scope
+        first-successful(doc:name                       = 'First Successful'
+                         doc:id                         = 4b0b0e31-6d88-4eb7-bf32-19380d0b66de
+                         tracking:enable-default-events
+                         doc:description)
+    }
+    flow(name   = core-refFlow14
+         doc:id = 382887ee-c304-44d0-b3ee-034d247c45b8)
+    {
+        // scope
+        round-robin(doc:name                       = 'Round Robin'
+                    doc:id                         = ee24bf4c-875f-4c7b-afb6-3b04923e5565
+                    tracking:enable-default-events
+                    doc:description)
+    }
+    flow(name   = core-refFlow15
+         doc:id = 5d6926fc-9c91-4108-9a0a-8a276d6a28f8)
+    {
+        // scope
+        scatter-gather(doc:name        = Scatter-Gather
+                       doc:id          = 8e67b861-4c68-44cf-ace2-6d525c3848bd
+                       maxConcurrency
+                       target
+                       targetValue     = #[payload]
+                       timeout
+                       doc:description)
+    }
+    flow(name   = core-refFlow16
+         doc:id = 6a28f59f-fca5-423a-9012-a17309f128b3)
+    {
+        // scope?
+        validation:all(doc:name      = All
+                       doc:id        = 2b43ea11-5710-48e3-b7dd-1ea2040142f0
+                       errorMappings)
+    }
+    flow(name   = core-refFlow18
+         doc:id = aa8ed021-087d-4076-b9f2-761c82cb19a3)
+    {
+        // scope
+        async(doc:name       = Async
+              doc:id         = d7b0ba96-18a0-429e-a287-a34d779db794
+              maxConcurrency
+              name)
+    }
+    flow(name   = core-refFlow19
+         doc:id = 726065d6-519f-4226-9394-05fd55ef65c5)
+    {
+        // scope
+        ee:cache(doc:name            = Cache
+                 doc:id              = d8842486-457f-49de-9fc9-20101505a082
+                 cachingStrategy-ref
+                 filterExpression)
+    }
+    // scope
+    flow(name           = core-refFlow20
+         doc:id         = 741b7f70-32ae-4a4e-a26c-c76bdca10c6c
+         initialState
+         maxConcurrency)
+    flow(name   = core-refFlow21
+         doc:id = 36dfa23a-f636-44d5-8eaa-2417d68fff2d)
+    {
+        // scope
+        foreach(doc:name                = 'For Each'
+                doc:id                  = 9e436848-67f3-470b-acd0-f7b9d2cfc519
+                batchSize
+                collection
+                counterVariableName
+                rootMessageVariableName)
+    }
+    flow(name   = core-refFlow22
+         doc:id = c2f09d50-f4f9-4598-854b-2538b16b4fa1)
+    {
+        // scope
+        json-logger:logger-scope(doc:name         = 'Logger scope'
+                                 doc:id           = 671f0474-ac7b-4b89-9b53-1b97012eab0a
+                                 category
+                                 configurationRef
+                                 correlationId
+                                 errorMappings
+                                 priority
+                                 scopeTracePoint
+                                 target
+                                 targetValue)
+    }
+    flow(name   = core-refFlow23
+         doc:id = 6aff09ef-9c54-44c1-9a1a-9b22e6fbbabb)
+    {
+        // scope
+        parallel-foreach(doc:name       = 'Parallel For Each'
+                         doc:id         = c8b24141-48b5-4c62-a8ba-4adfa07b5a08
+                         collection
+                         maxConcurrency
+                         target
+                         targetValue
+                         timeout)
+    }
+    // scope
+    sub-flow(name           = core-refSub_Flow
+             doc:id         = 5fdbe30b-cfcc-4f1f-8fc8-7231ddfdf45b
+             initialState
+             maxConcurrency)
+    flow(name   = core-refFlow24
+         doc:id = f739f4ae-dd54-4f3d-b5de-53f8a9728e3f)
+    {
+        // scope
+        try(doc:name            = Try
+            doc:id              = 131775d8-8a66-4627-83c3-8aa2e1c19340
+            transactionType
+            transactionalAction)
+    }
+    flow(name   = core-refFlow25
+         doc:id = 31ac134a-cdfd-449c-af6e-b036f3478d34)
+    {
+        // scope
+        until-successful(maxRetries           = 5
+                         doc:name             = 'Until Successful'
+                         doc:id               = 0ca0eef4-a84d-4c78-a166-004531cdb7d3
+                         millisBetweenRetries)
+    }
+    flow(name   = core-refFlow26
+         doc:id = 099d631f-ef71-4486-906e-148e29e10ee8)
+    {
+        remove-variable(doc:name     = 'Remove Variable'
+                        doc:id       = d5cf675d-c0bb-43da-a08b-0cb3c525cd75
+                        variableName)
+    }
+    flow(name   = core-refFlow27
+         doc:id = 6c576fdc-9cf0-4659-ba47-c0b65b68374e)
+    {
+        set-payload(value    = #[payload]
+                    doc:name = 'Set Payload'
+                    doc:id   = ae59cd04-21df-438d-995d-9ae8eba78fdb
+                    encoding
+                    mimeType)
+    }
+    flow(name   = core-refFlow28
+         doc:id = d4c7ddcc-9f95-42c8-9b62-c31f5e0016f9)
+    {
+        set-variable(value
+                     doc:name     = 'Set Variable'
+                     doc:id       = cb04702b-9815-4549-b117-6c512747aad0
+                     encoding
+                     mimeType
+                     variableName)
+    }
+    flow(name   = core-refFlow17
+         doc:id = 2926c4c3-004c-4dd9-bf12-a18bec24f05b)
+    {
+        // scope
+        validation:any(doc:name      = Any
+                       doc:id        = 38249597-590f-42d5-9677-5f7934601791
+                       errorMappings)
+    }
+}

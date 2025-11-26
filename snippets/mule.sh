@@ -28,6 +28,7 @@ Description:
 Options:
   --help                                Prints help doc to stdout
   -w|--wrap                             WIP: Wrap flag, wraps content read from stdin with snippet provided as args.
+
 Commands:
   help                                  Prints help doc to stdout
   test [name [method]]                  Not a snippet, shortcut for running munit test.
@@ -808,6 +809,12 @@ function munitConfigTemplate {
 }
 
 function runMunitTest {
+	# TODO add additional arguments:
+	# * list - list tests recursively with index in src/test/munit
+	# * list units file|index - parse xml and list out names of munit tests
+	# * watch [files...] [testname] - watch a set of files for change events and run tests. (optional tools to help with that: fswatch, Watchman, inotify-tools)
+	# * -l|--loop  - flag to run a specified test or suite(s) until killed with ^D
+	# * -m|--minimal - flag to limit test output to just relevant test information NOTE: will try piping command output through function with IFS=$'\n' read -r line to stream output to stding and filter in realtime
 	local args=(${@:2})
 	local command=""
 	if [[ -n ${args[0]} ]]; then
