@@ -828,13 +828,28 @@ function munitConfigTemplate {
 "
 }
 
+function filterTestOutput {
+	local display=0
+	while IFS=$'\n' read -r line; do
+		# TODO probably should use regexes to better forward and backwards compatible with different versions of MULE
+		if [[ "$line" == '[INFO] Running MULE_EE with version 4.9.0' ]]; then
+			display=1
+		fi
+		if [[ "$line" == '[INFO] >>> munit:3.3.2:coverage-report (test) > [munit]test @ wsfs-clients-process-api >>>' ]]; then
+			display=0
+		fi
+		if ((display == 1)); then
+			echo "${line/\[INFO\]/}"
+		fi
+	done
+}
+
 function runMunitTest {
+	# NOTE: command assumes that mvn is installed.
 	# TODO add additional arguments:
 	# * list - list tests recursively with index in src/test/munit
 	# * list units file|index - parse xml and list out names of munit tests
 	# * watch [files...] [testname] - watch a set of files for change events and run tests. (optional tools to help with that: fswatch, Watchman, inotify-tools)
-	# * -l|--loop  - flag to run a specified test or suite(s) until killed with ^D
-	# * -m|--minimal - flag to limit test output to just relevant test information NOTE: will try piping command output through function with IFS=$'\n' read -r line to stream output to stding and filter in realtime
 	local args=(${@:2})
 	local command=""
 	if [[ -n ${args[0]} ]]; then
@@ -843,8 +858,23 @@ function runMunitTest {
 	if [[ -n ${args[1]} ]]; then
 		command+="#${args[1]}"
 	fi
-	echo "running: mvn test $command"
-	mvn test $command
+
+	local commandString=""
+	if [[ -n "$testVerbose" ]]; then
+		commandString+="mvn test $command"
+	else
+		commandString+="mvn test $command | filterTestOutput"
+		#commandString+="cat ./snippets/example-test-output.txt | filterTestOutput"
+	fi
+	if [[ -n "$testTime" ]]; then
+		commandString="time ($commandString)"
+	fi
+	if [[ -n "$testLoop" ]]; then
+		commandString="while true; do $commandString; sleep 1; done"
+	fi
+
+	echo "running: $commandString"
+	eval "$commandString"
 }
 
 function run {
@@ -957,10 +987,28 @@ function main {
 		exit 0
 	fi
 
-	while getopts "w" flag; do
+	local skipCount=0
+	while getopts "wvlt" flag; do
 		case "$flag" in
 		w)
 			wrap=true
+			((skipCount += 1))
+			;;
+		v)
+			testVerbose=true
+			((skipCount += 1))
+			;;
+		l)
+			testLoop=true
+			((skipCount += 1))
+			;;
+		t)
+			testTime=true
+			((skipCount += 1))
+			;;
+		*)
+			echo "Unknown flag: $flag" >&2
+			exit 1
 			;;
 		esac
 	done
@@ -979,7 +1027,9 @@ function main {
 		#echo "$template" | awk "{sub(/{children}/, \"$content\")}1"
 		echo "${template/:children:/$content}"
 	elif ((argLength > 0)); then
-		processCommand "$@"
+		local input=($@)
+		local inputLen="$#"
+		processCommand "${input[@]:((skipCount)):((inputLen - skipCount))}"
 		# is process connected to pipe/redirected input?
 	elif [[ ! -t 0 ]]; then
 		# FIXME rework to preprocess for curly braces and batch up runs of processCommand
