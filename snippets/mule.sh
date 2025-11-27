@@ -17,6 +17,7 @@
 # TODO if adding support for stdin, might as well add a -w flag to allow stdin to be wrapped with another element
 # TODO add examples command for snippets of how to use (including examples for reading into stdin)
 # TODO add support for reading project local config for attribute defaults.
+# TODO add simple support to wrap function to take in array of attributes to find and replace.
 function fullDoc {
 	cat <<EOF
 Usage:
@@ -33,8 +34,8 @@ Commands:
   help                                  Prints help doc to stdout
   test [name [method]]                  Not a snippet, shortcut for running munit test.
   run                                   Not a snippet, shortcut for running application with common configuration.
-  muleTemplate|mtmpl                    Generates mule root element
-  munitTemplate|mutmpl                  Generates munit root element
+  muleRoot|mr                           Generates mule root element
+  munitRoot|mur                         Generates munit root element
   http:request|hr [children...]         Generates http:request template with the provided valid child element templates.
     children:
         - body|b                        Generates an http:body child element within the parent element.
@@ -128,6 +129,7 @@ output application/java
 "
 }
 
+# NOTE: this as a template represents more of a deterministic node, only a definitive subset nodes are allowed and terminate a path.
 function httpRequest {
 	# FIXME refactor to not subarray, move logic higher up in stack.
 	local subActions="${@:2}"
@@ -154,14 +156,14 @@ function httpRequest {
 		esac
 	done
 
-	echo "http:request(method     = '{method}'
-             doc:name   = '{name}'
+	echo "http:request(method     = ':method:'
+             doc:name   = ':name:'
              doc:id     = $(uuidgen)
-             config-ref = '{config-ref}'
-             path       = '{path}'
+             config-ref = ':config-ref:'
+             path       = ':path:'
              sendCorrelationId = ALWAYS
              correlationId = #[correlationId]
-             target     = '{target}')
+             target     = ':target:')
 {
     ${children['body']}
     ${children['headers']}
@@ -196,7 +198,7 @@ function transformVariables {
 	fi
 	local children=""
 	for ((i = 0; i < instances; i++)); do
-		children+="ee:set-variable(variableName = '{name-$i}') = '''#[%dw 2.0
+		children+="ee:set-variable(variableName = ':name-$i:') = '''#[%dw 2.0
 output application/json
 ---
 {}]'''
@@ -208,6 +210,7 @@ output application/json
 }
 "
 }
+# TODO this function may not be needed or even really supported
 function transformAttributes {
 	local params="$1"
 	local instances="0"
@@ -219,7 +222,7 @@ function transformAttributes {
 	fi
 	local children=""
 	for ((i = 0; i < instances; i++)); do
-		children+="ee:set-attribute(name = '{name-$i}') = '''#[%dw 2.0
+		children+="ee:set-attribute(name = ':name-$i:') = '''#[%dw 2.0
 output application/json
 ---
 {}]'''
@@ -286,8 +289,9 @@ function choiceWhen {
 	fi
 	local children=""
 	for ((i = 0; i < instances; i++)); do
-		children+="when(expression='#[{expression}]')
+		children+="when(expression='#[:expression:]')
 {
+    :children:
 }
 "
 	done
@@ -295,6 +299,7 @@ function choiceWhen {
 }
 function choiceOtherwise {
 	echo "otherwise {
+    :children:
 }"
 }
 function choiceRouter {
@@ -324,7 +329,7 @@ function choiceRouter {
 			;;
 		esac
 	done
-	echo "choice(doc:name='{doc:name}')
+	echo "choice(doc:name=':doc:name:')
 {
     ${children['when']}
     ${children['otherwise']}
@@ -376,23 +381,24 @@ function scatterGather {
 }
 ################################################################################
 function jsonLogger {
-	echo "json-logger:logger(doc:name   = '{doc:name}'
+	echo "json-logger:logger(doc:name   = ':doc:name:'
         config-ref = JSON_Logger_Config
-        message    = '{doc:name}')
+        message    = ':message:')
 "
 }
 ################################################################################
 function log {
-	echo "logger(level='{level}'
-message = '{message}')"
+	echo "logger(level=':level:'
+message = ':message:')"
 }
 ################################################################################
 # TODO add instance parameter
 function flow {
 	# TODO may have to refactor if adding support for error-handler
+	# FIXME: rework to use attributes syntax for replacement.
 	local name="$2"
 	if [[ -z $name ]]; then
-		name="'{name}'"
+		name="':name:'"
 	fi
 	echo "flow(doc:name = $name
 name = $name)
@@ -402,22 +408,42 @@ name = $name)
 }
 ################################################################################
 # TODO add instance parameter
+# TODO shouldn't be adding logic here for children, should be handling higher up collecting nested children then call process commands on each line
+#      and after processes have executed collect as string and find and replace.
+#      need to add a pre-process step to look ahead for curly braces.
 function subFlow {
-	local name="$2"
-	if [[ -z $name ]]; then
-		name="'{name}'"
-	fi
-	echo "sub-flow(doc:name = $name
-name = $name)
+	# TODO may have to refactor if adding support for error-handler
+	# FIXME: rework to use attributes syntax for replacement.
+	#local name="$2"
+	#if [[ -z $name ]]; then
+	#	name="':name:'"
+	#fi
+	local subActions=(${@:2})
+	local length=${#subActions[@]}
+	#for ((i = 0; i < length; i++)); do
+	#	if [[ "${subActions[i]}" == '{' ]]; then
+	#		if [[ "${subActions[((length - 1))]}" != '}' ]]; then
+	#			echo "Unbalanced curly at command: ${subActions[@]}" >&2
+	#			exit 1
+	#		fi
+	#		local children="$(processCommand "${subActions[@]:1:((length - 2))}")"
+	#	fi
+	#done
+	local root="sub-flow(doc:name = ':name:'
+name = ':name:')
 {
+    :children:
 }
 "
+	echo "$root"
 }
 ################################################################################
 function flowRef {
+	# TODO add supporte for { and } for nesting children.
 	local subActions=(${@:2})
 	local repeat="1"
 	local name=""
+	# TODO need to iterate over arguments
 	#TODO this should really be an either or, but whatever
 	if ((${#subActions[@]} == 2)); then
 		repeat="${subActions[0]}"
@@ -432,7 +458,7 @@ function flowRef {
 		fi
 	fi
 	for ((i = 0; i < repeat; i++)); do
-		echo "flow-ref(doc:name = '{$name-$i}'
+		echo "flow-ref(doc:name = ':$name-$i:'
 name = '{$name-$i}')
 "
 	done
@@ -462,9 +488,10 @@ function tryScope {
 }
 ################################################################################
 function munitConfig {
+	# FIXME: rework to use attributes syntax for replacement
 	local name="$2"
 	if [[ -z "$name" ]]; then
-		name="'{name}'"
+		name="':name:'"
 	fi
 	echo "munit:config(name = $name)"
 }
@@ -475,6 +502,7 @@ function munitTest {
 	for item in $subActions; do
 		case $item in
 		execution | e)
+			# FIXME these need to be reworked. no need for echo
 			children['execution']="$(echo 'munit:execution
 {
 }
@@ -498,8 +526,8 @@ function munitTest {
 			;;
 		esac
 	done
-	echo "munit:test(name = '{name}'
-description = '{description}')
+	echo "munit:test(name = ':name:'
+description = ':description:')
 {
     ${children['behavior']}
     ${children['execution']}
@@ -518,7 +546,7 @@ function munitSetEventVariables {
 	fi
 	local children=""
 	for ((i = 0; i < instances; i++)); do
-		children+="munit:variable(key = '{key-$i}'
+		children+="munit:variable(key = ':key-$i:'
     value = '''#[%dw 2.0
 output application/json
 ---
@@ -543,7 +571,7 @@ function munitSetEventAttributes {
 	fi
 	local children=""
 	for ((i = 0; i < instances; i++)); do
-		children+="munit:attribute(key = '{key-$i}'
+		children+="munit:attribute(key = ':key-$i:'
     value = '''#[%dw 2.0
 output application/json
 ---
@@ -609,15 +637,15 @@ function munitAssert {
 		case $item in
 		equals | eq)
 			children+="munit-tools:assert-equals(doc:name = 'assert equals'
-actual = '#[{actual}]'
-expected = '#[{true}]')
+actual = '#[:actual:]'
+expected = '#[:expected:]')
 "
 			;;
 		that | th)
 			children+="munit-tools:assert-that(doc:name = 'assert that'
 expression = #[payload]
 is = '#[MunitTools::notNullValue()]'
-message = '{message}')
+message = ':message:')
 "
 			;;
 		*)
@@ -639,8 +667,8 @@ function munitWithAttributes {
 	fi
 	local children=""
 	for ((i = 0; i < instances; i++)); do
-		children+="munit-tools:with-attribute(attributeName = '{attributeName}'
-whereValue = '{whereValue-$i}')
+		children+="munit-tools:with-attribute(attributeName = ':attributeName:'
+whereValue = ':whereValue-$i:')
 "
 	done
 	echo "
@@ -659,7 +687,7 @@ function munitVariables {
 	fi
 	local children=""
 	for ((i = 0; i < instances; i++)); do
-		children+="munit-tools:variable(key = '{key-$i}'
+		children+="munit-tools:variable(key = ':key-$i:'
 value = '''#[%dw 2.0
            output application/json
            ---
@@ -684,10 +712,10 @@ function munitVerifyCall {
 	local children=""
 	for ((i = 0; i < instances; i++)); do
 		children+="munit-tools:verify-call(doc:name = 'Verify Call'
-atLeast = 0
-atMost = 1
-times = 1
-processor = '{processor}'
+atLeast = ':atLeast:'
+atMost = ':atMost:' 
+times = ':times:'
+processor = ':processor:'
 )"
 	done
 	echo "$children"
@@ -729,8 +757,8 @@ function munitMock {
 		case $item in
 		when | w)
 			children+="
-munit-tools:mock-when(doc:name = '{doc:name}'
-processor = '{processor}')
+munit-tools:mock-when(doc:name = ':doc:name:'
+processor = ':processor:')
 {
 
 }"
@@ -739,8 +767,8 @@ processor = '{processor}')
 			# TODO need to add option for generating multipl or without parent
 			children+="
 munit-tools:with-attributes {
-    munit-tools:with-attribute(attributeName = '{attributeName}'
-    whereValue = '{whereValue}')
+    munit-tools:with-attribute(attributeName = ':attributeName:'
+    whereValue = ':whereValue:')
 }"
 			;;
 		return | r)
@@ -775,10 +803,6 @@ output application/json
 }
 ################################################################################
 function muleConfigTemplate {
-	local params="$1"
-	if [[ "$1" == "c" ]]; then
-		local childTemplate='{children}'
-	fi
 	echo "mule(xsi:schemaLocation = 'http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd'
      xmlns:xsi          = http://www.w3.org/2001/XMLSchema-instance
      xmlns:ee           = http://www.mulesoft.org/schema/mule/ee/core
@@ -787,23 +811,19 @@ function muleConfigTemplate {
      xmlns              = http://www.mulesoft.org/schema/mule/core
      xmlns:doc          = http://www.mulesoft.org/schema/mule/documentation)
 {
-    ${childTemplate}
+   :children: 
 }
 "
 }
 function munitConfigTemplate {
-	local params="$1"
-	if [[ "$1" == "c" ]]; then
-		local childTemplate='{children}'
-	fi
-	echo "mule(xsi:schemaLocation = '   http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd   http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd   http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd'
+	echo "mule(xsi:schemaLocation = 'http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd   http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd   http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd'
      xmlns:xsi          = http://www.w3.org/2001/XMLSchema-instance
      xmlns:munit        = http://www.mulesoft.org/schema/mule/munit
      xmlns:munit-tools  = http://www.mulesoft.org/schema/mule/munit-tools
      xmlns              = http://www.mulesoft.org/schema/mule/core
      xmlns:doc          = http://www.mulesoft.org/schema/mule/documentation)
 {
-    ${childTemplate}
+    :children:
 }
 "
 }
@@ -847,11 +867,11 @@ function processCommand {
 	run)
 		runMule
 		;;
-	muleTemplate | mtmpl)
+	muleRoot | mr)
 		# TODO add processing for c flag for child template processing
 		muleConfigTemplate
 		;;
-	munitTemplate | mutmpl)
+	munitRoot | mur)
 		# TODO add processing for c flag for child template processing
 		munitConfigTemplate
 		;;
@@ -937,12 +957,34 @@ function main {
 		exit 0
 	fi
 
+	while getopts "w" flag; do
+		case "$flag" in
+		w)
+			wrap=true
+			;;
+		esac
+	done
 	# FIXME need to deal with mixed arguments+pipe for expression replacement in existing document and/or wrap stdin with argument
 	local argLength="$#"
-	if ((argLength > 0)); then
+	# FIXME add support for simple find and replace of attributes, might be separate flag.
+	if [[ -n "$wrap" ]]; then
+		# FIXME need to appropriately remove -w|--wrap option from arguments.
+		local template=$(processCommand "${@:2}")
+		local content=''
+		while read -r line; do
+			# FIXME kinda of a hack, need to be able to evaluate newlines in string replacement
+			content+="$line
+"
+		done
+		#echo "$template" | awk "{sub(/{children}/, \"$content\")}1"
+		echo "${template/:children:/$content}"
+	elif ((argLength > 0)); then
 		processCommand "$@"
 		# is process connected to pipe/redirected input?
 	elif [[ ! -t 0 ]]; then
+		# FIXME rework to preprocess for curly braces and batch up runs of processCommand
+		# FIXME add logic wrapping processCommand with the read loop, will be easier to control advancing the loop and adding recursion.
+		#       will have to see how this affects performance, but the use case is for pretty much evaluating a more complex template in line.
 		while read -r line; do
 			processCommand $line
 		done
