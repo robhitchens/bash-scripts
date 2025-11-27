@@ -18,17 +18,39 @@
 # TODO add examples command for snippets of how to use (including examples for reading into stdin)
 # TODO add support for reading project local config for attribute defaults.
 # TODO add simple support to wrap function to take in array of attributes to find and replace.
+# TODO add examples function to poop out docs with executable snippets based on input. Kinda like a separate help doc per command.
 function fullDoc {
 	cat <<EOF
 Usage:
-  mule [--help | help | parent [children...]] 
+  mule [OPTS] [COMMANDS...]
+  STDIN | mule
+
+Synopsis:
+  mule generates xmq snippets for Mulesoft elements.
 
 Description:
-  mule generates xmq snippets for Mulesoft elements
+  mule can read commands as args or from stdin (see examples).
+  Syntax for commands is white space delimited unless otherwise specified.
+  Some commands support repetition at either the root or on specified child elements.
+  For example the command flow-ref 2 will produce the following:
+    flow-ref(doc:name = ':name-0:'
+    name = ':name-0:')
+    
+    flow-ref(doc:name = ':name-1:'
+    name = ':name-1:')
+
+
+  WIP: commands can be nested within { }. e.g. muleRoot { flow { http:request body headers } transform payload }.
+  As shorthand: mr { f { hr b h } tr p }. 
+  WIP: attributes can be provided to an element using a bash syntax array. e.g. flow-ref (doc:name 'Some flow' name a-referenced-flow)
+
 
 Options:
-  --help                                Prints help doc to stdout
-  -w|--wrap                             WIP: Wrap flag, wraps content read from stdin with snippet provided as args.
+  -h|--help                             Prints help doc to stdout
+  -w|--wrap                             Wrap flag, wraps content read from stdin with snippet provided as args.
+  -v|--verbose                          Verbose flag for test runner
+  -t|--timed                            Time flag for test runner
+  -l|--loop                             Loop flag to set test runner to until SIGINT (Crtl+C) is sent
 
 Commands:
   help                                  Prints help doc to stdout
@@ -459,7 +481,7 @@ function flowRef {
 	fi
 	for ((i = 0; i < repeat; i++)); do
 		echo "flow-ref(doc:name = ':$name-$i:'
-name = '{$name-$i}')
+name = ':$name-$i:')
 "
 	done
 }
@@ -988,7 +1010,7 @@ function main {
 	fi
 
 	local skipCount=0
-	while getopts "wvlt" flag; do
+	while getopts "wvlth" flag; do
 		case "$flag" in
 		w)
 			wrap=true
@@ -1005,6 +1027,10 @@ function main {
 		t)
 			testTime=true
 			((skipCount += 1))
+			;;
+		h)
+			fullDoc
+			exit 0
 			;;
 		*)
 			echo "Unknown flag: $flag" >&2
