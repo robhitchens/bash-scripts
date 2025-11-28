@@ -51,8 +51,11 @@ Options:
 
 Commands:
   help                                  Prints help doc to stdout
+  install                               Installs the script. Requires super user permissions.
   test [name [method]]                  Not a snippet, shortcut for running munit test.
   run                                   Not a snippet, shortcut for running application with common configuration.
+
+Commands (Snippets):
   muleRoot|mr                           Generates mule root element
   munitRoot|mur                         Generates munit root element
   http:request|hr [children...]         Generates http:request template with the provided valid child element templates.
@@ -932,9 +935,9 @@ Cannot process further" >&2
 	case "$element" in
 	# TODO use split operation on arguments here before passing to functions.
 	# TODO should find way to break out test and run command from this logic, maybe a simple lookahead check in main?
-	test)
-		runMunitTest $@
-		;;
+	#test)
+	#	runMunitTest $@
+	#	;;
 	run)
 		runMule
 		;;
@@ -1030,6 +1033,29 @@ function main {
 	# is first argument empty and input connected to terminal?
 	if [[ "$1" == '' && -t 0 ]]; then
 		fullDoc
+		exit 0
+	fi
+	# TODO should probably add an uninstall command, should remove symlink and config (or at least prompt user what they want to delete?)
+	# TODO should probably add a config command as well.
+	if [[ "$1" == 'install' ]]; then
+		local symlink='/usr/local/bin/mule'
+		# TODO should probably prompt user before nuking existing symlink file.
+		if [[ -f $symlink ]]; then
+			rm -f $symlink
+		else
+			local scriptLocation=$(find . -type f -iname 'mule.sh' | xargs realpath --relative-to=/ | sed -E 's/(.*)/\/\1/')
+			# TODO should error out if script can't be found.
+			ln -s $scriptLocation $symlink
+		fi
+		exit 0
+		# TODO need to find location of mule.sh
+		# assuming a first time use it would be executed where the script is located.
+		# should also check to see if the symlink already exists.
+		# TODO not sure if starting point for find should be the current directory or start at root
+		# TODO could attempt to find locally first before jumping up to root.
+	fi
+	if [[ "$1" == 'test' ]]; then
+		runMunitTest "${@:1}"
 		exit 0
 	fi
 
