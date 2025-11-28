@@ -112,23 +112,6 @@ EOF
 }
 
 ################################################################################
-function processAttributes {
-	local attributes=($@)
-	local length=$#
-	# TODO this check might not be doing anything.
-	if ((length % 2 != 0)); then
-		echo "length [$length] of attributes '$attributes' is unbalanced. Cannot process" >&2
-		exit 1
-	fi
-	for ((i = 0; i < length; i++)); do
-		local item="${attributes[((i))]}"
-		if [[ "$item" == "[" || "$item" == "]" ]]; then
-			unset "attributes[$i]"
-		fi
-	done
-	echo "$attributes"
-}
-################################################################################
 function httpRequestBody {
 	echo "http:body = '''#[%dw 2.0
 output application/json skipNullOn=\"everywhere\"
@@ -919,7 +902,7 @@ function processCommand {
 	local attributes=()
 	local isAttribute=0
 	local commands=()
-	for ((i = 1; i < length; i++)); do
+	for ((i = 1; i < length + 1; i++)); do
 		if [[ "${!i}" == "[" ]]; then
 			isAttribute=1
 			continue
@@ -934,6 +917,18 @@ function processCommand {
 			commands+=("${!i}")
 		fi
 	done
+	if ((isAttribute == 1)); then
+		echo "Command '${@:1}' has attributes that are unbalanced. 
+Command may be missing ']' to close attributes expression. 
+Cannot process further" >&2
+		exit 1
+	fi
+	if ((${#attributes[@]} % 2 != 0)); then
+		echo "attributes [${attributes[@]}] with length [${#attributes[@]}] is unbalanced.
+Maybe missing key or value?
+Cannot process further" >&2
+		exit 1
+	fi
 	case "$element" in
 	# TODO use split operation on arguments here before passing to functions.
 	# TODO should find way to break out test and run command from this logic, maybe a simple lookahead check in main?
