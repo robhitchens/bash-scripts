@@ -449,31 +449,7 @@ name = $name)
 #      need to add a pre-process step to look ahead for curly braces.
 function subFlow {
 	# TODO may have to refactor if adding support for error-handler
-	# FIXME: rework to use attributes syntax for replacement.
-	#local name="$2"
-	#if [[ -z $name ]]; then
-	#	name="':name:'"
-	#fi
-	# TODO use [ and ] for attribute replacement syntax.
-	# TODO add support for { and } for nesting children.
 	local subActions=(${@:2})
-	local length=${#subActions[@]}
-	for ((i = 0; i < length; i++)); do
-		if [[ "${subActions[i]}" == "[" ]]; then
-			# ideally the remaining arguments passed in are just the context for this component
-			# operating on that assumption for now.
-			local attributes=(processAttributes "${subActions[@]:((i))}")
-		fi
-	done
-	#for ((i = 0; i < length; i++)); do
-	#	if [[ "${subActions[i]}" == '{' ]]; then
-	#		if [[ "${subActions[((length - 1))]}" != '}' ]]; then
-	#			echo "Unbalanced curly at command: ${subActions[@]}" >&2
-	#			exit 1
-	#		fi
-	#		local children="$(processCommand "${subActions[@]:1:((length - 2))}")"
-	#	fi
-	#done
 	local root="sub-flow(doc:name = ':doc:name:'
 name = ':name:')
 {
