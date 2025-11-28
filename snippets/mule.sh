@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
 # TODO might be better to structure this with context based help messages.
-# TODO could add a function to handle routing of common flows, for simple embedding child elements
 # TODO could add shorthand for common snippets
 # TODO should add tab complete for commands and sub commands. maybe. Or at least a double tap tab to list the possible commands at this state.
-# TODO could template things and add a separator to help make things more composable.
 # TODO add "install" step to symlink script to mule under /usr/local/bin
 # TODO add flags to support dumping out full or minimal attributes for elements.
-# TODO can utilize 'shift [n]' to deal with arguments that take parameters
 # TODO might refactor the interface to make it composable by making the last argument to any function a string for the body of the element. This would allow composability utilizing existing bash idioms, but downside will be that composition will require multiple subprocesses which will be slower.
 #      or another way would be to accept strings of subcommands for composability and maybe a small syntax to avoid adding multiple quotes. Then if detected could then just pass the arguments through main again without subprocessing. With a generic way of handinling it in place  could refactor higher level components to be a composition rather than hard coded logic
 #      would need to figure out solution for emitting nested docs or would need to list all commands in help doc.
@@ -118,8 +115,9 @@ EOF
 function processAttributes {
 	local attributes=($@)
 	local length=$#
+	# TODO this check might not be doing anything.
 	if ((length % 2 != 0)); then
-		echo "length [$length] of attributes is unbalanced. Cannot process" >&2
+		echo "length [$length] of attributes '$attributes' is unbalanced. Cannot process" >&2
 		exit 1
 	fi
 	for ((i = 0; i < length; i++)); do
@@ -490,9 +488,10 @@ name = ':name:')
 }
 ################################################################################
 function flowRef {
-	local subActions=(${@:2})
+	local subActions=($@)
 	local repeat="1"
 	local name=""
+	# FIXME remove name replacement logic
 	# TODO need to iterate over arguments
 	#TODO this should really be an either or, but whatever
 	if ((${#subActions[@]} == 2)); then
@@ -508,7 +507,7 @@ function flowRef {
 		fi
 	fi
 	for ((i = 0; i < repeat; i++)); do
-		echo "flow-ref(doc:name = ':$name-$i:'
+		echo "flow-ref(doc:name = ':doc:name-$i:'
 name = ':$name-$i:')
 "
 	done
@@ -727,6 +726,7 @@ munit-tools:with-attributes {
 }
 "
 }
+# FIXME refactor to properly handle arguments
 function munitVariables {
 	local params="$1"
 	if [[ -n "$(echo "$params" | grep -E '[0-9]')" ]]; then
@@ -938,9 +938,29 @@ function run {
 
 function processCommand {
 	local element="$1"
-
+	local content=''
+	local length="$#"
+	local attributes=()
+	local isAttribute=0
+	local commands=()
+	for ((i = 1; i < length; i++)); do
+		if [[ "${!i}" == "[" ]]; then
+			isAttribute=1
+			continue
+			# ideally the remaining arguments passed in are just the context for this component
+			# operating on that assumption for now.
+		elif [[ "${!i}" == "]" ]]; then
+			isAttribute=0
+		fi
+		if ((isAttribute == 1)); then
+			attributes+=("${!i}")
+		else
+			commands+=("${!i}")
+		fi
+	done
 	case "$element" in
 	# TODO use split operation on arguments here before passing to functions.
+	# TODO should find way to break out test and run command from this logic, maybe a simple lookahead check in main?
 	test)
 		runMunitTest $@
 		;;
@@ -949,71 +969,68 @@ function processCommand {
 		;;
 	muleRoot | mr)
 		# TODO add processing for c flag for child template processing
-		muleConfigTemplate
+		content="$(muleConfigTemplate)"
 		;;
 	munitRoot | mur)
 		# TODO add processing for c flag for child template processing
-		munitConfigTemplate
+		content="$(munitConfigTemplate)"
 		;;
 	http:request | hr)
-		httpRequest "$@"
+		content="$(httpRequest "$commands")"
 		;;
 	transform | tr)
-		transform "$@"
-		;;
-	# FIXME: temporary shortcut
-	transform:set-payload | trp)
-		transformPayload 0
+		content="$(transform "$commands")"
 		;;
 	choiceRouter | cr)
-		choiceRouter "$@"
+		content="$(choiceRouter "$commands")"
 		;;
 	scatterGather | sg)
-		scatterGather "$@"
+		content="$(scatterGather "$commands")"
 		;;
 	jsonLogger | jl)
-		jsonLogger "$@"
+		content="$(jsonLogger "$commands")"
 		;;
 	log | l)
-		log "$@"
+		content="$(log "$commands")"
 		;;
 	flow | f)
-		flow "$@"
+		content="$(flow "$commands")"
 		;;
 	sub-flow | sf)
-		subFlow "$@"
+		content="$(subFlow "$commands")"
 		;;
 	flow-ref | fr)
-		flowRef "$@"
+		content="$(flowRef "$commands")"
 		;;
 	try | t)
-		tryScope "$@"
+		content="$(tryScope "$commands")"
 		;;
 	munit:config | muc)
-		munitConfig "$@"
+		content="$(munitConfig "$commands")"
 		;;
 	munit:test | mut)
-		munitTest "$@"
+		content="$(munitTest "$commands")"
 		;;
 	munit:set-event | mus)
-		munitSetEvent "$@"
+		content="$(munitSetEvent "$commands")"
 		;;
 	munit:assert | mua)
-		munitAssert "$@"
+		content="$(munitAssert "$commands")"
 		;;
 	munit:verify | muv)
-		munitVerify "$@"
+		content="$(munitVerify "$commands")"
 		;;
 	munit:attributes | muat)
 		# TODO roll up into munit:verify
-		munitWithAttributes
+		content="$(munitWithAttributes)"
 		;;
 	munit:variables | muvar)
 		# TODO roll up into munit:verify
-		munitVariables "${@:2}"
+		#content="$(munitVariables "${@:2}")"
+		content="$(munitVariables "$commands")"
 		;;
 	munit:mock | mum)
-		munitMock "$@"
+		content="$(munitMock "$commands")"
 		;;
 	dataweave | dw)
 		dataweave
@@ -1023,6 +1040,14 @@ function processCommand {
 		exit 1
 		;;
 	esac
+	# TODO process attributes in content here.
+	# TODO reassignment may not be necessary or efficient
+	if ((${#attributes[@]} != 0)); then
+		for ((i = 0; i < ${#attributes[@]}; i += 2)); do
+			content="${content/${attributes[i]}/${attributes[((i + 1))]}}"
+		done
+	fi
+	echo "$content"
 }
 
 function main {
@@ -1069,6 +1094,7 @@ function main {
 	# FIXME need to deal with mixed arguments+pipe for expression replacement in existing document and/or wrap stdin with argument
 	local argLength="$#"
 	# FIXME add support for simple find and replace of attributes, might be separate flag.
+	# TODO may need to utilize this when processing nested children. Would need to write bash string to be evaled as a series of wrap calls.
 	if [[ -n "$wrap" ]]; then
 		# FIXME need to appropriately remove -w|--wrap option from arguments.
 		local template=$(processCommand "${@:2}")
@@ -1078,7 +1104,6 @@ function main {
 			content+="$line
 "
 		done
-		#echo "$template" | awk "{sub(/{children}/, \"$content\")}1"
 		echo "${template/:children:/$content}"
 	elif ((argLength > 0)); then
 		# FIXME encapsulating input as array causes problems with whitespace in attribute replacement
@@ -1087,12 +1112,15 @@ function main {
 		# TODO this works for preserving whitespace (even to process command), but would need to propagate to all functions,
 		# better to just abstract higher up in the call chain before template processing.
 		local input=()
-		for ((i = 1; i < $#; i++)); do
+		for ((i = 1; i < argLength + 1; i++)); do
 			input+=("${!i}")
 		done
 		local inputLen="$#"
-
-		processCommand "${input[@]:((skipCount)):((inputLen - skipCount))}"
+		if ((skipCount == 0)); then
+			processCommand "${input[@]}"
+		else
+			processCommand "${input[@]:((skipCount)):((inputLen - skipCount))}"
+		fi
 		# is process connected to pipe/redirected input?
 	elif [[ ! -t 0 ]]; then
 		# FIXME rework to preprocess for curly braces and batch up runs of processCommand
