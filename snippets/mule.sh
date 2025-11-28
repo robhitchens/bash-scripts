@@ -42,7 +42,7 @@ Description:
 
   WIP: commands can be nested within { }. e.g. muleRoot { flow { http:request body headers } transform payload }.
   As shorthand: mr { f { hr b h } tr p }. 
-  WIP: attributes can be provided to an element using a bash syntax array. e.g. flow-ref (doc:name 'Some flow' name a-referenced-flow)
+  WIP: attributes can be provided to an element using a bash syntax array. e.g. flow-ref [ doc:name 'Some flow' name a-referenced-flow ]
 
 
 Options:
@@ -114,6 +114,22 @@ Commands:
 EOF
 }
 
+################################################################################
+function processAttributes {
+	local attributes=($@)
+	local length=$#
+	if ((length % 2 != 0)); then
+		echo "length [$length] of attributes is unbalanced. Cannot process" >&2
+		exit 1
+	fi
+	for ((i = 0; i < length; i++)); do
+		local item="${attributes[((i))]}"
+		if [[ "$item" == "[" || "$item" == "]" ]]; then
+			unset "attributes[$i]"
+		fi
+	done
+	echo "$attributes"
+}
 ################################################################################
 function httpRequestBody {
 	echo "http:body = '''#[%dw 2.0
@@ -440,8 +456,17 @@ function subFlow {
 	#if [[ -z $name ]]; then
 	#	name="':name:'"
 	#fi
+	# TODO use [ and ] for attribute replacement syntax.
+	# TODO add support for { and } for nesting children.
 	local subActions=(${@:2})
 	local length=${#subActions[@]}
+	for ((i = 0; i < length; i++)); do
+		if [[ "${subActions[i]}" == "[" ]]; then
+			# ideally the remaining arguments passed in are just the context for this component
+			# operating on that assumption for now.
+			local attributes=(processAttributes "${subActions[@]:((i))}")
+		fi
+	done
 	#for ((i = 0; i < length; i++)); do
 	#	if [[ "${subActions[i]}" == '{' ]]; then
 	#		if [[ "${subActions[((length - 1))]}" != '}' ]]; then
@@ -451,17 +476,20 @@ function subFlow {
 	#		local children="$(processCommand "${subActions[@]:1:((length - 2))}")"
 	#	fi
 	#done
-	local root="sub-flow(doc:name = ':name:'
+	local root="sub-flow(doc:name = ':doc:name:'
 name = ':name:')
 {
     :children:
 }
 "
+	# TODO should move logic for processing attributes before and within processCommand logic.
+	for ((i = 0; i < ${#attributes[@]}; i += 2)); do
+		root="${root/${attributes[i]}/${attributes[((i + 1))]}}"
+	done
 	echo "$root"
 }
 ################################################################################
 function flowRef {
-	# TODO add supporte for { and } for nesting children.
 	local subActions=(${@:2})
 	local repeat="1"
 	local name=""
@@ -1053,8 +1081,17 @@ function main {
 		#echo "$template" | awk "{sub(/{children}/, \"$content\")}1"
 		echo "${template/:children:/$content}"
 	elif ((argLength > 0)); then
-		local input=($@)
+		# FIXME encapsulating input as array causes problems with whitespace in attribute replacement
+		# TODO filter out attributes for replacement here.
+		#local input=($@)
+		# TODO this works for preserving whitespace (even to process command), but would need to propagate to all functions,
+		# better to just abstract higher up in the call chain before template processing.
+		local input=()
+		for ((i = 1; i < $#; i++)); do
+			input+=("${!i}")
+		done
 		local inputLen="$#"
+
 		processCommand "${input[@]:((skipCount)):((inputLen - skipCount))}"
 		# is process connected to pipe/redirected input?
 	elif [[ ! -t 0 ]]; then
