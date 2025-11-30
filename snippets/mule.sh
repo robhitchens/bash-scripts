@@ -20,7 +20,7 @@ function fullDoc {
 	cat <<EOF
 Usage:
   mule [OPTS] [COMMANDS...]
-  STDIN | mule
+  STDIN | mule [OPTS] [COMMAND]
 
 Synopsis:
   mule generates xmq snippets for Mulesoft elements.
@@ -325,10 +325,6 @@ function choiceOtherwise {
 }"
 }
 function choiceRouter {
-	# TODO fill out
-	# children:
-	#     - when|w [#]                    WIP: Generates the given (number) of when templates within the parent element.
-	#     - otherwise|o                   WIP: Generates a otherwise template within the parent element.
 	local subActions="${@:2}"
 	local children=""
 	local length="${#subActions[@]}"
@@ -772,7 +768,7 @@ function munitMock {
 munit-tools:mock-when(doc:name = ':doc:name:'
 processor = ':processor:')
 {
-
+    :children:
 }"
 			;;
 		attribute | a)
@@ -788,13 +784,13 @@ munit-tools:with-attributes {
 			# also expand with call to munitVariables
 			children+="
 munit-tools:then-return {
-    munit-tools:payload(value = '''#[{}]''')
+    munit-tools:payload(value = '''#[:payload:]''')
     munit-tools:variables {
-    munit-tools:variable(key = '{key}' 
-    value     = '''#[true]'''
+    munit-tools:variable(key = ':key:' 
+    value     = '''#[:value:]'''
     mediaType = application/json)
     }
-    munit-tools:error(typeId = '{typeId}')
+    munit-tools:error(typeId = ':typeId:')
 }"
 			;;
 		*)
@@ -890,6 +886,7 @@ function runMunitTest {
 }
 
 function run {
+	# TODO need to figure out what running the debugger from the command line would be like.
 	echo "not yet supported" >&2
 	# TODO will probably need to do the following:
 	# * set MULE_HOME and MULE_BASE
@@ -1024,6 +1021,22 @@ Cannot process further" >&2
 	echo "$content"
 }
 
+function installScript {
+	local symlink='/usr/local/bin/mule'
+	# TODO should probably prompt user before nuking existing symlink file.
+	if [[ -f $symlink ]]; then
+		rm -f $symlink
+	else
+		local scriptLocation=$(find . -type f -iname 'mule.sh' | xargs realpath --relative-to=/ | sed -E 's/(.*)/\/\1/')
+		# TODO should error out if script can't be found.
+		ln -s $scriptLocation $symlink
+	fi
+	# assuming a first time use it would be executed where the script is located.
+	# should also check to see if the symlink already exists.
+	# TODO not sure if starting point for find should be the current directory or start at root
+	# TODO could attempt to find locally first before jumping up to root.
+}
+
 function main {
 	# is args 'help' sub command?
 	if [[ "$1" == '--help' || "$1" == 'help' ]]; then
@@ -1038,21 +1051,8 @@ function main {
 	# TODO should probably add an uninstall command, should remove symlink and config (or at least prompt user what they want to delete?)
 	# TODO should probably add a config command as well.
 	if [[ "$1" == 'install' ]]; then
-		local symlink='/usr/local/bin/mule'
-		# TODO should probably prompt user before nuking existing symlink file.
-		if [[ -f $symlink ]]; then
-			rm -f $symlink
-		else
-			local scriptLocation=$(find . -type f -iname 'mule.sh' | xargs realpath --relative-to=/ | sed -E 's/(.*)/\/\1/')
-			# TODO should error out if script can't be found.
-			ln -s $scriptLocation $symlink
-		fi
+		installScript
 		exit 0
-		# TODO need to find location of mule.sh
-		# assuming a first time use it would be executed where the script is located.
-		# should also check to see if the symlink already exists.
-		# TODO not sure if starting point for find should be the current directory or start at root
-		# TODO could attempt to find locally first before jumping up to root.
 	fi
 	if [[ "$1" == 'test' ]]; then
 		runMunitTest "${@:1}"
@@ -1112,6 +1112,7 @@ function main {
 		for ((i = 1; i < argLength + 1; i++)); do
 			input+=("${!i}")
 		done
+		# TODO need to remember why I chose to use the input length here instead of len of $input
 		local inputLen="$#"
 		if ((skipCount == 0)); then
 			processCommand "${input[@]}"
