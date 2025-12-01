@@ -43,6 +43,7 @@ declare -a bsunit_sourcedTests
 readonly bsunit_messageHeader="[BSUNIT]"
 declare -g passedTests
 declare -g failedTests
+declare -g assertionFailures
 
 # TODO could expand #TEST annotation with [ ] to add additional attributes could be simply key=value config
 # potential options would be ignore, exitsWithErrorCode
@@ -65,6 +66,7 @@ function parseTests {
 	echo "${tests[@]}"
 }
 
+# FIXME need to add handling of empty result set
 function parseSetup {
 	local input="$1"
 	local lineNumbers=($(grep -n '#SETUP' $input | sed -E 's/(\d)*[:]#.*/\1+1/' | bc))
@@ -77,6 +79,7 @@ function parseSetup {
 	echo "$setup"
 }
 
+# FIXME need to add handling of empty result set
 function parseTeardown {
 	local input="$1"
 	local lineNumbers=($(grep -n '#TEARDOWN' $input | sed -E 's/(\d)*[:]#.*/\1+1/' | bc))
@@ -89,7 +92,7 @@ function parseTeardown {
 	echo "$teardown"
 }
 
-# TODO add support for #IGNORE annotation.
+# TODO add support for #IGNORE annotation. or ignore property of #TEST
 
 function streamOutput {
 	while IFS=$'\n' read -r line; do
@@ -99,34 +102,56 @@ function streamOutput {
 
 function bsunit_testRunner {
 	local testFile="$1"
+	local singleTest="$2"
 	local setup=$(parseSetup "$testFile")
 	local teardown=$(parseTeardown "$testFile")
 	local unitTests=($(parseTests "$testFile"))
+	if [[ "$singleTest" != '' ]]; then
+		local found=0
+		for ((i = 0; i < ${#unitTests[@]}; i++)); do
+			if [[ "${unitTests[i]}" == "$singleTest" ]]; then
+				found=1
+				break
+			fi
+		done
+		if ((found == 1)); then
+			unitTests=("$singleTest")
+		else
+			echo "Unit test '$singleTest' not found in $testFile" >&2
+			exit 1
+		fi
+	fi
 	for ((i = 0; i < ${#unitTests[@]}; i++)); do
 		bsunit_sourcedTests+=(${unitTests[i]})
 	done
+
 	# TODO need to capture success and failure of each unit test for stats.
 	# could add failed test names to a global array.
 	# TODO should be able to pipe output to stdout while collecting results as long as variables are declared higher up.
 	(
+		# TODO maybe set trap on RETURN signal and check to see if return code is 0 or not
 		source $testFile
 		for unitTest in "${unitTests[@]}"; do
 			echo "$bsunit_messageHeader running test: $unitTest"
 			# TODO may want to capture output for failed test and tee it to a file.
 			# if unit test has failed then take tee'd output and save it off somewhere, output in red in terminal.
-			$setup
-			# TODO need to handle if setup fails
-			$unitTest
-			if [[ $? == '0' ]]; then
-				# TODO might have to append to temp file
-				#passedTests+=("something")
-				echo "$unitTest" >>$passedTests
-			else
-				# TODO might have to append to temp file.
-				# failedTests+=("something")
-				echo "$unitTest" >>$failedTests
+			if [[ -n "$setup" ]]; then
+				$setup
 			fi
-			$teardown
+			# TODO need to handle if setup fails
+			# TODO need to tee error output to failures file, will require additional processing for results.
+			$unitTest
+			local exitCode="$?"
+			if [[ "$exitCode" == '0' ]]; then
+				echo "$unitTest" >>$passedTests
+			elif [[ "$exitCode" == '1' ]]; then
+				echo "$unitTest" >>$failedTests
+			else
+				echo "$unitTest" >>$assertionFailures
+			fi
+			if [[ -n "$teardown" ]]; then
+				$teardown
+			fi
 			# TODO need to handle if teardown fails.
 		done
 	) | streamOutput
@@ -136,14 +161,23 @@ function outputResults {
 	# TODO Add support for assertion failures, will require some additional thought, probably just another file that bsunit-lib manages.
 	local numPass=$(cat $passedTests | wc -l)
 	local numFail=$(cat $failedTests | wc -l)
-	local formattedFailed="$(cat $failedTests | sed -E "s/(.*)/$bsunit_messageHeader - \1/")"
+	local numAssertionFail=$(cat $assertionFailures | wc -l)
+	local formattedFailed="$(cat $failedTests | sed -E "s/(.*)/$bsunit_messageHeader \t- \1/")"
+	local formattedAssertFails="$(cat $assertionFailures | sed -E "s/(.*)/$bsunit_messageHeader \t- \1/")"
 	# TODO add execution time.
 	echo "$bsunit_messageHeader Test results:
-$bsunit_messageHeader Total tests executed: ${#bsunit_sourcedTests[@]}
-$bsunit_messageHeader Successful tests: $numPass/${#bsunit_sourcedTests[@]}
-$bsunit_messageHeader Failed tests: $numFail/${#bsunit_sourcedTests[@]}
-$formattedFailed
-"
+$bsunit_messageHeader - Total tests executed: ${#bsunit_sourcedTests[@]}/${#bsunit_sourcedTests[@]}
+$bsunit_messageHeader - Successful tests:     $numPass/${#bsunit_sourcedTests[@]}
+$bsunit_messageHeader - Failed tests:         $numFail/${#bsunit_sourcedTests[@]}
+$bsunit_messageHeader - Assertion failures:   $numAssertionFail/${#bsunit_sourcedTests[@]}"
+	if [[ -n "$formattedAssertFails" ]]; then
+		echo "$bsunit_messageHeader -------------------- Failed Assertions -------------------- 
+$formattedAssertFails"
+	fi
+	if [[ -n "$formattedFailed" ]]; then
+		echo "$bsunit_messageHeader -------------------- Failed Tests ------------------------
+$formattedFailed"
+	fi
 	# TODO add stats for ignored count as well
 }
 
@@ -153,8 +187,9 @@ function makeTmpDir {
 		mkdir -p "$tempDir"
 		touch "$tempDir/passedTests.bs"
 		touch "$tempDir/failedTests.bs"
+		touch "$tempDir/assertionFailures.bs"
 	fi
-	echo "$tempDir/passedTests.bs" "$tempDir/failedTests.bs"
+	echo "$tempDir/passedTests.bs" "$tempDir/failedTests.bs" "$tempDir/assertionFailures.bs"
 }
 
 function clearFile {
@@ -209,6 +244,11 @@ function bsunit_main {
 		local tmpFiles=($(makeTmpDir))
 		passedTests=${tmpFiles[0]}
 		failedTests=${tmpFiles[1]}
+		assertionFailures=${tmpFiles[2]}
+		# clearing in case of a previous failed run.
+		clearFile $passedTests
+		clearFile $failedTests
+		clearFile $assertionFailures
 		if [[ -n "$2" ]]; then
 			# TODO add check to see if files and directories are mixed. If so, exit with error.
 			if [[ -f "$2" ]]; then
@@ -216,23 +256,26 @@ function bsunit_main {
 				bsunit_testRunner "$2"
 			elif [[ -d "$2" ]]; then
 				# TODO expand to support multiple directories
-				local testFiles=$(find "$2" -type f '*.test.sh')
+				local testFiles=$(find "$2" -type f -name '*.test.sh')
 				local length="${#testFiles[@]}"
 				for ((i = 0; i < length; i++)); do
 					# TODO should probably just use a for in loop
 					bsunit_testRunner "${testFiles[((i))]}"
 				done
 			else
+				local arr=($(echo "$2" | sed 's/#/ /'))
+				if ((${#arr[@]} != 2)); then
+					echo "Invalid test function syntax: $2" >&2
+					exit 1
+				fi
+				bsunit_testRunner "${arr[0]}" "${arr[1]}"
 				# TODO handle case where test provided is single test.
-				echo "else not yet handled"
 			fi
 		else
 			echo "no tests found" &>2
 			exit 1
 		fi
 		outputResults
-		clearFile $passedTests
-		clearFile $failedTests
 	fi
 }
 

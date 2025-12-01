@@ -11,7 +11,45 @@ function assert {
 	# example use assert $someVar isEmpty
 	# example use assert $someVar isNotEmpty
 	# example use assert ...
-	echo "not yet implemented"
+	local actual="$1"
+	local expected="$3"
+	case "$2" in
+	equals)
+		#if [[ "$actual" == "$expected" ]]; then
+		if [[ "$(diff -w <(echo "$expected") <(echo "$actual") | wc -l)" == '0' ]]; then
+			return 0
+		else
+			#echo "Expected '$expected', but got '$actual'" >&2
+			echo "Actual did not match expected" >&2
+			diff --color=auto -w -U 10 <(echo "$expected") <(echo "$actual") >&2
+			return 2
+		fi
+		;;
+	matches)
+		# TODO may change to just a simple $string matches "$regex"
+		#FIXME: this doesn't quite work with multiline regex.
+		#might just implement a sed replace and compare.
+		#FIXME: need to be able to handle more substitutions.
+		local substitutions=("$(echo "$expected" | grep -nE 's/(.*)/(.*)/')")
+		for sub in "${substitutions[@]}"; do
+			local line="$(echo "$sub" | sed -E -s 's/^(.*):(.*)/\1/')"
+			local subCommand="$(echo "$sub" | sed -E -s 's:^.*(s/(.*)/(.*)/).*$:\1:')"
+			actual="$(echo "$actual" | sed -E "$line$subCommand")"
+		done
+		#if [[ $(echo "$actual" | grep -E "$expected" | wc -l) == '1' ]]; then
+		#FIXME this won't work as implemented.
+		if [[ "$actual" == "$expected" ]]; then
+			return 0
+		else
+			echo "Expected actual '$actual' to match '$expected', but did not" >&2
+			return 2
+		fi
+		;;
+	*)
+		echo "Unsupported assertion '$2'" >&2
+		exit 1
+		;;
+	esac
 }
 
 function verify {

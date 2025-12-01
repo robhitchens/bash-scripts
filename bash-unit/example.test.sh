@@ -26,3 +26,23 @@ function failingTest {
 	echo "executed failingTest"
 	return 1
 }
+
+#TEST
+function matchesExample {
+	local expected="1st line
+    second line s/second/2nd/ something else
+    3rd line"
+	local actual="1st line
+    second line something else
+    3rd line"
+
+	assert "$actual" matches "$expected"
+}
+
+#TEST
+function assertionFailure {
+	local expected="true"
+	local actual="false"
+
+	assert "$actual" equals "$expected"
+}
