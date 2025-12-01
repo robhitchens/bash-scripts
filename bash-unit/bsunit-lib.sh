@@ -2,6 +2,7 @@
 
 # TODO should implement "mocking" by allowing a binary or function to be aliased within the scope of a test.
 # doing this may require some clever use of eval to assemble everything prior to running the test and using eval to execute the test.
+# TODO could add assertAll which takes a semi-colon separated array of assert statements as strings
 
 function assert {
 	# TODO fillout

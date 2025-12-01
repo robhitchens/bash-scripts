@@ -32,6 +32,7 @@ Options:
   -l|--loop                             Loop flag to set test runner to until SIGINT (Crtl+C) is sent
 
 Commands:
+  install                               Installs bsunit and bsunit-lib.sh
   help                                  Prints help doc to stdout
   run [file|dir]                        Runs a bsunit test file.          
 EOF
@@ -42,6 +43,11 @@ declare -a bsunit_sourcedTests
 readonly bsunit_messageHeader="[BSUNIT]"
 declare -g passedTests
 declare -g failedTests
+
+# TODO could expand #TEST annotation with [ ] to add additional attributes could be simply key=value config
+# potential options would be ignore, exitsWithErrorCode
+# Need to figure out if there's a try block in bash
+# Looks like it's possible to use set -e, trap and a function to handle error scopes, would need to use in sub process only.
 
 function parseTests {
 	# TODO fill out
@@ -127,6 +133,7 @@ function bsunit_testRunner {
 }
 
 function outputResults {
+	# TODO Add support for assertion failures, will require some additional thought, probably just another file that bsunit-lib manages.
 	local numPass=$(cat $passedTests | wc -l)
 	local numFail=$(cat $failedTests | wc -l)
 	local formattedFailed="$(cat $failedTests | sed -E "s/(.*)/$bsunit_messageHeader - \1/")"
@@ -155,10 +162,43 @@ function clearFile {
 	echo -n $null >$file
 }
 
+function installScript {
+	local symlink='/usr/local/bin/bsunit'
+	local libSymlink='/usr/local/bin/bsunit-lib.sh'
+	# TODO should probably prompt user before nuking existing symlink file.
+	if [[ -f $symlink ]]; then
+		echo "link [$symlink] already exists. Removing..."
+		rm -f $symlink
+	fi
+
+	if [[ -f $libSymlink ]]; then
+		echo "link [$libSymlink] already exists. Removing..."
+		rm -f $libSymlink
+	fi
+
+	local scriptLocation=$(find . -type f -iname 'bsunit.sh' | xargs realpath --relative-to=/ | sed -E 's/(.*)/\/\1/')
+	local libLocation=$(find . -type f -iname 'bsunit-lib.sh' | xargs realpath --relative-to=/ | sed -E 's/(.*)/\/\1/')
+
+	# TODO should error out if script can't be found.
+	echo "linking $scriptLocation -> $symlink"
+	ln -s $scriptLocation $symlink
+	echo "linking $libLocation -> $libSymlink"
+	ln -s $libLocation $libSymlink
+	# assuming a first time use it would be executed where the script is located.
+	# should also check to see if the symlink already exists.
+	# TODO not sure if starting point for find should be the current directory or start at root
+	# TODO could attempt to find locally first before jumping up to root.
+}
+
 function bsunit_main {
-	if [[ "$1" == 'help' || "$1" == '--help' ]]; then
+	# TODO need to handle case were first argument is not a known option
+	if [[ "$1" == 'help' || "$1" == '--help' || "$1" == '' ]]; then
 		bsunit_fullDoc
 		exit 0
+	fi
+
+	if [[ "$1" == 'install' ]]; then
+		installScript
 	fi
 
 	if [[ "$1" == 'run' ]]; then
@@ -170,9 +210,12 @@ function bsunit_main {
 		passedTests=${tmpFiles[0]}
 		failedTests=${tmpFiles[1]}
 		if [[ -n "$2" ]]; then
+			# TODO add check to see if files and directories are mixed. If so, exit with error.
 			if [[ -f "$2" ]]; then
+				# TODO expand to support multiple files.
 				bsunit_testRunner "$2"
 			elif [[ -d "$2" ]]; then
+				# TODO expand to support multiple directories
 				local testFiles=$(find "$2" -type f '*.test.sh')
 				local length="${#testFiles[@]}"
 				for ((i = 0; i < length; i++)); do

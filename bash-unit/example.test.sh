@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-source ./bash-unit/bsunit-lib.sh
+# Assuming that bsunit-lib.sh is symlinked in /usr/local/bin/ folder.
+source bsunit-lib.sh
 
 #SETUP
 function setup {
