@@ -325,8 +325,8 @@ function choiceOtherwise {
 }"
 }
 function choiceRouter {
-	local subActions="${@:2}"
-	local children=""
+	local subActions=(${@:2})
+	declare -A children
 	local length="${#subActions[@]}"
 	for ((i = 0; i < length; i++)); do
 		case "${subActions[((i))]}" in
@@ -337,7 +337,6 @@ function choiceRouter {
 			fi
 			children['when']="$(choiceWhen "$instances")"
 			;;
-
 		otherwise | o)
 			children['otherwise']="$(choiceOtherwise)"
 			;;
@@ -947,49 +946,49 @@ Cannot process further" >&2
 		content="$(munitConfigTemplate)"
 		;;
 	http:request | hr)
-		content="$(httpRequest "$commands")"
+		content="$(httpRequest "${commands[@]}")"
 		;;
 	transform | tr)
-		content="$(transform "$commands")"
+		content="$(transform "${commands[@]}")"
 		;;
 	choiceRouter | cr)
-		content="$(choiceRouter "$commands")"
+		content="$(choiceRouter "${commands[@]}")"
 		;;
 	scatterGather | sg)
-		content="$(scatterGather "$commands")"
+		content="$(scatterGather "${commands[@]}")"
 		;;
 	jsonLogger | jl)
-		content="$(jsonLogger "$commands")"
+		content="$(jsonLogger "${commands[@]}")"
 		;;
 	log | l)
-		content="$(log "$commands")"
+		content="$(log "${commands[@]}")"
 		;;
 	flow | f)
-		content="$(flow "$commands")"
+		content="$(flow "${commands[@]}")"
 		;;
 	sub-flow | sf)
-		content="$(subFlow "$commands")"
+		content="$(subFlow "${commands[@]}")"
 		;;
 	flow-ref | fr)
-		content="$(flowRef "$commands")"
+		content="$(flowRef "${commands[@]}")"
 		;;
 	try | t)
-		content="$(tryScope "$commands")"
+		content="$(tryScope "${commands[@]}")"
 		;;
 	munit:config | muc)
-		content="$(munitConfig "$commands")"
+		content="$(munitConfig "${commands[@]}")"
 		;;
 	munit:test | mut)
-		content="$(munitTest "$commands")"
+		content="$(munitTest "${commands[@]}")"
 		;;
 	munit:set-event | mus)
-		content="$(munitSetEvent "$commands")"
+		content="$(munitSetEvent "${commands[@]}")"
 		;;
 	munit:assert | mua)
-		content="$(munitAssert "$commands")"
+		content="$(munitAssert "${commands[@]}")"
 		;;
 	munit:verify | muv)
-		content="$(munitVerify "$commands")"
+		content="$(munitVerify "${commands[@]}")"
 		;;
 	munit:attributes | muat)
 		# TODO roll up into munit:verify
@@ -998,10 +997,10 @@ Cannot process further" >&2
 	munit:variables | muvar)
 		# TODO roll up into munit:verify
 		#content="$(munitVariables "${@:2}")"
-		content="$(munitVariables "$commands")"
+		content="$(munitVariables "${commands[@]}")"
 		;;
 	munit:mock | mum)
-		content="$(munitMock "$commands")"
+		content="$(munitMock "${commands[@]}")"
 		;;
 	dataweave | dw)
 		dataweave
