@@ -35,7 +35,7 @@ function assert {
 			return 0
 		else
 			echo "Expected actual to equal '$expected', but was '$actual'" >&2 &&
-				diff --color=auto -U 10 <(echo "$expected") <(echo "$actual") >&2 &&
+				diff --color=auto -U 20 <(echo "$expected") <(echo "$actual") >&2 &&
 				return 2
 		fi
 		;;
@@ -44,7 +44,7 @@ function assert {
 			return 0
 		else
 			echo "Actual did not match expected" >&2 &&
-				diff --color=auto -w -U 10 <(echo "$expected") <(echo "$actual") >&2 &&
+				diff --color=auto -w -U 20 <(echo "$expected") <(echo "$actual") >&2 &&
 				return 2
 		fi
 		;;
