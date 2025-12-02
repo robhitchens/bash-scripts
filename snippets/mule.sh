@@ -412,14 +412,10 @@ message = ':message:')"
 # TODO add instance parameter
 function flow {
 	# TODO may have to refactor if adding support for error-handler
-	# FIXME: rework to use attributes syntax for replacement.
-	local name="$2"
-	if [[ -z $name ]]; then
-		name="':name:'"
-	fi
-	echo "flow(doc:name = $name
-name = $name)
+	echo "flow(doc:name = ':name:'
+name = ':name:')
 {
+    :children:
 }
 "
 }
@@ -445,27 +441,17 @@ name = ':name:')
 }
 ################################################################################
 function flowRef {
-	local subActions=($@)
+	local subActions=(${@:2})
 	local repeat="1"
-	local name=""
-	# FIXME remove name replacement logic
 	# TODO need to iterate over arguments
-	#TODO this should really be an either or, but whatever
-	if ((${#subActions[@]} == 2)); then
-		repeat="${subActions[0]}"
-		name="${subActions[1]}"
-	else
-		firstOption="${subActions[0]}"
-		if [[ -n "$(echo "$firstOption" | grep -E '[0-9]')" ]]; then
-			repeat="$firstOption"
-			name="name"
-		elif [[ -z "$name" || "$name" -eq '' ]]; then
-			name="name"
-		fi
+	# TODO this should really be an either or, but whatever
+	firstOption="${subActions[0]}"
+	if [[ -n "$(echo "$firstOption" | grep -E '[0-9]')" ]]; then
+		repeat="$firstOption"
 	fi
 	for ((i = 0; i < repeat; i++)); do
 		echo "flow-ref(doc:name = ':doc:name-$i:'
-name = ':$name-$i:')
+name = ':name-$i:')
 "
 	done
 }
@@ -665,12 +651,11 @@ message = ':message:')
 }
 function munitWithAttributes {
 	local params="$1"
-	local instances="0"
 	if [[ -n "$(echo "$params" | grep -E '[0-9]')" ]]; then
-		instances="$params"
+		local instances="$params"
 	fi
 	if [[ -z $instances ]]; then
-		instances="1"
+		local instances="1"
 	fi
 	local children=""
 	for ((i = 0; i < instances; i++)); do
@@ -715,7 +700,7 @@ function munitVerifyCall {
 		local instances="$params"
 	fi
 	if [[ -z "$instances" ]]; then
-		local intances="1"
+		local instances="1"
 	fi
 	local children=""
 	for ((i = 0; i < instances; i++)); do
@@ -729,7 +714,7 @@ processor = ':processor:'
 	echo "$children"
 }
 function munitVerify {
-	local subActions="${@:2}"
+	local subActions=(${@:2})
 	local children=""
 	local length="${#subActions[@]}"
 	#for item in $subActions; do
@@ -747,10 +732,13 @@ function munitVerify {
 				local instances="${subActions[((i + 1))]}"
 				((i = i + 1))
 			fi
-			children+="$(munitWithAttributes "$instances")"
+			# FIXME should be nested under verify call as child
+			children+="{ 
+$(munitWithAttributes "$instances")
+}"
 			;;
 		*)
-			echo "Unsupported assert element: $item" >&2
+			echo "Unsupported verify element: $item" >&2
 			exit 1
 			;;
 		esac

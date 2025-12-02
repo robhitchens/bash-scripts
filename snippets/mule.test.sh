@@ -400,6 +400,7 @@ function flow_noArgs_test {
 		assert "$output" equalsIgnoringWhitespace "flow(doc:name = ':name:'
 name = ':name:')
 {
+    :children:
 }"
 }
 
@@ -411,6 +412,7 @@ function flow_noArgs_shorthand_test {
 		assert "$output" equalsIgnoringWhitespace "flow(doc:name = ':name:'
 name = ':name:')
 {
+    :children:
 }"
 }
 
@@ -527,6 +529,440 @@ description = ':description:')
  
     
     
+}"
+}
+
+#TEST
+function munitTest_allArgs_test {
+	local output="$(mule munit:test execution validation behavior)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "munit:test(name = ':name:'
+description = ':description:')
+{
+    munit:behavior
+{
+}
+    munit:execution
+{
+}
+    munit:validation
+{
+}
+}"
+}
+
+#TEST
+function munitTest_allArgs_shorthand_test {
+	local output="$(mule mut e v b)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "munit:test(name = ':name:'
+description = ':description:')
+{
+    munit:behavior
+{
+}
+    munit:execution
+{
+}
+    munit:validation
+{
+}
+}"
+}
+
+#TEST
+function munitSetEvent_noArgs_test {
+	local output="$(mule munit:set-event)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "munit:set-event(doc:name = 'set event')
+{
+ 
+    
+    
+}"
+}
+
+#TEST
+function munitSetEvent_noArgs_shorthand_test {
+	local output="$(mule mus)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "munit:set-event(doc:name = 'set event')
+{
+ 
+    
+    
+}"
+}
+
+#TEST
+function munitSetEvent_allArgs_test {
+	local output="$(mule munit:set-event payload variables 1 attributes 1)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "munit:set-event(doc:name = 'set event')
+{
+    munit:payload(value = '''#[%dw 2.0
+output application/json
+---
+{}]'''
+mediaType = application/json)
+  
+    munit:variables
+{
+    munit:variable(key = ':key-0:'
+    value = '''#[%dw 2.0
+output application/json
+---
+{}]'''
+    mediaType = application/json)
+     
+}
+    munit:attributes 
+{
+    munit:attribute(key = ':key-0:'
+    value = '''#[%dw 2.0
+output application/json
+---
+{}]'''
+    mediaType = application/json)
+     
+ }
+}"
+}
+
+#TEST
+function munitSetEvent_allArgs_shorthand_test {
+	local output="$(mule mus p v 1 a 1)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "munit:set-event(doc:name = 'set event')
+{
+    munit:payload(value = '''#[%dw 2.0
+output application/json
+---
+{}]'''
+mediaType = application/json)
+  
+    munit:variables
+{
+    munit:variable(key = ':key-0:'
+    value = '''#[%dw 2.0
+output application/json
+---
+{}]'''
+    mediaType = application/json)
+     
+}
+    munit:attributes 
+{
+    munit:attribute(key = ':key-0:'
+    value = '''#[%dw 2.0
+output application/json
+---
+{}]'''
+    mediaType = application/json)
+     
+ }
+}"
+}
+
+#TEST
+function munitAssert_noArgs_test {
+	local output="$(mule munit:assert)"
+
+	assert "$output" isEmpty
+}
+
+#TEST
+function munitAssert_noArgs_shorthand_test {
+	local output="$(mule mua)"
+
+	assert "$output" isEmpty
+}
+
+#TEST
+function munitAssert_equals_test {
+	local output="$(mule munit:assert equals)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "munit-tools:assert-equals(doc:name = 'assert equals'
+actual = '#[:actual:]'
+expected = '#[:expected:]')"
+}
+
+#TEST
+function munitAssert_equals_shorthand_test {
+	local output="$(mule mua eq)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "munit-tools:assert-equals(doc:name = 'assert equals'
+actual = '#[:actual:]'
+expected = '#[:expected:]')"
+}
+
+#TEST
+function munitAssert_that_test {
+	local output="$(mule munit:assert that)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "munit-tools:assert-that(doc:name = 'assert that'
+expression = #[payload]
+is = '#[MunitTools::notNullValue()]'
+message = ':message:')"
+}
+
+#TEST
+function munitAssert_that_shorthand_test {
+	local output="$(mule mua th)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "munit-tools:assert-that(doc:name = 'assert that'
+expression = #[payload]
+is = '#[MunitTools::notNullValue()]'
+message = ':message:')"
+}
+
+#TEST
+function munitVerify_noArgs_test {
+	local output="$(mule munit:verify)"
+
+	assert "$output" isEmpty
+}
+
+#TEST
+function munitVerify_noArgs_shorthand_test {
+	local output="$(mule muv)"
+
+	assert "$output" isEmpty
+}
+
+#TEST
+function munitVerify_allArgs_test {
+	local output="$(mule munit:verify call 1 attributes 1)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "munit-tools:verify-call(doc:name = 'Verify Call'
+atLeast = ':atLeast:'
+atMost = ':atMost:'
+times = ':times:'
+processor = ':processor:'
+){
+
+munit-tools:with-attributes {
+    munit-tools:with-attribute(attributeName = ':attributeName:'
+    whereValue=':whereValue-0:')
+
+}
+}"
+}
+
+#TEST
+function munitVerify_allArgs_shorthand_test {
+	local output="$(mule muv c 1 a 1)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "munit-tools:verify-call(doc:name = 'Verify Call'
+atLeast = ':atLeast:'
+atMost = ':atMost:'
+times = ':times:'
+processor = ':processor:'
+){
+
+munit-tools:with-attributes {
+    munit-tools:with-attribute(attributeName = ':attributeName:'
+    whereValue=':whereValue-0:')
+
+}
+}"
+}
+
+#TEST
+function munitAttributes_noArgs_test {
+	local output="$(mule munit:attributes)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "
+munit-tools:with-attributes {
+    munit-tools:with-attribute(attributeName = ':attributeName:'
+whereValue = ':whereValue-0:')
+
+}"
+}
+
+#TEST
+function munitAttributes_noArgs_shorthand_test {
+	local output="$(mule muat)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "
+munit-tools:with-attributes {
+    munit-tools:with-attribute(attributeName = ':attributeName:'
+whereValue = ':whereValue-0:')
+
+}"
+}
+
+#TEST
+function munitAttributes_allArgs_test {
+	local output="$(mule munit:attributes 1)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "
+munit-tools:with-attributes {
+    munit-tools:with-attribute(attributeName = ':attributeName:'
+whereValue = ':whereValue-0:')
+
+}"
+}
+
+#TEST
+function munitAttributes_allArgs_shorthand_test {
+	local output="$(mule muat 1)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "
+munit-tools:with-attributes {
+    munit-tools:with-attribute(attributeName = ':attributeName:'
+whereValue = ':whereValue-0:')
+
+}"
+}
+
+#TEST
+function munitVariables_noArgs_test {
+	local output="$(mule munit:variables)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "
+munit-tools:variables {
+    munit-tools:variable(key = ':key-0:'
+value = '''#[%dw 2.0
+           output application/json
+           ---
+           {}]'''
+mediaType = 'application/json')
+
+}"
+}
+
+#TEST
+function munitVariables_noArgs_shorthand_test {
+	local output="$(mule muvar)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "
+munit-tools:variables {
+    munit-tools:variable(key = ':key-0:'
+value = '''#[%dw 2.0
+           output application/json
+           ---
+           {}]'''
+mediaType = 'application/json')
+
+}"
+}
+
+#TEST
+function munitVariables_allArgs_test {
+	local output="$(mule munit:variables 1)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "
+munit-tools:variables {
+    munit-tools:variable(key = ':key-0:'
+value = '''#[%dw 2.0
+           output application/json
+           ---
+           {}]'''
+mediaType = 'application/json')
+
+}"
+}
+
+#TEST
+function munitVariables_allArgs_shorthand_test {
+	local output="$(mule muvar 1)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "
+munit-tools:variables {
+    munit-tools:variable(key = ':key-0:'
+value = '''#[%dw 2.0
+           output application/json
+           ---
+           {}]'''
+mediaType = 'application/json')
+
+}"
+}
+
+#TEST
+function munitMock_noArgs_test {
+	local output="$(mule munit:mock)"
+
+	assert "$output" isEmpty
+}
+
+#TEST
+function munitMock_noArgs_shorthand_test {
+	local output="$(mule mum)"
+
+	assert "$output" isEmpty
+}
+
+#TEST
+function munitMock_allArgs_test {
+	local output="$(mule munit:mock when attribute return)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "
+munit-tools:mock-when(doc:name = ':doc:name:'
+processor = ':processor:')
+{
+    :children:
+}
+munit-tools:with-attributes {
+    munit-tools:with-attribute(attributeName = ':attributeName:'
+    whereValue = ':whereValue:')
+}
+munit-tools:then-return {
+    munit-tools:payload(value = '''#[:payload:]''')
+    munit-tools:variables {
+    munit-tools:variable(key = ':key:' 
+    value     = '''#[:value:]'''
+    mediaType = application/json)
+    }
+    munit-tools:error(typeId = ':typeId:')
+}"
+}
+
+#TEST
+function munitMock_allArgs_shorthand_test {
+	local output="$(mule mum w a r)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "
+munit-tools:mock-when(doc:name = ':doc:name:'
+processor = ':processor:')
+{
+    :children:
+}
+munit-tools:with-attributes {
+    munit-tools:with-attribute(attributeName = ':attributeName:'
+    whereValue = ':whereValue:')
+}
+munit-tools:then-return {
+    munit-tools:payload(value = '''#[:payload:]''')
+    munit-tools:variables {
+    munit-tools:variable(key = ':key:' 
+    value     = '''#[:value:]'''
+    mediaType = application/json)
+    }
+    munit-tools:error(typeId = ':typeId:')
 }"
 }
 
