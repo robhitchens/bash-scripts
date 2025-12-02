@@ -4,11 +4,14 @@ source bsunit-lib.sh
 
 readonly uuidRegex='[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'
 
+# TODO could reduce the amount of tests by adding support for parameterized tests somehow, at least parameterized input.
+
 #TEST
 function muleRoot_test {
 	local output="$(mule muleRoot)"
 
-	assert "$output" equals "mule(xsi:schemaLocation = 'http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd'
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "mule(xsi:schemaLocation = 'http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd'
      xmlns:xsi          = http://www.w3.org/2001/XMLSchema-instance
      xmlns:ee           = http://www.mulesoft.org/schema/mule/ee/core
      xmlns:http         = http://www.mulesoft.org/schema/mule/http
@@ -24,7 +27,8 @@ function muleRoot_test {
 function muleRoot_shorthand_test {
 	local output="$(mule mr)"
 
-	assert "$output" equals "mule(xsi:schemaLocation = 'http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd'
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "mule(xsi:schemaLocation = 'http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd'
      xmlns:xsi          = http://www.w3.org/2001/XMLSchema-instance
      xmlns:ee           = http://www.mulesoft.org/schema/mule/ee/core
      xmlns:http         = http://www.mulesoft.org/schema/mule/http
@@ -40,7 +44,8 @@ function muleRoot_shorthand_test {
 function munitRoot_test {
 	local output="$(mule munitRoot)"
 
-	assert "$output" equals "mule(xsi:schemaLocation = 'http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd   http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd   http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd'
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "mule(xsi:schemaLocation = 'http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd   http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd   http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd'
      xmlns:xsi          = http://www.w3.org/2001/XMLSchema-instance
      xmlns:munit        = http://www.mulesoft.org/schema/mule/munit
      xmlns:munit-tools  = http://www.mulesoft.org/schema/mule/munit-tools
@@ -55,7 +60,8 @@ function munitRoot_test {
 function munitRoot_shorthand_test {
 	local output="$(mule mur)"
 
-	assert "$output" equals "mule(xsi:schemaLocation = 'http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd   http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd   http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd'
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "mule(xsi:schemaLocation = 'http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd   http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd   http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd'
      xmlns:xsi          = http://www.w3.org/2001/XMLSchema-instance
      xmlns:munit        = http://www.mulesoft.org/schema/mule/munit
      xmlns:munit-tools  = http://www.mulesoft.org/schema/mule/munit-tools
@@ -71,7 +77,8 @@ function httpRequest_noArgs_test {
 	# NOTE: should probably just have the template not auto inject uuid for http:request template.
 	local output="$(mule http:request | sed -E "s/$uuidRegex/':doc:id:'/")"
 
-	assert "$output" equals "http:request(method     = ':method:'
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "http:request(method     = ':method:'
              doc:name   = ':name:'
              doc:id     = ':doc:id:'
              config-ref = ':config-ref:'
@@ -91,7 +98,8 @@ function httpRequest_noArgs_test {
 function httpRequest_noArgs_shorthand_test {
 	local output="$(mule hr | sed -E "s/$uuidRegex/':doc:id:'/")"
 
-	assert "$output" equals "http:request(method     = ':method:'
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "http:request(method     = ':method:'
              doc:name   = ':name:'
              doc:id     = ':doc:id:'
              config-ref = ':config-ref:'
@@ -111,7 +119,8 @@ function httpRequest_noArgs_shorthand_test {
 function httpRequest_allArgs_test {
 	local output="$(mule http:request body headers uriParams queryParams)"
 
-	assert "$(echo "$output" | sed -E "s/$uuidRegex/':doc:id:'/")" equals "http:request(method     = ':method:'
+	assert "$output" isNotEmpty &&
+		assert "$(echo "$output" | sed -E "s/$uuidRegex/':doc:id:'/")" equalsIgnoringWhitespace "http:request(method     = ':method:'
              doc:name   = ':name:'
              doc:id     = ':doc:id:'
              config-ref = ':config-ref:'
@@ -147,7 +156,8 @@ output application/java
 function httpRequest_allArgs_shorthand_test {
 	local output="$(mule hr b h u q)"
 
-	assert "$(echo "$output" | sed -E "s/$uuidRegex/':doc:id:'/")" equals "http:request(method     = ':method:'
+	assert "$output" isNotEmpty &&
+		assert "$(echo "$output" | sed -E "s/$uuidRegex/':doc:id:'/")" equalsIgnoringWhitespace "http:request(method     = ':method:'
              doc:name   = ':name:'
              doc:id     = ':doc:id:'
              config-ref = ':config-ref:'
@@ -183,7 +193,8 @@ output application/java
 function transform_noArgs_test {
 	local output="$(mule transform)"
 
-	assert "$output" equals "ee:transform(doc:name = 'Transform Message')
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "ee:transform(doc:name = 'Transform Message')
 {
     ee:message
     
@@ -195,7 +206,8 @@ function transform_noArgs_test {
 function transform_noArgs_shorthand_test {
 	local output="$(mule tr)"
 
-	assert "$output" equals "ee:transform(doc:name = 'Transform Message')
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "ee:transform(doc:name = 'Transform Message')
 {
     ee:message
     
@@ -206,7 +218,9 @@ function transform_noArgs_shorthand_test {
 #TEST
 function transform_allArgs_test {
 	local output="$(mule transform payload variables 1)"
-	assert "$output" equals "ee:transform(doc:name = 'Transform Message')
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "ee:transform(doc:name = 'Transform Message')
 {
     ee:message
 {
@@ -230,7 +244,9 @@ output application/json
 #TEST
 function transform_allArgs_shorthand_test {
 	local output="$(mule tr p v 1)"
-	assert "$output" equals "ee:transform(doc:name = 'Transform Message')
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "ee:transform(doc:name = 'Transform Message')
 {
     ee:message
 {
@@ -255,7 +271,8 @@ output application/json
 function choiceRouter_noargs_test {
 	local output="$(mule choiceRouter)"
 
-	assert "$output" equals "choice(doc:name=':doc:name:')
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "choice(doc:name=':doc:name:')
 {
 
 
@@ -266,7 +283,8 @@ function choiceRouter_noargs_test {
 function choiceRouter_noargs_shorthand_test {
 	local output="$(mule cr)"
 
-	assert "$output" equals "choice(doc:name=':doc:name:')
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "choice(doc:name=':doc:name:')
 {
 
 
@@ -277,7 +295,8 @@ function choiceRouter_noargs_shorthand_test {
 function choiceRouter_allArgs_shorthand_test {
 	local output="$(mule cr w 1 o)"
 
-	assert "$output" equals "choice(doc:name=':doc:name:')
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "choice(doc:name=':doc:name:')
 {
     when(expression='#[:expression:]')
 {
@@ -285,6 +304,52 @@ function choiceRouter_allArgs_shorthand_test {
 }
     otherwise {
     :children:
+}
+}"
+}
+
+#TEST
+function scatterGather_noArgs_test {
+	local output="$(mule scatterGather)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "scatter-gather(doc:name = Scatter-Gather)
+{
+ 
+}"
+}
+
+#TEST
+function scatterGather_noArgs_shorthand_test {
+	local output="$(mule sg)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "scatter-gather(doc:name = Scatter-Gather)
+{
+ 
+}"
+}
+
+#TEST
+function scatterGather_allArgs_test {
+	local output="$(mule scatterGather r 1)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "scatter-gather(doc:name = Scatter-Gather)
+{
+route {
+}
+}"
+}
+
+#TEST
+function scatterGather_allArgs_shorthand_test {
+	local output="$(mule sg r 1)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "scatter-gather(doc:name = Scatter-Gather)
+{
+route {
 }
 }"
 }

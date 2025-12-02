@@ -369,7 +369,7 @@ function scatterGatherRoute {
 	echo "$children"
 }
 function scatterGather {
-	local subActions="${@:2}"
+	local subActions=(${@:2})
 	local length="${#subActions[@]}"
 	declare -A children
 	for ((i = 0; i < length; i++)); do
