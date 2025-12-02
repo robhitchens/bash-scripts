@@ -41,9 +41,12 @@ EOF
 declare -A bsunit_testResults
 declare -a bsunit_sourcedTests
 readonly bsunit_messageHeader="[BSUNIT]"
+# FIXME: should be able to declare all of these as a single line.
 declare -g passedTests
 declare -g failedTests
 declare -g assertionFailures
+declare -g start
+declare -g end
 
 # TODO could expand #TEST annotation with [ ] to add additional attributes could be simply key=value config
 # potential options would be ignore, exitsWithErrorCode
@@ -157,25 +160,48 @@ function bsunit_testRunner {
 	) | streamOutput
 }
 
+function segmentTimestamp {
+	local timeStamp="$1"
+	local subExp='([0-9]{2}):([0-9]{2}):([0-9]{2})[.]([0-9]{3})'
+	# TODO could probably simplify this logic using bash substitution expressions (or whatever they're called)
+	local hours="$(echo "$timeStamp" | sed -E "s/$subExp/\1/")"
+	local minutes="$(echo "$timeStamp" | sed -E "s/$subExp/\2/")"
+	local seconds="$(echo "$timeStamp" | sed -E "s/$subExp/\3/")"
+	local milliseconds="$(echo "$timeStamp" | sed -E "s/$subExp/\4/")"
+	echo "$hours $minutes $seconds $milliseconds"
+}
+
+function formatElapsedTime {
+	#FIXME this function won't be able to handle clock rollover logic i.e. 23:59 -> 00:00
+	local startTime="$1"
+	local endTime="$2"
+	local sSeg=($(segmentTimestamp "$startTime"))
+	local eSeg=($(segmentTimestamp "$endTime"))
+
+	echo "$((${eSeg[0]} - ${sSeg[0]}))h $((${eSeg[1]} - ${sSeg[1]}))m $((${eSeg[2]} - ${sSeg[2]}))s $((${eSeg[3]} - ${sSeg[3]}))ms"
+}
+
 function outputResults {
-	# TODO Add support for assertion failures, will require some additional thought, probably just another file that bsunit-lib manages.
 	local numPass=$(cat $passedTests | wc -l)
 	local numFail=$(cat $failedTests | wc -l)
 	local numAssertionFail=$(cat $assertionFailures | wc -l)
-	local formattedFailed="$(cat $failedTests | sed -E "s/(.*)/$bsunit_messageHeader \t- \1/")"
-	local formattedAssertFails="$(cat $assertionFailures | sed -E "s/(.*)/$bsunit_messageHeader \t- \1/")"
+	local formattedFailed="$(cat $failedTests | sed -E "s/(.*)/$bsunit_messageHeader - \1/")"
+	local formattedAssertFails="$(cat $assertionFailures | sed -E "s/(.*)/$bsunit_messageHeader - \1/")"
 	# TODO add execution time.
 	echo "$bsunit_messageHeader Test results:
+$bsunit_messageHeader Start Time: $(echo "$start" | date +'%H:%M:%S.%3N')
+$bsunit_messageHeader End Time: $(echo "$end" | date +'%H:%M:%S.%3N')
+$bsunit_messageHeader Total execution time: $(formatElapsedTime "$start" "$end")
 $bsunit_messageHeader - Total tests executed: ${#bsunit_sourcedTests[@]}/${#bsunit_sourcedTests[@]}
 $bsunit_messageHeader - Successful tests:     $numPass/${#bsunit_sourcedTests[@]}
 $bsunit_messageHeader - Failed tests:         $numFail/${#bsunit_sourcedTests[@]}
 $bsunit_messageHeader - Assertion failures:   $numAssertionFail/${#bsunit_sourcedTests[@]}"
 	if [[ -n "$formattedAssertFails" ]]; then
-		echo "$bsunit_messageHeader -------------------- Failed Assertions -------------------- 
+		echo "$bsunit_messageHeader -------------------- Tests with failed assertions -------------------- 
 $formattedAssertFails"
 	fi
 	if [[ -n "$formattedFailed" ]]; then
-		echo "$bsunit_messageHeader -------------------- Failed Tests ------------------------
+		echo "$bsunit_messageHeader -------------------- Failed tests ------------------------------------
 $formattedFailed"
 	fi
 	# TODO add stats for ignored count as well
@@ -241,6 +267,7 @@ function bsunit_main {
 		# could utilize grep to find which lines are annotated, simple increment by 1 to get the function name to execute.
 		# after running each file, may want to see if there's a way to unsource a file or something.
 		# could deal with isolating source by encapsulating in subshell while sourcing and running tests.
+		start="$(date +'%T.%3N')"
 		local tmpFiles=($(makeTmpDir))
 		passedTests=${tmpFiles[0]}
 		failedTests=${tmpFiles[1]}
@@ -275,6 +302,7 @@ function bsunit_main {
 			echo "no tests found" &>2
 			exit 1
 		fi
+		end="$(date +'%T.%3N')"
 		outputResults
 	fi
 }

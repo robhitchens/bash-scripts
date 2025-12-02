@@ -14,40 +14,51 @@ function assert {
 	local actual="$1"
 	local expected="$3"
 	case "$2" in
-	equals)
-		#if [[ "$actual" == "$expected" ]]; then
-		if [[ "$(diff -w <(echo "$expected") <(echo "$actual") | wc -l)" == '0' ]]; then
+	isEmpty)
+		if [[ -z "$actual" ]]; then
 			return 0
 		else
-			#echo "Expected '$expected', but got '$actual'" >&2
-			echo "Actual did not match expected" >&2
-			diff --color=auto -w -U 10 <(echo "$expected") <(echo "$actual") >&2
-			return 2
+			echo "Expecting actual to be empty, but was '$actual'" >&2 &&
+				return 2
 		fi
 		;;
-	matches)
-		# TODO may change to just a simple $string matches "$regex"
-		#FIXME: this doesn't quite work with multiline regex.
-		#might just implement a sed replace and compare.
-		#FIXME: need to be able to handle more substitutions.
-		local substitutions=("$(echo "$expected" | grep -nE 's/(.*)/(.*)/')")
-		for sub in "${substitutions[@]}"; do
-			local line="$(echo "$sub" | sed -E -s 's/^(.*):(.*)/\1/')"
-			local subCommand="$(echo "$sub" | sed -E -s 's:^.*(s/(.*)/(.*)/).*$:\1:')"
-			actual="$(echo "$actual" | sed -E "$line$subCommand")"
-		done
-		#if [[ $(echo "$actual" | grep -E "$expected" | wc -l) == '1' ]]; then
-		#FIXME this won't work as implemented.
+	isNotEmpty)
+		if [[ -n "$actual" ]]; then
+			return 0
+		else
+			echo "Expecting actual to not be empty, but was '$actual'" >&2 &&
+				return 2
+		fi
+		;;
+	equals)
 		if [[ "$actual" == "$expected" ]]; then
 			return 0
 		else
-			echo "Expected actual '$actual' to match '$expected', but did not" >&2
-			return 2
+			echo "Expected actual to equal '$expected', but was '$actual'" >&2 &&
+				diff --color=auto -U 10 <(echo "$expected") <(echo "$actual") >&2 &&
+				return 2
+		fi
+		;;
+	equalsIgnoringWhitespace)
+		if [[ "$(diff -w <(echo "$expected") <(echo "$actual") | wc -l)" == '0' ]]; then
+			return 0
+		else
+			echo "Actual did not match expected" >&2 &&
+				diff --color=auto -w -U 10 <(echo "$expected") <(echo "$actual") >&2 &&
+				return 2
+		fi
+		;;
+	matches)
+		if [[ "$(echo "$actual" | grep -E "$expected" | wc -l)" == '0' ]]; then
+			return 0
+		else
+			echo "Expected actual '$actual' to match '$expected', but did not" >&2 &&
+				return 2
 		fi
 		;;
 	*)
-		echo "Unsupported assertion '$2'" >&2
-		exit 1
+		echo "Unsupported assertion '$2'" >&2 &&
+			exit 1
 		;;
 	esac
 }
