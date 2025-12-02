@@ -354,6 +354,182 @@ route {
 }"
 }
 
+#TEST
+function jsonLogger_noArgs_test {
+	local output="$(mule jsonLogger)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "json-logger:logger(doc:name   = ':doc:name:'
+        config-ref = JSON_Logger_Config
+        message    = ':message:')"
+}
+
+#TEST
+function jsonLogger_noArgs_shorthand_test {
+	local output="$(mule jl)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "json-logger:logger(doc:name   = ':doc:name:'
+        config-ref = JSON_Logger_Config
+        message    = ':message:')"
+}
+
+#TEST
+function log_noArgs_test {
+	local output="$(mule log)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "logger(level=':level:'
+message = ':message:')"
+}
+
+#TEST
+function log_noArgs_shorthand_test {
+	local output="$(mule l)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "logger(level=':level:'
+message = ':message:')"
+}
+
+#TEST
+function flow_noArgs_test {
+	local output="$(mule flow)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "flow(doc:name = ':name:'
+name = ':name:')
+{
+}"
+}
+
+#TEST
+function flow_noArgs_shorthand_test {
+	local output="$(mule f)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "flow(doc:name = ':name:'
+name = ':name:')
+{
+}"
+}
+
+#TEST
+function subflow_noargs_test {
+	local output="$(mule sub-flow)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "sub-flow(doc:name = ':doc:name:'
+name = ':name:')
+{
+    :children:
+}"
+}
+
+#TEST
+function subflow_noargs_shorthand_test {
+	local output="$(mule sf)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "sub-flow(doc:name = ':doc:name:'
+name = ':name:')
+{
+    :children:
+}"
+}
+
+#TEST
+function try_noArgs_test {
+	local output="$(mule try)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "try(doc:name = Try)
+{
+    :children: 
+
+}"
+}
+
+#TEST
+function try_noArgs_shorthand_test {
+	local output="$(mule t)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "try(doc:name = Try)
+{
+    :children: 
+
+}"
+}
+
+#TEST
+function try_allArgs_test {
+	local output="$(mule try errorhandler)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "try(doc:name = Try)
+{
+    :children:
+    error-handler(ref = global-error-handler)
+}"
+}
+
+#TEST
+function try_allArgs_shorthand_test {
+	local output="$(mule t eh)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "try(doc:name = Try)
+{
+    :children:
+    error-handler(ref = global-error-handler)
+}"
+}
+
+#TEST
+function munitConfig_noArgs_test {
+	local output="$(mule munit:config)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "munit:config(name = ':name:')"
+}
+
+#TEST
+function munitConfig_noArgs_shorthand_test {
+	local output="$(mule muc)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "munit:config(name = ':name:')"
+}
+
+#TEST
+function munitTest_noArgs_test {
+	local output="$(mule munit:test)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "munit:test(name = ':name:'
+description = ':description:')
+{
+ 
+    
+    
+}"
+}
+
+#TEST
+function munitTest_noArgs_shorthand_test {
+	local output="$(mule mut)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "munit:test(name = ':name:'
+description = ':description:')
+{
+ 
+    
+    
+}"
+}
+
 # TODO add more unit tests validating behavior of all template commands.
 # TODO add test coverage for bad input to commands.
 # TODO add simple test for attribute replacement

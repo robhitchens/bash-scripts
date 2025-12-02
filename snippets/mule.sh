@@ -488,6 +488,7 @@ function tryScope {
 	done
 	echo "try(doc:name = Try)
 {
+    :children:
     $children
 }
 "
