@@ -163,16 +163,18 @@ function bsunit_testRunner {
 function segmentTimestamp {
 	local timeStamp="$1"
 	local subExp='([0-9]{2}):([0-9]{2}):([0-9]{2})[.]([0-9]{3})'
+	local leadingZeros='^[0]+([0-9]+)'
 	# TODO could probably simplify this logic using bash substitution expressions (or whatever they're called)
-	local hours="$(echo "$timeStamp" | sed -E "s/$subExp/\1/")"
-	local minutes="$(echo "$timeStamp" | sed -E "s/$subExp/\2/")"
-	local seconds="$(echo "$timeStamp" | sed -E "s/$subExp/\3/")"
-	local milliseconds="$(echo "$timeStamp" | sed -E "s/$subExp/\4/")"
+	local hours="$(echo "$timeStamp" | sed -E "s/$subExp/\1/" | sed -E "s/$leadingZeros/\1/")"
+	local minutes="$(echo "$timeStamp" | sed -E "s/$subExp/\2/" | sed -E "s/$leadingZeros/\1/")"
+	local seconds="$(echo "$timeStamp" | sed -E "s/$subExp/\3/" | sed -E "s/$leadingZeros/\1/")"
+	local milliseconds="$(echo "$timeStamp" | sed -E "s/$subExp/\4/" | sed -E "s/$leadingZeros/\1/")"
 	echo "$hours $minutes $seconds $milliseconds"
 }
 
 function formatElapsedTime {
 	#FIXME this function won't be able to handle clock rollover logic i.e. 23:59 -> 00:00
+	#FIXME the calculations seem off, something is not getting evaluated correctly.
 	local startTime="$1"
 	local endTime="$2"
 	local sSeg=($(segmentTimestamp "$startTime"))
@@ -189,8 +191,8 @@ function outputResults {
 	local formattedAssertFails="$(cat $assertionFailures | sed -E "s/(.*)/$bsunit_messageHeader - \1/")"
 	# TODO add execution time.
 	echo "$bsunit_messageHeader Test results:
-$bsunit_messageHeader Start Time: $(echo "$start" | date +'%H:%M:%S.%3N')
-$bsunit_messageHeader End Time: $(echo "$end" | date +'%H:%M:%S.%3N')
+$bsunit_messageHeader Start Time: $start
+$bsunit_messageHeader End Time: $end
 $bsunit_messageHeader Total execution time: $(formatElapsedTime "$start" "$end")
 $bsunit_messageHeader - Total tests executed: ${#bsunit_sourcedTests[@]}/${#bsunit_sourcedTests[@]}
 $bsunit_messageHeader - Successful tests:     $numPass/${#bsunit_sourcedTests[@]}
@@ -280,6 +282,7 @@ function bsunit_main {
 			# TODO add check to see if files and directories are mixed. If so, exit with error.
 			if [[ -f "$2" ]]; then
 				# TODO expand to support multiple files.
+				echo "$bsunit_messageHeader running test suite: $2"
 				bsunit_testRunner "$2"
 			elif [[ -d "$2" ]]; then
 				# TODO expand to support multiple directories
@@ -287,6 +290,7 @@ function bsunit_main {
 				local length="${#testFiles[@]}"
 				for ((i = 0; i < length; i++)); do
 					# TODO should probably just use a for in loop
+					echo "$bsunit_messageHeader running test suite: ${testFiles[i]}"
 					bsunit_testRunner "${testFiles[((i))]}"
 				done
 			else
@@ -295,6 +299,7 @@ function bsunit_main {
 					echo "Invalid test function syntax: $2" >&2
 					exit 1
 				fi
+				echo "$bsunit_messageHeader running test suite: ${arr[0]}"
 				bsunit_testRunner "${arr[0]}" "${arr[1]}"
 				# TODO handle case where test provided is single test.
 			fi
