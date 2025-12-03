@@ -85,6 +85,7 @@ Commands (Snippets):
   try|t  [children]                     Generates a try scope template
     children:
         - errorhandler|eh               Generates an error-handler template within the parent element
+  raise|re                              Generates an raise-error template
   munit:config|muc [name]               Generates an munit config template with the given name
   munit:test|mut [children...]          Generates an munit test
     children:
@@ -478,6 +479,13 @@ function tryScope {
     $children
 }
 "
+}
+################################################################################
+function raiseError {
+	echo "raise-error(doc:name    = 'Raise error'
+doc:id      = ':doc:id:'
+type        = ':type:'
+description = ':description:')"
 }
 ################################################################################
 function munitConfig {
@@ -963,6 +971,9 @@ Cannot process further" >&2
 		;;
 	try | t)
 		content="$(tryScope "${commands[@]}")"
+		;;
+	raise-error | re)
+		content="$(raiseError "${commands[@]}")"
 		;;
 	munit:config | muc)
 		content="$(munitConfig "${commands[@]}")"

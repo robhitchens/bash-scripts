@@ -966,6 +966,74 @@ munit-tools:then-return {
 }"
 }
 
+#TEST
+function dataweave_noArgs_test {
+	local output="$(mule dataweave)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "%dw 2.0
+output application/json
+---
+{}"
+}
+
+#TEST
+function dataweave_noArgs_shorthand_test {
+	local output="$(mule dw)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "%dw 2.0
+output application/json
+---
+{}"
+}
+
+#TEST
+function raiseError_noArgs_test {
+	local output="$(mule raise-error)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "raise-error(doc:name    = 'Raise error'
+doc:id      = ':doc:id:'
+type        = ':type:'
+description = ':description:')"
+}
+
+#TEST
+function raiseError_noArgs_shorthand_test {
+	local output="$(mule re)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "raise-error(doc:name    = 'Raise error'
+doc:id      = ':doc:id:'
+type        = ':type:'
+description = ':description:')"
+}
+
+#TEST
+function raiseError_attributeReplacement_test {
+	local output="$(mule re [ :doc:id: 'some id' :type: someType :description: 'some description' ])"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "raise-error(doc:name    = 'Raise error'
+doc:id      = 'some id'
+type        = 'someType'
+description = 'some description')"
+}
+
+#TEST
+function tryScope_wrap_stdin_test {
+	local output="$(echo "some child element" | mule -w t eh)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "try(doc:name = Try)
+{
+    some child element
+
+    error-handler(ref = global-error-handler)
+}"
+}
+
 # TODO add more unit tests validating behavior of all template commands.
 # TODO add test coverage for bad input to commands.
 # TODO add simple test for attribute replacement
