@@ -842,6 +842,9 @@ function filterTestOutput {
 		if [[ "$line" == '[INFO] >>> munit:3.3.2:coverage-report (test) > [munit]test @ wsfs-clients-process-api >>>' ]]; then
 			display=0
 		fi
+		if [[ "$line" == '[INFO] BUILD FAILURE' ]]; then
+			display=1
+		fi
 		if ((display == 1)); then
 			echo "${line/\[INFO\]/}"
 		fi
