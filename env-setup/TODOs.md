@@ -1,3 +1,0 @@
-# TODOs
-
-- [ ] Add script to setup common exports like editor,browser,etc...
