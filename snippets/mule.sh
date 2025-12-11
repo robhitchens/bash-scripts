@@ -70,22 +70,27 @@ Commands (Snippets):
         - variables|v [#]               Generates a ee:variables template with the given (number) of ee:set-variable element templates.
         - attributes|a [#]              Generates the ee:attributes tempalte with the given (number) of ee:set-attribute element templates.
   transform:set-payload|trp             Temporary shortcut for transform payload
-  choiceRouter|cr [children...]         WIP: Generates a choice template with the provided child element templates.
+  choiceRouter|cr [children...]         Generates a choice template with the provided child element templates.
     children:
-        - when|w [#]                    WIP: Generates the given (number) of when templates within the parent element.
-        - otherwise|o                   WIP: Generates a otherwise template within the parent element.
-  scatterGather|sg [children...]        WIP: Generates a scatter-gather tempalte with the provided child elements.
+        - when|w [#]                    Generates the given (number) of when templates within the parent element.
+        - otherwise|o                   Generates a otherwise template within the parent element.
+  scatterGather|sg [children...]        Generates a scatter-gather tempalte with the provided child elements.
     children:
-        - route|r [#]                   WIP: Generates the given (number) of route templates within the parent element.
+        - route|r [#]                   Generates the given (number) of route templates within the parent element.
   jsonLogger|jl                         Generates a jsonlogger template
-  log|l                                 WIP: Generates a log template
+  log|l                                 Generates a log template
   flow|f [name]                         Generates a flow template with the given flow name
   sub-flow|sf [name]                    Generates a sub-flow template with the given sub-flow name
   flow-ref|fr [#] [name]                Generates a flow-ref template with the given referenced flow name
   try|t  [children]                     Generates a try scope template
     children:
         - errorhandler|eh               Generates an error-handler template within the parent element
-  raise|re                              Generates an raise-error template
+  raise|re                              Generates a raise-error template
+  batch:job|b [children]                Generates a batch scope template
+    children:
+        - process-records|pr [children] Generates a batch:process-records template within the parent element
+            - step|s [children]         Generates a batch:step template within the parent element
+               - aggregator|a           Generates a batch:aggregator template within the parent element
   munit:config|muc [name]               Generates an munit config template with the given name
   munit:test|mut [children...]          Generates an munit test
     children:
@@ -486,6 +491,15 @@ function raiseError {
 doc:id      = ':doc:id:'
 type        = ':type:'
 description = ':description:')"
+}
+################################################################################
+function batchJob {
+	# TODO need to figure out if this is actually required anymore
+	local subActions=(${@:2})
+	# TODO handle children:
+	# - process-records | pr
+	#   - step | s
+	#       - aggregator | a
 }
 ################################################################################
 function munitConfig {
@@ -978,6 +992,9 @@ Cannot process further" >&2
 	raise-error | re)
 		content="$(raiseError "${commands[@]}")"
 		;;
+	batch:job | b)
+		content="$(batchJob "${commands[@]}")"
+		;;
 	munit:config | muc)
 		content="$(munitConfig "${commands[@]}")"
 		;;
@@ -999,7 +1016,6 @@ Cannot process further" >&2
 		;;
 	munit:variables | muvar)
 		# TODO roll up into munit:verify
-		#content="$(munitVariables "${@:2}")"
 		content="$(munitVariables "${commands[@]}")"
 		;;
 	munit:mock | mum)
