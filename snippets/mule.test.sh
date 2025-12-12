@@ -918,6 +918,7 @@ function munitMock_noArgs_shorthand_test {
 function munitMock_allArgs_test {
 	local output="$(mule munit:mock when attribute return)"
 
+	#FIXME update logic to process :children: template properly.
 	assert "$output" isNotEmpty &&
 		assert "$output" equalsIgnoringWhitespace "
 munit-tools:mock-when(doc:name = ':doc:name:'
