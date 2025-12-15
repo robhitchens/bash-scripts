@@ -945,9 +945,9 @@ Cannot process further" >&2
 	case "$element" in
 	# TODO use split operation on arguments here before passing to functions.
 	# TODO should find way to break out test and run command from this logic, maybe a simple lookahead check in main?
-	#test)
-	#	runMunitTest $@
-	#	;;
+	test)
+		runMunitTest ${@:1}
+		;;
 	run)
 		runMule
 		;;
@@ -1072,10 +1072,6 @@ function main {
 		installScript
 		exit 0
 	fi
-	if [[ "$1" == 'test' ]]; then
-		runMunitTest "${@:1}"
-		exit 0
-	fi
 
 	local skipCount=0
 	while getopts "wvlth" flag; do
@@ -1106,6 +1102,11 @@ function main {
 			;;
 		esac
 	done
+	# FIXME refactor logic to parse commands
+	if [[ "$1" == 'test' ]]; then
+		runMunitTest "${@:1}"
+		exit 0
+	fi
 	# FIXME need to deal with mixed arguments+pipe for expression replacement in existing document and/or wrap stdin with argument
 	local argLength="$#"
 	# FIXME add support for simple find and replace of attributes, might be separate flag.
