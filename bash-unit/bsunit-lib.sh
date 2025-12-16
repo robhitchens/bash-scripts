@@ -70,6 +70,8 @@ function verify {
 	echo "not yet implemented"
 }
 
+declare -A _bsUnitLib_mocks
+
 function mock {
 	# TODO fillout
 	# will need to collect stats on invocations
@@ -78,7 +80,30 @@ function mock {
 	# example use mock when "functionName" then return $returnCode
 	# example use mock when "functionName" then exit $exitCode
 	# example use mock ...
-	echo "not yet implemented"
+	local command="$1"
+	local functionName="$2"
+	case "$command" in
+	initialize)
+		# only supporting single function for now
+		_bsUnitLib_aliasMock "$functionName"
+		;;
+	*) echo "command $command is not supported" >&2 ;;
+	esac
+}
+
+#Internal function for aliasing mocked behavior
+function _bsUnitLib_aliasMock {
+	local command="$1"
+	_bsUnitLib_mocks[$command]='echo "default mock behavior"'
+	#eval "function cat {_bsUnitLib_invokeMock \"$command\" }"
+	alias $command="_bsUnitLib_invokeMock \"$command\""
+}
+
+#Internal function for aliasing mocked behavior
+function _bsUnitLib_invokeMock {
+	# TODO aggregate function invocations for verify
+	local mockedFunction=${_bsUnitLib_mocks[$1]}
+	eval "$mockedFunction"
 }
 
 #Internal function to clear mock behavior after each test run
@@ -102,4 +127,4 @@ function _bsUnitLib_spysClear {
 
 # NOTE: if creating internal functions may have to move or merge into single script.
 
-export -f assert mock spy verify
+export -f assert mock spy verify _bsUnitLib_invokeMock

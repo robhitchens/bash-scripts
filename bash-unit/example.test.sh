@@ -1,5 +1,6 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash -i
 
+shopt -s expand_aliases
 # Assuming that bsunit-lib.sh is symlinked in /usr/local/bin/ folder.
 source bsunit-lib.sh
 
@@ -45,4 +46,14 @@ function assertionFailure {
 	local actual="false"
 
 	assert "$actual" equals "$expected"
+}
+
+#TEST
+function mockInitTest {
+	mock initialize "cat"
+
+	local output=$(cat "")
+
+	assert "$output" isEmpty
+	verify cat called 1
 }
