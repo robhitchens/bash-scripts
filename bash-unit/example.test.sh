@@ -1,6 +1,5 @@
 #!/usr/bin/env bash -i
 
-shopt -s expand_aliases
 # Assuming that bsunit-lib.sh is symlinked in /usr/local/bin/ folder.
 source bsunit-lib.sh
 
@@ -55,5 +54,16 @@ function mockInitTest {
 	local output=$(cat "")
 
 	assert "$output" isEmpty
+	verify cat called 1
+}
+
+#TEST
+function mockWhenTest {
+	mock initialize cat
+	mock when cat then echo "some value"
+
+	local output=$(cat "")
+
+	assert "$output" equals "some value"
 	verify cat called 1
 }

@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-shopt -s expand_aliases
 
 # TODO need setup test runner in bsunit
 # take file(s) | /dir as arguments (or functions inline) (or maybe invoke at the bottom of a test script and read in tests from the invoking script
@@ -156,6 +155,7 @@ function bsunit_testRunner {
 			if [[ -n "$teardown" ]]; then
 				$teardown
 			fi
+			[[ $(type -t _bsUnitLib_mocksClear) == function ]] && _bsUnitLib_mocksClear
 			# TODO need to handle if teardown fails.
 		done
 	) | streamOutput
