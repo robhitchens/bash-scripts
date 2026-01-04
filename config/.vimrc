@@ -5,6 +5,7 @@ set number
 set ts=4 sw=4
 set expandtab
 set ruler
+set updatetime=100
 colorscheme elflord
 
 "TODO may just get rid of this plugin, not really using"
@@ -14,10 +15,17 @@ call plug#begin()
 "Plug 'tyru/eskk.vim'
 "Material color themes"
 Plug 'kaicataldo/material.vim', { 'branch': 'main' }
+"Git gutter"
+Plug 'airblade/vim-gitgutter', { 'branch': 'main' }
 call plug#end()
 
 let g:material_theme_style = 'ocean'
 "colorscheme material"
+
+let g:gitgutter_highlight_lines = 0
+let g:gitgutter_highlight_linenrs = 0
+let g:gitgutter_realtime = 1
+let g:gitgutter_live_mode = 1
 
 augroup restore_cursor_on_write_after_format
   autocmd! 
