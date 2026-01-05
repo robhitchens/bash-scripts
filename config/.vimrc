@@ -15,7 +15,7 @@ call plug#begin()
 "Plug 'tyru/eskk.vim'
 "Material color themes"
 Plug 'kaicataldo/material.vim', { 'branch': 'main' }
-"Rainbow Parenthesies"
+"Rainbow Parentheses"
 Plug 'junegunn/rainbow_parentheses.vim'
 "Git gutter"
 Plug 'airblade/vim-gitgutter', { 'branch': 'main' }
