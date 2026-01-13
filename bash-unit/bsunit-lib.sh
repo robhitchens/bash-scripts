@@ -95,6 +95,18 @@ function _bsUnitLib_aliasMock {
 	_bsUnitLib_mockInvocations[$command]="0"
 }
 
+# PLAN
+# use _bsUnitLib_mockInvocations[$command] to track index of mock invocation definition in temp file.
+# NOTE: using $command::field as shorthand for structure of file data
+# upon invocation eval $command::mockBehavior and update $command::invocations with updated count and arguments passed in
+# upon call to verify function read in $command::invocations and $command::invocations[i]::args
+# For mock logging structure could store the following:
+# in mock invocations log: index:::$commandName:::folderForInvocationsStorage
+# for storage of actual run invocations, could do the following:
+#   - create file under /tmp/bsunit-lib/mockInvocations/$hashOruuid
+#   - each file would have name format -> $index$FuncName
+#   - File contents would contain arguments? Maybe per line for argument position?
+
 function mock {
 	# TODO fillout
 	# will need to collect stats on invocations
