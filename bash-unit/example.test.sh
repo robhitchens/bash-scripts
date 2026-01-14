@@ -6,6 +6,7 @@ source bsunit-lib.sh
 #SETUP
 function setup {
 	echo "executed setup function"
+	mock initialize cat
 	return 0
 }
 
@@ -49,12 +50,15 @@ function assertionFailure {
 
 #TEST
 function mockInitTest {
+	# TODO need to test mocking cat in setup method
 	mock initialize "cat"
 
 	local output=$(cat "")
 
 	assert "$output" isEmpty
 	verify cat called 1
+	# TODO need to add hook to invoke clearMocks after tests execution.
+	# TODO could add handling of mock initialization and clearing using 'annotations' (a.k.a comments) to let the test runner control thise behavior.
 }
 
 #TEST

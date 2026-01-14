@@ -3,7 +3,7 @@ shopt -s expand_aliases
 
 # TODO should implement "mocking" by allowing a binary or function to be aliased within the scope of a test.
 # doing this may require some clever use of eval to assemble everything prior to running the test and using eval to execute the test.
-# TODO could add assertAll which takes a semi-colon separated array of assert statements as strings
+# TODO could add assertAll which takes a semi-colon separated array of assert statements as strings, alternative would be to take in an array of strings and use eval and && to join executions together.
 
 readonly _bsUnitLib_mockDir='/tmp/bsunit-lib'
 readonly _bsUnitLib_mockLogFile="$_bsUnitLib_mockDir/mockInvocations.log"
@@ -256,4 +256,4 @@ function _bsUnitLib_spysClear {
 
 # NOTE: if creating internal functions may have to move or merge into single script.
 
-export -f assert mock spy verify _bsUnitLib_invokeMock
+export -f assert mock spy verify _bsUnitLib_invokeMock _bsUnitLib_mocksClear
