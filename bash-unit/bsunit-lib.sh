@@ -106,6 +106,13 @@ function _bsUnitLib_aliasMock {
 #   - create file under /tmp/bsunit-lib/mockInvocations/$hashOruuid
 #   - each file would have name format -> $index$FuncName
 #   - File contents would contain arguments? Maybe per line for argument position?
+# Need to keep track of two separate paths of data for mocks (behaviors and invocations)
+#   - Behavior files will contain stubbed behavior (with or without) invocation order based execution
+#       - Sub functionality of mocking that I forgot about is matching execution based on provided arguments. So behaviors file will also need a way to track arguments at some point.
+#   - Invocations file will contain order of execution and tracking of arguments provided to the mocked function.
+
+# TODO NOTE: since the logic for mocking, stubbing, and verifying is becoming more complex, may break it out into a separate lib.
+#      If I do that then may be able to incorporate hooks in the runner for mock initialization as mocks would be opt in.
 
 function mock {
 	# TODO fillout
@@ -123,6 +130,7 @@ function mock {
 	case "$command" in
 	initialize)
 		_bsUnitLib_initializeTempFolder
+		# TODO write initial entry to mockInvocationsFile
 		# only supporting single function for now
 		local functionName="$2"
 		_bsUnitLib_aliasMock "$functionName"
@@ -133,6 +141,8 @@ function mock {
 		echo "funcname $func" >&2
 		local subCommands=(${@:3})
 		echo "subcommands: ${subCommands[@]}" >&2
+		# TODO need to write stubbed behavior to mockInvocationsFile or subDirectory
+		#      If I want to provide a way of running different behavior based on execution order, then will need to rework and figure out structure for that.
 		case "${subCommands[0]}" in
 		then)
 			case "${subCommands[1]}" in
