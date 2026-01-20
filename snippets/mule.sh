@@ -16,6 +16,8 @@
 # TODO add support for reading project local config for attribute defaults.
 # TODO add simple support to wrap function to take in array of attributes to find and replace.
 # TODO add examples function to poop out docs with executable snippets based on input. Kinda like a separate help doc per command.
+# TODO add comment|c using the below snippet example:
+# <!-- [STUDIO:":description:"]
 function fullDoc {
 	cat <<EOF
 Usage:
