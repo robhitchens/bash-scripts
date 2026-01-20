@@ -7,6 +7,7 @@ shopt -s expand_aliases
 
 readonly _bsUnitLib_mockDir='/tmp/bsunit-lib'
 readonly _bsUnitLib_mockLogFile="$_bsUnitLib_mockDir/mockInvocations.log"
+readonly _bsUnitLib_mockBehaviorFile="$_bsUnitLib_mockDir/mockBehavior.log"
 function _bsUnitLib_initializeTempFolder {
 	if [[ ! -d "$_bsUnitLib_mockDir" ]]; then
 		mkdir -p "$_bsUnitLib_mockDir"
@@ -149,7 +150,10 @@ function mock {
 			# TODO need to figure out how to maintain whitespacing for strings passed in as arg to echo
 			echo)
 				local echoArgs=(${subCommands[@]:2})
-				_bsUnitLib_mocks[$func]="echo '${echoArgs[@]}'"
+				#_bsUnitLib_mocks[$func]="echo '${echoArgs[@]}'"
+				local mockIndex=${_bsUnitLib_mocks[$func]}
+				# TODO write line "echo '${echoArgs[@]}'" to file at index
+				#$_bsUnitLib_mockLogFile
 				echo "mock behavior: ${_bsUnitLib_mocks[$func]}"
 				;;
 			*) echo "unsupported sub command ${subCommands[1]}" >&2 ;;
