@@ -18,6 +18,12 @@ function _bsUnitLib_initializeTempFolder {
 	else
 		echo -n $null >"$_bsUnitLib_mockLogFile"
 	fi
+
+	if [[ ! -f "$_bsUnitLib_mockBehaviorFile" ]]; then
+		touch "$_bsUnitLib_mockBehaviorFile"
+	else
+		echo -n $null >"$_bsUnitLib_mockBehaviorFile"
+	fi
 }
 
 function assert {
@@ -84,6 +90,31 @@ declare -A _bsUnitLib_mocks
 # update label to maintain line numbers in file.
 declare -A _bsUnitLib_mockInvocations
 
+# TODO need better name
+function _bsUnitLib_getLastIndex {
+	local index=0
+	while read -r line; do
+		((index++))
+	done <$_bsUnitLib_mockLogFile
+	echo "$index"
+}
+# TODO may have to implement own function for updating lines.
+function _bsUnitLib_updateInvocationAtIndex {
+	local newValue="$1"
+	local index="$2"
+
+	# TODO slow way of handling this would be to read and copy lines to temp file until index
+	#      read line at index and modify string, write line to temp file
+	#      continue reading and copying until EOF, move temp file to mockInvocations.
+	#      Without using sed I don't know of a way in bash to write my own stream editor.
+	#      If need be can set array of core dependencies for bsunit-lib that can't be mocked and check on mock initialize if the function being mocked is needed,
+	#      or alternatively can create internal alias, or invoke the fully qualified binary.
+	local count=0
+	while read -r line; do
+		::
+	done <$_bsUnitLib_mockLogFile
+}
+
 #Internal function for aliasing mocked behavior
 # TODO this doesn't seem to really be needed, should set alias in initialize and have separate function for setting behavior.
 function _bsUnitLib_aliasMock {
@@ -93,7 +124,10 @@ function _bsUnitLib_aliasMock {
 	alias $command="_bsUnitLib_invokeMock \"$command\""
 	# TODO, unless I can figure out why this isn't working may have to switch to dumping mock state in file and just keep index in memory.
 	# alias command may be running in a sub shell which means state changes won't cascade back up, so will have to rely on a file
-	_bsUnitLib_mockInvocations[$command]="0"
+	# TODO may need to offset index before setting.
+	# Since anything could be aliased will have to whip up my own bash read file function
+	local lastIndex="$(_bsUnitLib_getLastIndex)"
+	_bsUnitLib_mockInvocations[$command]="$lastIndex"
 }
 
 # PLAN
@@ -171,6 +205,7 @@ function _bsUnitLib_updateInvocationStats {
 	# TODO assuming that mock invocation file already exists.
 	local command="$1"
 	local lineNum="${_bsUnitLib_mockInvocations[$command]}"
+	# TODO should add checks to make sure that alias exists first before continuing.
 	local line=$(sed -n "${lineNum}p" "$_bsUnitLib_mockLogFile")
 	local regex=".*[:]([0-9]+)"
 	if [[ "$line" =~ $regex ]]; then
@@ -178,7 +213,7 @@ function _bsUnitLib_updateInvocationStats {
 		((count++))
 		# FIXME untested
 		# sed -i -E -s '3c\mock:1' /tmp/scratch/test.log
-		# sed -i -E -s "${lineNum}c/:([0-9]+)/:$count"
+		sed -i -E -s "${lineNum}c/:([0-9]+)/:$count"
 	fi
 	# check for file
 	# retrieve invocation line
