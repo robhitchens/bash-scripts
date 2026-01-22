@@ -18,6 +18,7 @@
 # TODO add examples function to poop out docs with executable snippets based on input. Kinda like a separate help doc per command.
 # TODO add comment|c using the below snippet example:
 # <!-- [STUDIO:":description:"]
+# TODO should add shell completion for test command. First arg completion would list out test suites, second completion would list out test flows in the selected test suite
 function fullDoc {
 	cat <<EOF
 Usage:
