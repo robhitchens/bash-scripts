@@ -15,6 +15,8 @@ call plug#begin()
 "Plug 'tyru/eskk.vim'
 "Material color themes"
 Plug 'kaicataldo/material.vim', { 'branch': 'main' }
+"Solarized color themes
+Plug 'altercation/vim-colors-solarized', { 'branch' : 'master' }
 "Rainbow Parentheses"
 Plug 'junegunn/rainbow_parentheses.vim'
 "Git gutter"
@@ -22,7 +24,13 @@ Plug 'airblade/vim-gitgutter', { 'branch': 'main' }
 call plug#end()
 
 let g:material_theme_style = 'ocean'
+"colors are :
+"default,palenight,ocean,lighter,darker,default-community,palenight-community,ocean-community,lighter-community,darker-community
 "colorscheme material"
+
+" Solarized configuration
+set background=dark
+let g:solarized_termcolors=256
 
 let g:gitgutter_highlight_lines = 0
 let g:gitgutter_highlight_linenrs = 0
