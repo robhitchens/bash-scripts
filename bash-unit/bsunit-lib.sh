@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 shopt -s expand_aliases
+# creating local references incase 'wc', 'sed', or 'cat' get mocked in execution context
+# TODO may also have to do for echo, return, and diff
+readonly _sed=$(which sed)
+readonly _cat=$(which cat)
+readonly _wc=$(which wc)
 
 # TODO should implement "mocking" by allowing a binary or function to be aliased within the scope of a test.
 # doing this may require some clever use of eval to assemble everything prior to running the test and using eval to execute the test.
@@ -119,15 +124,14 @@ function _bsUnitLib_updateInvocationAtIndex {
 # TODO this doesn't seem to really be needed, should set alias in initialize and have separate function for setting behavior.
 function _bsUnitLib_aliasMock {
 	local command="$1"
-	#_bsUnitLib_mocks[$command]='echo "default mock behavior"'
-	#eval "function cat {_bsUnitLib_invokeMock \"$command\" }"
+	local lastIndex="$($_cat $_bsUnitLib_mockLogFile | $_wc -l)"
+
 	alias $command="_bsUnitLib_invokeMock \"$command\""
-	# TODO, unless I can figure out why this isn't working may have to switch to dumping mock state in file and just keep index in memory.
-	# alias command may be running in a sub shell which means state changes won't cascade back up, so will have to rely on a file
-	# TODO may need to offset index before setting.
-	# Since anything could be aliased will have to whip up my own bash read file function
-	local lastIndex="$(_bsUnitLib_getLastIndex)"
+
+	# TODO instead of keeping track of indexes separately, could just serialize into alias command
 	_bsUnitLib_mockInvocations[$command]="$lastIndex"
+	# writing initial mock invocation state
+	echo "$lastIndex::$command::0" >>$_bsUnitLib_mockLogFile
 }
 
 # PLAN
@@ -185,6 +189,7 @@ function mock {
 			echo)
 				local echoArgs=(${subCommands[@]:2})
 				#_bsUnitLib_mocks[$func]="echo '${echoArgs[@]}'"
+				# instead of keeping track of indexes in memory, could just grep file for alias name
 				local mockIndex=${_bsUnitLib_mocks[$func]}
 				# TODO write line "echo '${echoArgs[@]}'" to file at index
 				#$_bsUnitLib_mockLogFile
@@ -206,14 +211,13 @@ function _bsUnitLib_updateInvocationStats {
 	local command="$1"
 	local lineNum="${_bsUnitLib_mockInvocations[$command]}"
 	# TODO should add checks to make sure that alias exists first before continuing.
-	local line=$(sed -n "${lineNum}p" "$_bsUnitLib_mockLogFile")
-	local regex=".*[:]([0-9]+)"
+	local line=$($_sed -n "${lineNum}p" "$_bsUnitLib_mockLogFile")
+	local regex=".*[::]([0-9]+)$"
 	if [[ "$line" =~ $regex ]]; then
 		local count="${BASH_REMATCH[1]}"
-		((count++))
-		# FIXME untested
-		# sed -i -E -s '3c\mock:1' /tmp/scratch/test.log
-		sed -i -E -s "${lineNum}c/:([0-9]+)/:$count"
+		line=$(echo "$line" | $_sed -E -s "s/::[0-9]+\$/::((count++))/")
+		# TODO need to write updated state to line
+		$_sed -i -E -s "${lineNum}c${line}"
 	fi
 	# check for file
 	# retrieve invocation line
@@ -239,6 +243,7 @@ function _bsUnitLib_getInvocationStats {
 function _bsUnitLib_invokeMock {
 	# TODO aggregate function invocations for verify
 	local command="$1"
+	# FIXME: read in line from mock invocations.
 	local mockedFunction=${_bsUnitLib_mocks[$command]}
 	# FIXME somehow this is not cascading up
 	#local invocationCount=${_bsUnitLib_mockInvocations[$command]}
