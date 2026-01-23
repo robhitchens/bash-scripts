@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 shopt -s expand_aliases
 # creating local references incase 'wc', 'sed', or 'cat' get mocked in execution context
-# TODO may also have to do for echo, return, and diff
+# TODO may also have to do for mkdir, touch, echo, return, and diff
 readonly _sed=$(which sed)
 readonly _cat=$(which cat)
 readonly _wc=$(which wc)
