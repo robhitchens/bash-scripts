@@ -61,6 +61,7 @@ Commands:
 Commands (Snippets):
   muleRoot|mr                           Generates mule root element
   munitRoot|mur                         Generates munit root element
+  comment|c                             Generates a Anypoint studio compatible comment
   http:request|hr [children...]         Generates http:request template with the provided valid child element templates.
     children:
         - body|b                        Generates an http:body child element within the parent element.
@@ -850,6 +851,10 @@ function munitConfigTemplate {
 "
 }
 
+function studioComment {
+	echo "// [STUDIO:\":content:\"]"
+}
+
 function filterTestOutput {
 	local display=0
 	while IFS=$'\n' read -r line; do
@@ -962,6 +967,9 @@ Cannot process further" >&2
 	munitRoot | mur)
 		# TODO add processing for c flag for child template processing
 		content="$(munitConfigTemplate)"
+		;;
+	comment | c)
+		content="$(studioComment)"
 		;;
 	http:request | hr)
 		content="$(httpRequest "${commands[@]}")"

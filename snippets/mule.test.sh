@@ -73,6 +73,29 @@ function munitRoot_shorthand_test {
 }
 
 #TEST
+function comment_test {
+	local output="$(mule comment)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "// [STUDIO:\":content:\"]"
+}
+
+#TEST
+function comment_shorthand_test {
+	local output="$(mule c)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "// [STUDIO:\":content:\"]"
+}
+
+#TEST
+function comment_test_attribute_replacement {
+	local output="$(mule c [ :content: 'TODO some comment value' ])"
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "// [STUDIO:\"TODO some comment value\"]"
+}
+
+#TEST
 function httpRequest_noArgs_test {
 	# NOTE: should probably just have the template not auto inject uuid for http:request template.
 	local output="$(mule http:request | sed -E "s/$uuidRegex/':doc:id:'/")"
