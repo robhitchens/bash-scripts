@@ -450,6 +450,7 @@ name = ':name:')
 }
 ################################################################################
 function flowRef {
+	# TODO refactor to not handle repeats, create common interface for dealing with repeat element generation + plus attribute replacement
 	local subActions=(${@:2})
 	local repeat="1"
 	# TODO need to iterate over arguments
@@ -460,7 +461,7 @@ function flowRef {
 	fi
 	for ((i = 0; i < repeat; i++)); do
 		echo "flow-ref(doc:name = ':doc:name-$i:'
-name = ':name-$i:')
+name = ':name:')
 "
 	done
 }
