@@ -2,6 +2,7 @@
 
 # Assuming that bsunit-lib.sh is symlinked in /usr/local/bin/ folder.
 source bsunit-lib.sh
+source bsunit-mocks-lib.sh
 
 #SETUP
 function setup {
