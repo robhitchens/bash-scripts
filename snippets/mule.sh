@@ -62,6 +62,7 @@ Commands (Snippets):
   muleRoot|mr                           Generates mule root element
   munitRoot|mur                         Generates munit root element
   comment|c                             Generates a Anypoint studio compatible comment
+  comment-multi|cm                      Generates a Anypoint studio compatible multi-line comment
   http:request|hr [children...]         Generates http:request template with the provided valid child element templates.
     children:
         - body|b                        Generates an http:body child element within the parent element.
@@ -852,7 +853,11 @@ function munitConfigTemplate {
 }
 
 function studioComment {
-	echo "// [STUDIO:\":content:\"]"
+	echo "// [STUDIO:\":comment:\"]"
+}
+
+function studioCommentMultiline {
+	echo "/* [STUDIO:\":comment:\"] :children: [STUDIO] */"
 }
 
 function filterTestOutput {
@@ -970,6 +975,9 @@ Cannot process further" >&2
 		;;
 	comment | c)
 		content="$(studioComment)"
+		;;
+	comment-multi | cm)
+		content="$(studioCommentMultiline)"
 		;;
 	http:request | hr)
 		content="$(httpRequest "${commands[@]}")"
