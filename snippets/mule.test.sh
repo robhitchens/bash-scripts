@@ -77,7 +77,7 @@ function comment_test {
 	local output="$(mule comment)"
 
 	assert "$output" isNotEmpty &&
-		assert "$output" equalsIgnoringWhitespace "// [STUDIO:\":content:\"]"
+		assert "$output" equalsIgnoringWhitespace "// [STUDIO:\":comment:\"]"
 }
 
 #TEST
@@ -85,14 +85,30 @@ function comment_shorthand_test {
 	local output="$(mule c)"
 
 	assert "$output" isNotEmpty &&
-		assert "$output" equalsIgnoringWhitespace "// [STUDIO:\":content:\"]"
+		assert "$output" equalsIgnoringWhitespace "// [STUDIO:\":comment:\"]"
 }
 
 #TEST
 function comment_test_attribute_replacement {
-	local output="$(mule c [ :content: 'TODO some comment value' ])"
+	local output="$(mule c [ :comment: 'TODO some comment value' ])"
 	assert "$output" isNotEmpty &&
 		assert "$output" equalsIgnoringWhitespace "// [STUDIO:\"TODO some comment value\"]"
+}
+
+#TEST
+function commentMulti_test {
+	local output="$(mule comment-multi)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "/* [STUDIO:\":comment:\"] :children: [STUDIO] */"
+}
+
+#TEST
+function commentMulti_shorthand_test {
+	local output="$(mule cm)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "/* [STUDIO:\":comment:\"] :children: [STUDIO] */"
 }
 
 #TEST
