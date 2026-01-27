@@ -1061,13 +1061,15 @@ Cannot process further" >&2
 
 function installScript {
 	local symlink='/usr/local/bin/mule'
+	local symlink_short='/usr/local/bin/ml'
 	# TODO should probably prompt user before nuking existing symlink file.
-	if [[ -f $symlink ]]; then
-		rm -f $symlink
+	if [[ -f $symlink || -f $symlink_short ]]; then
+		rm -f $symlink $symlink_short
 	else
 		local scriptLocation=$(find . -type f -iname 'mule.sh' | xargs realpath --relative-to=/ | sed -E 's/(.*)/\/\1/')
 		# TODO should error out if script can't be found.
 		ln -s $scriptLocation $symlink
+		ln -s $scriptLocation $symlink_short
 	fi
 	# assuming a first time use it would be executed where the script is located.
 	# should also check to see if the symlink already exists.
