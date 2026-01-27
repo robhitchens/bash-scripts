@@ -440,6 +440,24 @@ name = ':name:')
 }
 
 #TEST
+function flowRef_noArgs_test {
+	local output="$(mule flow-ref)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "flow-ref(doc:name = ':doc:name:'
+name = ':name:')"
+}
+
+#TEST
+function flowRef_noArgs_shorthand_test {
+	local output="$(mule fr)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "flow-ref(doc:name = ':doc:name:'
+name = ':name:')"
+}
+
+#TEST
 function subflow_noargs_test {
 	local output="$(mule sub-flow)"
 

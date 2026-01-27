@@ -85,7 +85,7 @@ Commands (Snippets):
   log|l                                 Generates a log template
   flow|f [name]                         Generates a flow template with the given flow name
   sub-flow|sf [name]                    Generates a sub-flow template with the given sub-flow name
-  flow-ref|fr [#] [name]                Generates a flow-ref template with the given referenced flow name
+  flow-ref|fr [name]                    Generates a flow-ref template with the given referenced flow name
   try|t  [children]                     Generates a try scope template
     children:
         - errorhandler|eh               Generates an error-handler template within the parent element
@@ -444,27 +444,27 @@ name = ':name:')
 }
 "
 	# TODO should move logic for processing attributes before and within processCommand logic.
-	for ((i = 0; i < ${#attributes[@]}; i += 2)); do
-		root="${root/${attributes[i]}/${attributes[((i + 1))]}}"
-	done
+	#for ((i = 0; i < ${#attributes[@]}; i += 2)); do
+	#	root="${root/${attributes[i]}/${attributes[((i + 1))]}}"
+	#done
 	echo "$root"
 }
 ################################################################################
 function flowRef {
 	# TODO refactor to not handle repeats, create common interface for dealing with repeat element generation + plus attribute replacement
 	local subActions=(${@:2})
-	local repeat="1"
+	#local repeat="1"
 	# TODO need to iterate over arguments
 	# TODO this should really be an either or, but whatever
-	firstOption="${subActions[0]}"
-	if [[ -n "$(echo "$firstOption" | grep -E '[0-9]')" ]]; then
-		repeat="$firstOption"
-	fi
-	for ((i = 0; i < repeat; i++)); do
-		echo "flow-ref(doc:name = ':doc:name-$i:'
+	#firstOption="${subActions[0]}"
+	#if [[ -n "$(echo "$firstOption" | grep -E '[0-9]')" ]]; then
+	#	repeat="$firstOption"
+	#fi
+	#for ((i = 0; i < repeat; i++)); do
+	echo "flow-ref(doc:name = ':doc:name:'
 name = ':name:')
 "
-	done
+	#done
 }
 ################################################################################
 function tryScope {
