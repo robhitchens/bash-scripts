@@ -1060,6 +1060,8 @@ Cannot process further" >&2
 }
 
 function installScript {
+	# TODO should add flag to shorthand install
+	# TODO should add flag for uninstall, instead of confusing behavior
 	local symlink='/usr/local/bin/mule'
 	local symlink_short='/usr/local/bin/ml'
 	# TODO should probably prompt user before nuking existing symlink file.
