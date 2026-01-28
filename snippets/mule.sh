@@ -1053,7 +1053,7 @@ Cannot process further" >&2
 	# TODO reassignment may not be necessary or efficient
 	if ((${#attributes[@]} != 0)); then
 		for ((i = 0; i < ${#attributes[@]}; i += 2)); do
-			content="${content/${attributes[i]}/${attributes[((i + 1))]}}"
+			content="${content/\'${attributes[i]}\'/${attributes[((i + 1))]}}"
 		done
 	fi
 	echo "$content"
@@ -1066,11 +1066,14 @@ function installScript {
 	local symlink_short='/usr/local/bin/ml'
 	# TODO should probably prompt user before nuking existing symlink file.
 	if [[ -f $symlink || -f $symlink_short ]]; then
+		echo "Removing existing links: $symlink, $symlink_short" >&2
 		rm -f $symlink $symlink_short
 	else
 		local scriptLocation=$(find . -type f -iname 'mule.sh' | xargs realpath --relative-to=/ | sed -E 's/(.*)/\/\1/')
 		# TODO should error out if script can't be found.
+		echo "Adding symlink: $symlink"
 		ln -s $scriptLocation $symlink
+		echo "Adding symlink: $symlink_short"
 		ln -s $scriptLocation $symlink_short
 	fi
 	# assuming a first time use it would be executed where the script is located.
