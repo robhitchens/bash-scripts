@@ -1,0 +1,34 @@
+mur {
+    f [ :name: 'flow1' ] {
+        l [ :level: info :message: 'test message' ]
+        l [ :level: debug :message: 'test message debug' ]
+    }
+    f [ :name: 'flow2' ] {
+        l [ :level: info :message: 'another test message' ]
+    }
+}
+
+:*
+Comments:
+TODO: Not sure if I'll add comment support, 
+this would be a nice way alongside adding support for files to create 
+compound snippets for complex common patterns.
+
+An example of structuring the above in commands would probably look like the following
+echo "$(
+    echo "$(ml l [ :level: info :message: '...' ];
+            ml l [ :level: debug :message: '...' ])" 
+        | ml -w f [ :name: 'flow1' ];
+    echo "$(ml l [ :level: info : message: 'another test message' ])"
+        | ml -w f [ :name: 'flow2' ];
+)" | ml -w mur
+
+The above would be the effective bash command to run to render the input.
+It may be easier if I render each component first, push to stack with a marker, 
+then pop off stack and prepend to var, hit marker substitute :children: with current aggretate
+then clear replace var with new rendered content.
+
+Another idea would be to stream render it and count the ending braces. would just replace them upon hitting EOF.
+For this approach would need to replace :children: element with nothing and remove the last '}'.
+This way I don't have to capture anything and can immediately write to stdout.
+*:

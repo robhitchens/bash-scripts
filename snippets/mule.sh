@@ -1100,6 +1100,7 @@ function main {
 	fi
 
 	local skipCount=0
+	# FIXME: should add handling of getopts for sub functions, instead of handling at top.
 	while getopts "wvlth" flag; do
 		case "$flag" in
 		w)
@@ -1169,7 +1170,24 @@ function main {
 		# FIXME rework to preprocess for curly braces and batch up runs of processCommand
 		# FIXME add logic wrapping processCommand with the read loop, will be easier to control advancing the loop and adding recursion.
 		#       will have to see how this affects performance, but the use case is for pretty much evaluating a more complex template in line.
+		# TODO add logic here to handle processing nested elements. For now will only allow nesting on parsing stdin, (can add support for reading from file later)
 		while read -r line; do
+			# Pseudo logic:
+			#   if line contains '{'; then push processCommand onto stack? push 'next wrap command' onto stack?
+			#   if line contains '}'; then pop children processCommands, render and prepend to var, pop top process command and render, replace :children: with content.
+			#   else push processCommand onto stack
+			#   finally echo output to stdout?
+			#   example input:
+			#   mur {
+			#       f [ :name: flow1 ]
+			#       f [ :name: flow2 ]
+			#   }
+			#   stack commands would look like (from top to bottom)
+			#   processCommand 'f [ :name: flow2 ]'
+			#   processCommand 'f [ :name: flow1 ]'
+			#   processCommand -w mur
+			#   NOTE: this will work for simple cases, might work if continually pushing and popping stack, effective tree traversal will be depth first
+			#   NOTE: for deep nested elements, will need to process wrap commands and store rendered result.
 			processCommand $line
 		done
 	fi
