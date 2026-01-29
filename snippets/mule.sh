@@ -2,22 +2,16 @@
 # TODO might be better to structure this with context based help messages.
 # TODO could add shorthand for common snippets
 # TODO should add tab complete for commands and sub commands. maybe. Or at least a double tap tab to list the possible commands at this state.
-# TODO add "install" step to symlink script to mule under /usr/local/bin
 # TODO add flags to support dumping out full or minimal attributes for elements.
 # TODO might refactor the interface to make it composable by making the last argument to any function a string for the body of the element. This would allow composability utilizing existing bash idioms, but downside will be that composition will require multiple subprocesses which will be slower.
 #      or another way would be to accept strings of subcommands for composability and maybe a small syntax to avoid adding multiple quotes. Then if detected could then just pass the arguments through main again without subprocessing. With a generic way of handinling it in place  could refactor higher level components to be a composition rather than hard coded logic
 #      would need to figure out solution for emitting nested docs or would need to list all commands in help doc.
 
 # TODO could introduce a flag for declaring a single command and another flag for nesting a secondary command into the first or process the elements inside out to build the output string
-# TODO Add support for reading from stdin
 # TODO Add support for nesting children and commands using {} syntax, that should work without interference with standard bash commands.
-# TODO if adding support for stdin, might as well add a -w flag to allow stdin to be wrapped with another element
 # TODO add examples command for snippets of how to use (including examples for reading into stdin)
 # TODO add support for reading project local config for attribute defaults.
-# TODO add simple support to wrap function to take in array of attributes to find and replace.
 # TODO add examples function to poop out docs with executable snippets based on input. Kinda like a separate help doc per command.
-# TODO add comment|c using the below snippet example:
-# <!-- [STUDIO:":description:"]
 # TODO should add shell completion for test command. First arg completion would list out test suites, second completion would list out test flows in the selected test suite
 function fullDoc {
 	cat <<EOF
@@ -1052,8 +1046,13 @@ Cannot process further" >&2
 	# TODO process attributes in content here.
 	# TODO reassignment may not be necessary or efficient
 	if ((${#attributes[@]} != 0)); then
+		# FIXME: may have to write my own string replacement logic, or just switch to using sed. Maybe could use bash regexes to capture and replace instead.
 		for ((i = 0; i < ${#attributes[@]}; i += 2)); do
-			content="${content/\'${attributes[i]}\'/${attributes[((i + 1))]}}"
+			content="${content/\'${attributes[i]}\'/\'${attributes[((i + 1))]}\'}"
+		done
+		# TODO this will probably break something.
+		for ((i = 0; i < ${#attributes[@]}; i += 2)); do
+			content="${content/${attributes[i]}/${attributes[((i + 1))]}}"
 		done
 	fi
 	echo "$content"
