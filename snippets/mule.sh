@@ -432,7 +432,7 @@ name = ':name:')
 function subFlow {
 	# TODO may have to refactor if adding support for error-handler
 	local subActions=(${@:2})
-	local root="sub-flow(doc:name = ':doc:name:'
+	local root="sub-flow(doc:name = ':name:'
 name = ':name:')
 {
     :children:
