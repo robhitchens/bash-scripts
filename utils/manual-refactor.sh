@@ -5,6 +5,18 @@ function vimLine() {
 	local lineNum="$2"
 	vim +$2 $1 -c 'normal zt'
 }
+function helpDoc() {
+	cat <<EOF
+Usage:
+    manualRefactor [OPTIONS] [ARGS]
+Options:
+    -p              Print out matches and command to be run. Does not execute command.
+Arguments:
+    pattern         \$1 - Regex pattern to match against
+    dir             \$2 - Directory to execute refactor against.
+EOF
+}
+
 function manualRefactor() {
 	local pattern="$1"
 	local dir="$2"
@@ -56,6 +68,10 @@ function installScript {
 	ln -s $scriptLocation $symlink
 }
 
+if (($# < 1)); then
+	helpDoc
+	exit 1
+fi
 if [[ "$1" == 'install' ]]; then
 	installScript
 else
