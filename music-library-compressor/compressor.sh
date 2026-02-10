@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # BUG: issue cropping up where some entries in compressor.log is still getting through diff.
+# FIXME: rework logging. maybe remove usage of logging script.
 # TODO: Add the following options:
 #     --dry-run -> run and output actions, but don't perform them
 #     --no-cache -> run but ignore cache file.
@@ -296,12 +297,32 @@ function printStatistics {
 	log info "Total compression ratio: $totalCompressionRatio%"
 }
 
+function installScript {
+	local symlink='/usr/local/bin/compressor'
+	# TODO should probably prompt user before nuking existing symlink file.
+	if [[ -f $symlink ]]; then
+		echo "link [$symlink] already exists. Removing..."
+		rm -f $symlink
+	fi
+
+	local scriptLocation=$(find . -type f -iname 'compressor.sh' | xargs realpath --relative-to=/ | sed -E 's/(.*)/\/\1/')
+
+	# TODO should error out if script can't be found.
+	echo "linking $scriptLocation -> $symlink"
+	ln -s $scriptLocation $symlink
+}
+
 # TODO: should probably wrap some of below into functions for readability
 
 # Guard clause for inputs
 if [[ $# -ne 2 ]]; then
-	echo "Usage: $scriptName \$sourceDirectory \$targetDirectory"
-	exit 1
+	if [[ "$1" == 'install' ]]; then
+		installScript
+		exit 0
+	else
+		echo "Usage: $scriptName \$sourceDirectory \$targetDirectory"
+		exit 1
+	fi
 fi
 
 log info "Provided directory $1"
