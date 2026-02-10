@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+# TODO leftover
 function vimLine() {
 	local fileName="$1"
 	local lineNum="$2"
@@ -39,4 +41,23 @@ function manualRefactor() {
 	fi
 }
 
-manualRefactor "$@"
+function installScript {
+	local symlink='/usr/local/bin/manualRefactor'
+	# TODO should probably prompt user before nuking existing symlink file.
+	if [[ -f $symlink ]]; then
+		echo "link [$symlink] already exists. Removing..."
+		rm -f $symlink
+	fi
+
+	local scriptLocation=$(find . -type f -iname 'manual-refactor.sh' | xargs realpath --relative-to=/ | sed -E 's/(.*)/\/\1/')
+
+	# TODO should error out if script can't be found.
+	echo "linking $scriptLocation -> $symlink"
+	ln -s $scriptLocation $symlink
+}
+
+if [[ "$1" == 'install' ]]; then
+	installScript
+else
+	manualRefactor "$@"
+fi
