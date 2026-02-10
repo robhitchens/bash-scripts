@@ -32,6 +32,7 @@ function manualRefactor() {
 		esac
 	done
 	local commands=""
+	# TODO could probably fix old implementation using wait -f -n. -f makes wait hold for id to terminate before continuing.
 	while read -r line; do
 		local separated=($(echo "$line" | tr ':' ' '))
 		local file="${separated[0]}"
