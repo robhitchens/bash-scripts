@@ -899,7 +899,8 @@ function runMunitTest {
 		commandString="time ($commandString)"
 	fi
 	if [[ -n "$testLoop" ]]; then
-		commandString="while true; do $commandString; sleep 1; done"
+		[[ "${args[0]}" == '' || -d "${args[0]}" ]] && local cmd="-r src/test/" || local cmd="src/test/munit/${args[0]}"
+		commandString="while [[ 0 ]]; do inotifywait -e close_write $cmd; echo 'running'; $commandString; done"
 	fi
 
 	echo "running: $commandString"
