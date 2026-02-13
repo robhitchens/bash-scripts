@@ -162,6 +162,8 @@ function bsunit_testRunner {
 }
 
 function segmentTimestamp {
+	# TODO below will help to give milliseconds since epoch. timestamp can be calculated with this
+	#echo "$(echo "$EPOCHREALTIME" | sed -E 's/[0-9]+\.//' | xargs -I {} echo '{}/1000' | bc)"
 	local timeStamp="$1"
 	local subExp='([0-9]{2}):([0-9]{2}):([0-9]{2})[.]([0-9]{3})'
 	local leadingZeros='^[0]+([0-9]+)'
