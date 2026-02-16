@@ -161,6 +161,7 @@ function bsunit_testRunner {
 	) | streamOutput
 }
 
+# DEPRECATED
 function segmentTimestamp {
 	# TODO below will help to give milliseconds since epoch. timestamp can be calculated with this
 	#echo "$(echo "$EPOCHREALTIME" | sed -E 's/[0-9]+\.//' | xargs -I {} echo '{}/1000' | bc)"
@@ -175,15 +176,40 @@ function segmentTimestamp {
 	echo "$hours $minutes $seconds $milliseconds"
 }
 
+function segmentEpoch {
+	local epoch="$1"
+	#local leadingZeros='s/^[0]+([0-9]+)/\1/'
+	local epochSecondsNano=($(echo "$epoch" | tr '.' ' '))
+	# TODO could probably cutdown on starting and killing processes by cating each calculation through a pipe into bc.
+	if ((${#epochSecondsNano[@]} == 1)); then
+		local hours=0
+		local minutes=0
+		local seconds=0
+		local milli="$(echo "${epochSecondsNano[0]}/1000" | bc)"
+		echo "$hours $minutes $seconds $milli"
+	else
+		local hours="$(echo "${epochSecondsNano[0]}/60/60%60" | bc)"
+		local minutes="$(echo "${epochSecondsNano[0]}/60%60" | bc)"
+		local seconds="$(echo "${epochSecondsNano[0]}%60" | bc)"
+		local milli="$(echo "${epochSecondsNano[1]}/1000" | bc)"
+		echo "$hours $minutes $seconds $milli"
+	fi
+}
+
 function formatElapsedTime {
 	#FIXME this function won't be able to handle clock rollover logic i.e. 23:59 -> 00:00
 	#FIXME the calculations seem off, something is not getting evaluated correctly.
 	local startTime="$1"
 	local endTime="$2"
-	local sSeg=($(segmentTimestamp "$startTime"))
-	local eSeg=($(segmentTimestamp "$endTime"))
+	#local sSeg=($(segmentTimestamp "$startTime"))
+	#local eSeg=($(segmentTimestamp "$endTime"))
 
-	echo "$((${eSeg[0]} - ${sSeg[0]}))h $((${eSeg[1]} - ${sSeg[1]}))m $((${eSeg[2]} - ${sSeg[2]}))s $((${eSeg[3]} - ${sSeg[3]}))ms"
+	# TODO need to rework logic here.
+	#echo "$((${eSeg[0]} - ${sSeg[0]}))h $((${eSeg[1]} - ${sSeg[1]}))m $((${eSeg[2]} - ${sSeg[2]}))s $((${eSeg[3]} - ${sSeg[3]}))ms"
+	local elapsed="$(echo "$end - $start" | bc)"
+	local elapsedSegments=($(segmentEpoch "$elapsed"))
+
+	echo "${elapsedSegments[0]}h ${elapsedSegments[1]}m ${elapsedSegments[2]}s ${elapsedSegments[3]}ms"
 }
 
 function outputResults {
@@ -194,8 +220,8 @@ function outputResults {
 	local formattedAssertFails="$(cat $assertionFailures | sed -E "s/(.*)/$bsunit_messageHeader - \1/")"
 	# TODO add execution time.
 	echo "$bsunit_messageHeader Test results:
-$bsunit_messageHeader Start Time: $start
-$bsunit_messageHeader End Time: $end
+$bsunit_messageHeader Start Time: $(date +'%T.%3N' -d "@$start")
+$bsunit_messageHeader End Time: $(date +'%T.%3N' -d "@$end")
 $bsunit_messageHeader Total execution time: $(formatElapsedTime "$start" "$end")
 $bsunit_messageHeader - Total tests executed: ${#bsunit_sourcedTests[@]}/${#bsunit_sourcedTests[@]}
 $bsunit_messageHeader - Successful tests:     $numPass/${#bsunit_sourcedTests[@]}
@@ -272,7 +298,8 @@ function bsunit_main {
 		# could utilize grep to find which lines are annotated, simple increment by 1 to get the function name to execute.
 		# after running each file, may want to see if there's a way to unsource a file or something.
 		# could deal with isolating source by encapsulating in subshell while sourcing and running tests.
-		start="$(date +'%T.%3N')"
+		#start="$(date +'%T.%3N')"
+		start="$EPOCHREALTIME"
 		local tmpFiles=($(makeTmpDir))
 		passedTests=${tmpFiles[0]}
 		failedTests=${tmpFiles[1]}
@@ -289,7 +316,9 @@ function bsunit_main {
 				bsunit_testRunner "$2"
 			elif [[ -d "$2" ]]; then
 				# TODO expand to support multiple directories
-				local testFiles=$(find "$2" -type f -name '*.test.sh')
+				# FIXME: logic here seems to be broken. script exits after the first suite is run.
+				echo "Running tests in dir: $2" >&2
+				local testFiles=($(find "$2" -type f -name '*.test.sh'))
 				local length="${#testFiles[@]}"
 				for ((i = 0; i < length; i++)); do
 					# TODO should probably just use a for in loop
@@ -310,7 +339,8 @@ function bsunit_main {
 			echo "no tests found" &>2
 			exit 1
 		fi
-		end="$(date +'%T.%3N')"
+		#end="$(date +'%T.%3N')"
+		end="$EPOCHREALTIME"
 		outputResults
 	fi
 }
