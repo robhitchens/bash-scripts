@@ -69,20 +69,20 @@ function parseTests {
 	echo "${tests[@]}"
 }
 
-# FIXME need to add handling of empty result set
 function parseSetup {
 	local input="$1"
 	local lineNumbers=($(grep -n '#SETUP' $input | sed -E 's/(\d)*[:]#.*/\1+1/' | bc))
-	# TODO add check to see if no setup methods exist.
 	if ((${#lineNumbers[@]} > 1)); then
 		echo "test file [$input] contained [${#lineNumber[@]}] #SETUP methods. Only 1 setup method is supported" >&2
 		exit 1
+	elif ((${#lineNumbers[@]} == 1)); then
+		local setup=$(head -n${lineNumbers[i]} "$input" | tail -n1 | sed -E 's/function (.*) \{$/\1/')
+		echo "$setup"
+	else
+		echo "No setup functions found" >&2
 	fi
-	local setup=$(head -n${lineNumbers[i]} "$input" | tail -n1 | sed -E 's/function (.*) \{$/\1/')
-	echo "$setup"
 }
 
-# FIXME need to add handling of empty result set
 function parseTeardown {
 	local input="$1"
 	local lineNumbers=($(grep -n '#TEARDOWN' $input | sed -E 's/(\d)*[:]#.*/\1+1/' | bc))
@@ -90,19 +90,15 @@ function parseTeardown {
 	if ((${#lineNumbers[@]} > 1)); then
 		echo "test file [$input] contained [${#lineNumber[@]}] #TEARDOWN methods. Only 1 setup method is supported" >&2
 		exit 1
+	elif ((${#lineNumbers[@]} == 1)); then
+		local teardown=$(head -n${lineNumbers[i]} "$input" | tail -n1 | sed -E 's/function (.*) \{$/\1/')
+		echo "$teardown"
+	else
+		echo "No teardown functions found" >&2
 	fi
-	local teardown=$(head -n${lineNumbers[i]} "$input" | tail -n1 | sed -E 's/function (.*) \{$/\1/')
-	echo "$teardown"
 }
 
 # TODO add support for #IGNORE annotation. or ignore property of #TEST
-
-function streamOutput {
-	while IFS=$'\n' read -r line; do
-		echo "$line"
-	done
-}
-
 function bsunit_testRunner {
 	local testFile="$1"
 	local singleTest="$2"
@@ -158,22 +154,7 @@ function bsunit_testRunner {
 			[[ $(type -t _bsUnitLib_mocksClear) == function ]] && _bsUnitLib_mocksClear
 			# TODO need to handle if teardown fails.
 		done
-	) | streamOutput
-}
-
-# DEPRECATED
-function segmentTimestamp {
-	# TODO below will help to give milliseconds since epoch. timestamp can be calculated with this
-	#echo "$(echo "$EPOCHREALTIME" | sed -E 's/[0-9]+\.//' | xargs -I {} echo '{}/1000' | bc)"
-	local timeStamp="$1"
-	local subExp='([0-9]{2}):([0-9]{2}):([0-9]{2})[.]([0-9]{3})'
-	local leadingZeros='^[0]+([0-9]+)'
-	# TODO could probably simplify this logic using bash substitution expressions (or whatever they're called)
-	local hours="$(echo "$timeStamp" | sed -E "s/$subExp/\1/" | sed -E "s/$leadingZeros/\1/")"
-	local minutes="$(echo "$timeStamp" | sed -E "s/$subExp/\2/" | sed -E "s/$leadingZeros/\1/")"
-	local seconds="$(echo "$timeStamp" | sed -E "s/$subExp/\3/" | sed -E "s/$leadingZeros/\1/")"
-	local milliseconds="$(echo "$timeStamp" | sed -E "s/$subExp/\4/" | sed -E "s/$leadingZeros/\1/")"
-	echo "$hours $minutes $seconds $milliseconds"
+	)
 }
 
 function segmentEpoch {
@@ -216,17 +197,21 @@ function outputResults {
 	local numPass=$(cat $passedTests | wc -l)
 	local numFail=$(cat $failedTests | wc -l)
 	local numAssertionFail=$(cat $assertionFailures | wc -l)
+	local numIgnored=0 #$(cat $ignoredTests | wc -l)
+	local totalExecutedTests=$((numPass + numFail + numAssertionFail))
+	local totalFoundTests=$((totalExecutedTests + numIgnored))
 	local formattedFailed="$(cat $failedTests | sed -E "s/(.*)/$bsunit_messageHeader - \1/")"
 	local formattedAssertFails="$(cat $assertionFailures | sed -E "s/(.*)/$bsunit_messageHeader - \1/")"
-	# TODO add execution time.
+
 	echo "$bsunit_messageHeader Test results:
 $bsunit_messageHeader Start Time: $(date +'%T.%3N' -d "@$start")
 $bsunit_messageHeader End Time: $(date +'%T.%3N' -d "@$end")
 $bsunit_messageHeader Total execution time: $(formatElapsedTime "$start" "$end")
-$bsunit_messageHeader - Total tests executed: ${#bsunit_sourcedTests[@]}/${#bsunit_sourcedTests[@]}
-$bsunit_messageHeader - Successful tests:     $numPass/${#bsunit_sourcedTests[@]}
-$bsunit_messageHeader - Failed tests:         $numFail/${#bsunit_sourcedTests[@]}
-$bsunit_messageHeader - Assertion failures:   $numAssertionFail/${#bsunit_sourcedTests[@]}"
+$bsunit_messageHeader - Total tests executed: $totalExecutedTests/$totalFoundTests
+$bsunit_messageHeader - Ignored tests:        $numIgnored/$totalFoundTests
+$bsunit_messageHeader - Successful tests:     $numPass/$totalExecutedTests
+$bsunit_messageHeader - Failed tests:         $numFail/$totalExecutedTests
+$bsunit_messageHeader - Assertion failures:   $numAssertionFail/$totalExecutedTests"
 	if [[ -n "$formattedAssertFails" ]]; then
 		echo "$bsunit_messageHeader -------------------- Tests with failed assertions -------------------- 
 $formattedAssertFails"
@@ -235,7 +220,6 @@ $formattedAssertFails"
 		echo "$bsunit_messageHeader -------------------- Failed tests ------------------------------------
 $formattedFailed"
 	fi
-	# TODO add stats for ignored count as well
 }
 
 function makeTmpDir {
@@ -291,14 +275,10 @@ function bsunit_main {
 
 	if [[ "$1" == 'install' ]]; then
 		installScript
+		exit 0
 	fi
 
 	if [[ "$1" == 'run' ]]; then
-		# maybe here check to see what was provided, source, and execute testRunner
-		# could utilize grep to find which lines are annotated, simple increment by 1 to get the function name to execute.
-		# after running each file, may want to see if there's a way to unsource a file or something.
-		# could deal with isolating source by encapsulating in subshell while sourcing and running tests.
-		#start="$(date +'%T.%3N')"
 		start="$EPOCHREALTIME"
 		local tmpFiles=($(makeTmpDir))
 		passedTests=${tmpFiles[0]}
@@ -308,6 +288,7 @@ function bsunit_main {
 		clearFile $passedTests
 		clearFile $failedTests
 		clearFile $assertionFailures
+
 		if [[ -n "$2" ]]; then
 			# TODO add check to see if files and directories are mixed. If so, exit with error.
 			if [[ -f "$2" ]]; then
@@ -316,14 +297,12 @@ function bsunit_main {
 				bsunit_testRunner "$2"
 			elif [[ -d "$2" ]]; then
 				# TODO expand to support multiple directories
-				# FIXME: logic here seems to be broken. script exits after the first suite is run.
 				echo "Running tests in dir: $2" >&2
 				local testFiles=($(find "$2" -type f -name '*.test.sh'))
 				local length="${#testFiles[@]}"
 				for ((i = 0; i < length; i++)); do
-					# TODO should probably just use a for in loop
 					echo "$bsunit_messageHeader running test suite: ${testFiles[i]}"
-					bsunit_testRunner "${testFiles[((i))]}"
+					(bsunit_testRunner "${testFiles[((i))]}")
 				done
 			else
 				local arr=($(echo "$2" | sed 's/#/ /'))
@@ -339,7 +318,6 @@ function bsunit_main {
 			echo "no tests found" &>2
 			exit 1
 		fi
-		#end="$(date +'%T.%3N')"
 		end="$EPOCHREALTIME"
 		outputResults
 	fi
