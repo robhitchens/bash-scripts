@@ -1,13 +1,5 @@
 #!/usr/bin/env bash
 
-# TODO need setup test runner in bsunit
-# take file(s) | /dir as arguments (or functions inline) (or maybe invoke at the bottom of a test script and read in tests from the invoking script
-# e.g. bsunit run mule-test.sh
-# parse functions that end with the word test or comment annotated with TEST
-# maybe also do something similar with setup and teardown functions.
-# eval function and collect test results.
-# print out stats at the end of run.
-# if invoking bsunit as a top level process will need to source passed in test files.
 function bsunit_fullDoc {
 	cat <<EOF
 Usage:
@@ -124,9 +116,6 @@ function bsunit_testRunner {
 		bsunit_sourcedTests+=(${unitTests[i]})
 	done
 
-	# TODO need to capture success and failure of each unit test for stats.
-	# could add failed test names to a global array.
-	# TODO should be able to pipe output to stdout while collecting results as long as variables are declared higher up.
 	(
 		# TODO maybe set trap on RETURN signal and check to see if return code is 0 or not
 		source $testFile
