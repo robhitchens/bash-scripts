@@ -167,15 +167,9 @@ function segmentEpoch {
 }
 
 function formatElapsedTime {
-	#FIXME this function won't be able to handle clock rollover logic i.e. 23:59 -> 00:00
-	#FIXME the calculations seem off, something is not getting evaluated correctly.
 	local startTime="$1"
 	local endTime="$2"
-	#local sSeg=($(segmentTimestamp "$startTime"))
-	#local eSeg=($(segmentTimestamp "$endTime"))
 
-	# TODO need to rework logic here.
-	#echo "$((${eSeg[0]} - ${sSeg[0]}))h $((${eSeg[1]} - ${sSeg[1]}))m $((${eSeg[2]} - ${sSeg[2]}))s $((${eSeg[3]} - ${sSeg[3]}))ms"
 	local elapsed="$(echo "$end - $start" | bc)"
 	local elapsedSegments=($(segmentEpoch "$elapsed"))
 
