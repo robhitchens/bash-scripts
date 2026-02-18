@@ -182,7 +182,9 @@ function httpRequest {
 			;;
 		esac
 	done
-
+	# TODO add sub commands aliases as main commands, refactor this implementation to template with :children: attribute.
+	#      here is child elements are present as part of command, then process in order and replace :children: attribute
+	#      with child string. May want to figure out validator logic or something before attempting to output invalid xmq.
 	echo "http:request(method     = ':method:'
              doc:name   = ':name:'
              doc:id     = $(uuidgen)
