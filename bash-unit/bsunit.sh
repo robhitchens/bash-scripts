@@ -30,8 +30,6 @@ Commands:
 EOF
 }
 
-declare -A bsunit_testResults
-declare -a bsunit_sourcedTests
 readonly bsunit_messageHeader="[BSUNIT]"
 # FIXME: should be able to declare all of these as a single line.
 declare -g passedTests
@@ -112,10 +110,6 @@ function bsunit_testRunner {
 			exit 1
 		fi
 	fi
-	for ((i = 0; i < ${#unitTests[@]}; i++)); do
-		bsunit_sourcedTests+=(${unitTests[i]})
-	done
-
 	(
 		# TODO maybe set trap on RETURN signal and check to see if return code is 0 or not
 		source $testFile
