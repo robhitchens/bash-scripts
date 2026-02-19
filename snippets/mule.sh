@@ -881,6 +881,8 @@ function runMunitTest {
 	# * list - list tests recursively with index in src/test/munit
 	# * list units file|index - parse xml and list out names of munit tests
 	# * watch [files...] [testname] - watch a set of files for change events and run tests. (optional tools to help with that: fswatch, Watchman, inotify-tools)
+	# To skip test compilation need to use mvn -o com.mulesoft.munit.tools:munit-maven-plugin:3.3.2:test -Dmunit.test=post-client-remarks-test-suite.xml
+	# To compile just tests, need to use mvn -o test-compile
 	local args=(${@:2})
 	local command=""
 	if [[ -n ${args[0]} ]]; then
