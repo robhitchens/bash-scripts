@@ -41,6 +41,7 @@ augroup restore_cursor_on_write_after_format
   autocmd! 
   autocmd BufWritePre *.go call FormatGoCode()
   autocmd BufWritePre *.sh call FormatShellCode()
+  autocmd BufWritePre *.json call FormatJson()
 augroup END
 
 function! FormatGoCode()
@@ -57,6 +58,16 @@ function! FormatShellCode()
     silent! %!shfmt
     call winrestview(l:saved_view)
 endfunction
+
+function! FormatJson()
+    let l:saved_view = winsaveview()
+    silent! %!jq -M '.'
+    call winrestview(l:saved_view)
+endfunction
+
+command Todo vim /\vTODO|FIXME/ % | copen
+
+cabbrev GF execute "normal! <C-V><C-W>gFzt"
 
 " TODO add a script to bash scripts for installing vim plugin if not
 " installed.
