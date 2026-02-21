@@ -2,17 +2,19 @@
 
 # FIXME this will probably break if I include flags for test.
 function _test_complete {
-	local word="$1"
+	local argStartIndex="$1"
+	local word="$2"
 	# Assuming current working directory is root of project.
 	if [[ -d 'src/test/munit' ]]; then
 		local testFiles=($(find src/test/munit -type f -iname '*-suite.xml'))
-		if ((COMP_CWORD == 2)); then
+		if ((COMP_CWORD == (argStartIndex + 1))); then
 			local baseNames=($(printf "%s\\n" "${testFiles[@]}" | xargs -I {} basename '{}'))
 			COMPREPLY=($(compgen -W "${baseNames[*]}" "$word"))
-		elif ((COMP_CWORD == 3)); then
-			if [[ $(printf "%s\\n" "${testFiles[@]}" | xargs -I {} basename '{}' | grep "${COMP_WORDS[2]}" | wc -l) == '1' ]]; then
+		elif ((COMP_CWORD == (argStartIndex + 2))); then
+			local fileIndex=$((argStartIndex + 1))
+			if [[ $(printf "%s\\n" "${testFiles[@]}" | xargs -I {} basename '{}' | grep "${COMP_WORDS[fileIndex]}" | wc -l) == '1' ]]; then
 				# Need to resolve COMP_WORDS[2] to relative file path. Kinda cheating a bit, but I've already made some assumptions prior to here.
-				local testMethods=($(grep 'munit:test name=' -i "src/test/munit/${COMP_WORDS[2]}" | sed -E 's/.*name="(.*)" .*$/\1/'))
+				local testMethods=($(grep 'munit:test name=' -i "src/test/munit/${COMP_WORDS[fileIndex]}" | sed -E 's/.*name="(.*)" .*$/\1/'))
 				COMPREPLY=($(compgen -W "${testMethods[*]}" "$word"))
 			fi
 		fi
@@ -20,20 +22,54 @@ function _test_complete {
 	fi
 }
 
+# TODO to make this work will need to write a mini completion engine, maybe during install could plop some kind of a map file in ~/.config/mule or something.
+function _httpRequest_complete {
+	local argStartIndex="$1"
+	local word="$2"
+	local options=('b' 'body' 'h' 'headers' 'q' 'queryParams' 'u' 'uriParams')
+
+	# TODO, ugh this is gonna get complicated
+	local cword="$COMP_CWORD"
+	if ((COMP_CWORD > (argStartIndex + 1))); then
+		: # TODO need to figure out the logic here.
+		# Need to loop through and remove option pairs for already completed options.
+		# Then need way to fix the condition for the above if statements
+		# Will need to loop up to argStartIndex + 4
+	else
+		COMPREPLY=($(compgen -W "${options[*]}" "$word"))
+	fi
+}
+
 function _auto_complete {
-	local firstLevelOptions=('test' 'dw')
+	# Note: once a flag has been selected, should probably remove it from the list of options
+	local firstLevelOptions=('-h' 'help' 'hr' 'install' 'test' 'dw' '-w' '-v' '-t' '-l')
 	# Notes: CWORD is the current index of words trying to be completed
 	#        COMP_WORD contains all of the current arguments presented during completion.
 	local word="${COMP_WORDS[COMP_CWORD]}"
-	if ((COMP_CWORD == 1)); then
-		COMPREPLY=($(compgen -W "${firstLevelOptions[*]}" "$word"))
+	local argStartIndex=1
+	while ((argStartIndex < ${#COMP_WORDS[@]})); do
+		if [[ "${COMP_WORDS[argStartIndex]}" =~ -\w ]]; then
+			((argStartIndex++))
+		else
+			break
+		fi
+	done
+	# TODO if first few options are flags, then need to advance the cursor until we reach a non flag arg
+	if ((COMP_CWORD == argStartIndex)); then
+		# FIXME if tab completing a flag, then need to find way to escape $word
+		COMPREPLY=($(compgen -W "${firstLevelOptions[*]}" "$(echo $word | sed 's/-/\\-/')"))
 		return 0
 	fi
-	# TODO need better comprehensive test expression.
-	if [[ "${COMP_WORDS[1]}" == 'test' ]]; then
-		_test_complete "$word"
+	case "${COMP_WORDS[argStartIndex]}" in
+	test)
+		_test_complete "$argStartIndex" "$word"
 		return 0
-	fi
+		;;
+	http:request | hr)
+		_httpRequest_complete "$argStartIndex" "$word"
+		return 0
+		;;
+	esac
 }
 
 # Registering auto complete with ml and mule symlinks, assuming they're installed already.
