@@ -27,17 +27,25 @@ function _httpRequest_complete {
 	local argStartIndex="$1"
 	local word="$2"
 	local options=('b' 'body' 'h' 'headers' 'q' 'queryParams' 'u' 'uriParams')
+	# FIXME: This works, but feels clunky.
+	declare -A pairs
+	pairs['b']='body'
+	pairs['body']='b'
+	pairs['h']='headers'
+	pairs['headers']='h'
+	pairs['q']='queryParams'
+	pairs['queryParams']='q'
+	pairs['u']='uriParams'
+	pairs['uriParams']='u'
 
-	# TODO, ugh this is gonna get complicated
-	local cword="$COMP_CWORD"
 	if ((COMP_CWORD > (argStartIndex + 1))); then
-		: # TODO need to figure out the logic here.
-		# Need to loop through and remove option pairs for already completed options.
-		# Then need way to fix the condition for the above if statements
-		# Will need to loop up to argStartIndex + 4
-	else
-		COMPREPLY=($(compgen -W "${options[*]}" "$word"))
+		for ((i = argStartIndex + 1; i < COMP_CWORD; i++)); do
+			local remove="${COMP_WORDS[$i]}"
+			remove="($remove ${pairs[$remove]}|${pairs[$remove]} $remove)"
+			options=($(echo "${options[@]}" | sed -E "s/$remove//"))
+		done
 	fi
+	COMPREPLY=($(compgen -W "${options[*]}" "$word"))
 }
 
 function _auto_complete {
