@@ -50,7 +50,7 @@ function _httpRequest_complete {
 
 function _auto_complete {
 	# Note: once a flag has been selected, should probably remove it from the list of options
-	local firstLevelOptions=('-h' 'help' 'hr' 'install' 'test' 'dw' '-w' '-v' '-t' '-l')
+	local firstLevelOptions=('-h' 'help' 'hr' 'http:request' 'install' 'test' 'dw' '-w' '-v' '-t' '-l')
 	# Notes: CWORD is the current index of words trying to be completed
 	#        COMP_WORD contains all of the current arguments presented during completion.
 	local word="${COMP_WORDS[COMP_CWORD]}"
@@ -68,13 +68,17 @@ function _auto_complete {
 		COMPREPLY=($(compgen -W "${firstLevelOptions[*]}" "$(echo $word | sed 's/-/\\-/')"))
 		return 0
 	fi
-	case "${COMP_WORDS[argStartIndex]}" in
+	case "$(echo "${COMP_WORDS[argStartIndex]}" | sed 's/-/\\:/')" in
 	test)
 		_test_complete "$argStartIndex" "$word"
 		return 0
 		;;
+		# FIXME: may need to refactor bash args to not contain ':'. Tab completion seems to break words with ':' into three separate words. i.e. http:request becomes http : request
 	http:request | hr)
 		_httpRequest_complete "$argStartIndex" "$word"
+		return 0
+		;;
+	*)
 		return 0
 		;;
 	esac
