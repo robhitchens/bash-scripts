@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # FIXME this will probably break if I include flags for test.
+# TODO this works locally, but doesn't appear to work on my machine at work. Will need to investigate what's different.
 function _test_complete {
 	local argStartIndex="$1"
 	local word="$2"
