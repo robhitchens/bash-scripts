@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# TODO look into using /etc/bash_completion.d/ for installing auto-complete scripts.
 # FIXME this will probably break if I include flags for test.
 # TODO this works locally, but doesn't appear to work on my machine at work. Will need to investigate what's different.
 function _test_complete {
