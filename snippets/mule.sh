@@ -57,6 +57,7 @@ Commands (Snippets):
   munitRoot|mur                         Generates munit root element
   comment|c                             Generates a Anypoint studio compatible comment
   comment-multi|cm                      Generates a Anypoint studio compatible multi-line comment
+  global|g                              Generates a global-property element
   http:request|hr [children...]         Generates http:request template with the provided valid child element templates.
     children:
         - body|b                        Generates an http:body child element within the parent element.
@@ -579,6 +580,7 @@ output application/json
 }
 
 function munitSetEventAttributes {
+	# FIXME this shouldn't take a repeat parameter
 	local params="$1"
 	if [[ -n "$(echo "$params" | grep -E '[0-9]')" ]]; then
 		local instances="$params"
@@ -588,19 +590,17 @@ function munitSetEventAttributes {
 	fi
 	local children=""
 	for ((i = 0; i < instances; i++)); do
-		children+="munit:attribute(key = ':key-$i:'
-    value = '''#[%dw 2.0
-output application/json
----
-{}]'''
-    mediaType = application/json)
-"
+		#		children+="munit:attribute(key = ':key-$i:'
+		#    value = '''#[%dw 2.0
+		#output application/json
+		#---
+		#{}]'''
+		#    mediaType = application/json)
+		#"
+		#TODO: need to double check this.
+		children+="munit:attributes(value = '#[]')"
 	done
-	echo "munit:attributes 
-{
-    $children
-}
-"
+	echo "$children"
 }
 
 function munitSetEvent {
@@ -641,8 +641,8 @@ mediaType = application/json)
 	echo "munit:set-event(doc:name = 'set event')
 {
     ${children['payload']}
-    ${children['variables']}
     ${children['attributes']}
+    ${children['variables']}
 }
 "
 }
@@ -856,6 +856,11 @@ function studioCommentMultiline {
 	echo "/* [STUDIO:\":comment:\"] :children: [STUDIO] */"
 }
 
+function globalProperty {
+	echo "global-property(name = ':name:'
+value = ':value:')"
+}
+
 function filterTestOutput {
 	local display=0
 	while IFS=$'\n' read -r line; do
@@ -977,6 +982,9 @@ Cannot process further" >&2
 		;;
 	comment-multi | cm)
 		content="$(studioCommentMultiline)"
+		;;
+	global-property | g)
+		content="$(globalProperty)"
 		;;
 	http:request | hr)
 		content="$(httpRequest "${commands[@]}")"

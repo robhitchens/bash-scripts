@@ -73,6 +73,24 @@ function munitRoot_shorthand_test {
 }
 
 #TEST
+function globalProperty_test {
+	local output="$(mule global-property)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "global-property(name = ':name:'
+value = ':value:')"
+}
+
+#TEST
+function globalProperty_shorthand_test {
+	local output="$(mule g)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "global-property(name = ':name:'
+value = ':value:')"
+}
+
+#TEST
 function comment_test {
 	local output="$(mule comment)"
 
@@ -478,7 +496,7 @@ function subflow_noargs_test {
 	local output="$(mule sub-flow)"
 
 	assert "$output" isNotEmpty &&
-		assert "$output" equalsIgnoringWhitespace "sub-flow(doc:name = ':doc:name:'
+		assert "$output" equalsIgnoringWhitespace "sub-flow(doc:name = ':name:'
 name = ':name:')
 {
     :children:
@@ -490,7 +508,7 @@ function subflow_noargs_shorthand_test {
 	local output="$(mule sf)"
 
 	assert "$output" isNotEmpty &&
-		assert "$output" equalsIgnoringWhitespace "sub-flow(doc:name = ':doc:name:'
+		assert "$output" equalsIgnoringWhitespace "sub-flow(doc:name = ':name:'
 name = ':name:')
 {
     :children:
@@ -668,6 +686,7 @@ output application/json
 {}]'''
 mediaType = application/json)
   
+    munit:attributes(value = '#[]')
     munit:variables
 {
     munit:variable(key = ':key-0:'
@@ -678,16 +697,6 @@ output application/json
     mediaType = application/json)
      
 }
-    munit:attributes 
-{
-    munit:attribute(key = ':key-0:'
-    value = '''#[%dw 2.0
-output application/json
----
-{}]'''
-    mediaType = application/json)
-     
- }
 }"
 }
 
@@ -704,6 +713,7 @@ output application/json
 {}]'''
 mediaType = application/json)
   
+    munit:attributes(value = '#[]')
     munit:variables
 {
     munit:variable(key = ':key-0:'
@@ -714,16 +724,6 @@ output application/json
     mediaType = application/json)
      
 }
-    munit:attributes 
-{
-    munit:attribute(key = ':key-0:'
-    value = '''#[%dw 2.0
-output application/json
----
-{}]'''
-    mediaType = application/json)
-     
- }
 }"
 }
 
