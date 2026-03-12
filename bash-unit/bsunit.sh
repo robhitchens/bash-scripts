@@ -244,6 +244,7 @@ function installScript {
 }
 
 function bsunit_main {
+	# TODO add support for a --loop or -l option to run a test in a loop if inotify utils is installed
 	# TODO need to handle case were first argument is not a known option
 	if [[ "$1" == 'help' || "$1" == '--help' || "$1" == '' ]]; then
 		bsunit_fullDoc
