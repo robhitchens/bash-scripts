@@ -70,6 +70,7 @@ Commands (Snippets):
         - variables|v [#]               Generates a ee:variables template with the given (number) of ee:set-variable element templates.
         - attributes|a [#]              Generates the ee:attributes tempalte with the given (number) of ee:set-attribute element templates.
   transform:set-payload|trp             Temporary shortcut for transform payload
+  set-variable:sv                       Generates a set-variable template
   choiceRouter|cr [children...]         Generates a choice template with the provided child element templates.
     children:
         - when|w [#]                    Generates the given (number) of when templates within the parent element.
@@ -310,6 +311,13 @@ function transform {
     ${children['attributes']}
 }
 "
+}
+################################################################################
+function setVariable {
+	echo "set-variable(value        = ':value:'
+                     doc:name     = ':doc:name:'
+                     doc:id       = '$(uuidgen)'
+                     variableName = ':variableName:')"
 }
 ################################################################################
 function choiceWhen {
@@ -991,6 +999,9 @@ Cannot process further" >&2
 		;;
 	transform | tr)
 		content="$(transform "${commands[@]}")"
+		;;
+	set-variable | sv)
+		content="$(setVariable "${commands[@]}")"
 		;;
 	choiceRouter | cr)
 		content="$(choiceRouter "${commands[@]}")"
