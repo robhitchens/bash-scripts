@@ -1092,6 +1092,28 @@ function tryScope_wrap_stdin_test {
 }"
 }
 
+#TEST
+function setVariable_test {
+	local output="$(mule set-variable)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "set-variable(value = ':value:'
+doc:name = ':doc:name:'
+doc:id = ':doc:id:'
+variableName = ':variableName:')"
+}
+
+#TEST
+function setVariable_shorthand_test {
+	local output="$(mule sv)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "set-variable(value = ':value:'
+doc:name = ':doc:name:'
+doc:id = ':doc:id:'
+variableName = ':variableName:')"
+}
+
 # TODO add more unit tests validating behavior of all template commands.
 # TODO add test coverage for bad input to commands.
 # TODO add simple test for attribute replacement
