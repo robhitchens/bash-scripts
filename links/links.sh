@@ -6,6 +6,23 @@ function hereDoc {
 	# TODO document options
 	# TODO document interface
 	cat <<-EOF
+		Usage:
+		  links [OPTS] [LINKNAME]
+
+		Synopsis:
+		  links is a simple utility to open links saved in a text file in a browser
+
+		Description:
+		  If no option for a browser is provided, then the bash default \$BROWSER will be used
+
+		Options:
+		  --help                            Prints help doc to stdout
+		  -w                                Opens link using \$WINBROWSER variable
+		  -c                                Opens link using \$CLIBROWSER variable
+		  -f|--file                         Link file to be searched                                
+		Commands:
+		  install                           Installs the script under /usr/local/bin and auto complete script under ...
+		  help                              Prints help doc to stdout
 	EOF
 }
 
@@ -47,6 +64,38 @@ function main {
 	# TODO exit with error if empty.
 
 	# TODO interface links [-w|-c] [-f file] [linkName]
+	if [[ "$1" == 'help' || "$1" == '--help' || "$1" == '' ]]; then
+		hereDoc
+		exit 0
+	fi
+
+	if [[ "$1" == 'install' ]]; then
+		install
+		exit 0
+	fi
+
+	local skipCount=0
+	while getopts "wcf" flag; do
+		case "$flag" in
+		w)
+			win=true
+			((skipCount += 1))
+			;;
+		c)
+			cli=true
+			((skipCount += 1))
+			;;
+		f)
+			# TODO may want to deal with flags without getopts
+			:
+			((skipCount += 1))
+			;;
+		*)
+			echo "Unknown flag: $flag" >&2
+			exit 1
+			;;
+		esac
+	done
 }
 
 main "$@"
