@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+declare -A flags
+
 function hereDoc {
 	# TODO document global var in hereDoc ($WINBROWSER, $CLIBROWSER, $BROWSER)
 	# TODO document usage
@@ -13,13 +15,14 @@ function hereDoc {
 		  links is a simple utility to open links saved in a text file in a browser
 
 		Description:
-		  If no option for a browser is provided, then the bash default \$BROWSER will be used
+		  If no option for a browser is provided, then the bash default \$BROWSER will be used.
+		  Default link doc can be set with LINKSDOC global variable
 
 		Options:
 		  --help                            Prints help doc to stdout
+		  --file                            Link file to be searched                                
 		  -w                                Opens link using \$WINBROWSER variable
 		  -c                                Opens link using \$CLIBROWSER variable
-		  -f|--file                         Link file to be searched                                
 		Commands:
 		  install                           Installs the script under /usr/local/bin and auto complete script under ...
 		  help                              Prints help doc to stdout
@@ -30,9 +33,15 @@ function getLink {
 	local linkName="$1"
 	local linkDoc="$2"
 
-	local linkVal="$(grep -A1 -i "$linkName" | grep -v -E '^#.*')"
+	local linkVal="$(grep -A1 -i "$linkName" "$linkDoc" | grep -v -E '^#.*')"
 
-	echo "$linkVal"
+	if (($(echo "$linkVal" | wc -l) > 1)); then
+		echo "Duplicate values returned for link name '$linkName'" >&2
+		# TODO add support to allow interactive selection
+		exit 1
+	else
+		echo "$linkVal"
+	fi
 
 	# TODO grep $LINKSDOC for link friendly name, extract line number
 	# TODO increment line number by 1
@@ -75,27 +84,60 @@ function main {
 	fi
 
 	local skipCount=0
-	while getopts "wcf" flag; do
+	while getopts "wc" flag; do
 		case "$flag" in
 		w)
-			win=true
+			flags['win']=true
 			((skipCount += 1))
 			;;
 		c)
-			cli=true
-			((skipCount += 1))
-			;;
-		f)
-			# TODO may want to deal with flags without getopts
-			:
+			flags['cli']=true
 			((skipCount += 1))
 			;;
 		*)
 			echo "Unknown flag: $flag" >&2
-			exit 1
+			flags['default']=true
 			;;
 		esac
 	done
+
+	local input=()
+	local inputLen="$#"
+	#for ((i = skipCount; i < $#; i++)); do
+	#	#"${input[@]:((skipCount)):((inputLen - skipCount))}"
+	#	# TODO don't remember what ! does in a string template
+	#	input+=("${!i}")
+	#done
+	#input="${input[@]:((skipCount)):((inputLen - skipCount))}"
+	local linkDoc
+	for ((i = skipCount; i < $#; i++)); do
+		local arg="${!i}"
+		if [[ '--file' == "$arg" ]]; then
+			((i += 1))
+			((skipCount += 2))
+			linkDoc="${!i}"
+			if [[ -z "$linkDoc" ]]; then
+				linkDoc="$LINKSDOC"
+			fi
+		fi
+	done
+
+	local linkName="${!skipCount}"
+	local link="$(getLink "$linkName" "$linkDoc")"
+
+	if [[ -z "$link" ]]; then
+		echo "Link name '$linkName' not found" >&2
+		exit 1
+	fi
+
+	if [[ "${flags['win']}" == true ]]; then
+		$WINBROWSER "$link"
+	elif [[ "${flags['cli']}" == true ]]; then
+		$CLIBROWSER "$link"
+	else
+		$BROWSER "$link"
+	fi
+
 }
 
 main "$@"
