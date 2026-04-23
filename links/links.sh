@@ -103,11 +103,6 @@ function main {
 
 	local input=()
 	local inputLen="$#"
-	#for ((i = skipCount; i < $#; i++)); do
-	#	#"${input[@]:((skipCount)):((inputLen - skipCount))}"
-	#	# TODO don't remember what ! does in a string template
-	#	input+=("${!i}")
-	#done
 	#input="${input[@]:((skipCount)):((inputLen - skipCount))}"
 	local linkDoc
 	for ((i = skipCount; i < $#; i++)); do
@@ -119,6 +114,7 @@ function main {
 			if [[ -z "$linkDoc" ]]; then
 				linkDoc="$LINKSDOC"
 			fi
+			break
 		fi
 	done
 
@@ -131,8 +127,16 @@ function main {
 	fi
 
 	if [[ "${flags['win']}" == true ]]; then
+		if [[ -z "$WINBROWSER" ]]; then
+			echo "Global variable WINBROWSER not set" >&2
+			exit 1
+		fi
 		$WINBROWSER "$link"
 	elif [[ "${flags['cli']}" == true ]]; then
+		if [[ -z "$CLIBROWSER" ]]; then
+			echo "Global variable CLIBROWSER not set" >&2
+			exit 1
+		fi
 		$CLIBROWSER "$link"
 	else
 		$BROWSER "$link"
