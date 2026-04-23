@@ -25,7 +25,7 @@ function hereDoc {
 		  -c                                Opens link using \$CLIBROWSER variable
 		Commands:
 		  install                           Installs the script under /usr/local/bin and auto complete script under ...
-		  cat                               Lists out link headers from link doc
+		  list                              Lists out link headers from link doc
 		  edit                              Opens up link doc using \$EDITOR
 		  help                              Prints help doc to stdout
 	EOF
@@ -136,7 +136,7 @@ function main {
 
 	((skipCount += 1))
 	local linkName="${!skipCount}"
-	if [[ "$linkName" == 'cat' ]]; then
+	if [[ "$linkName" == 'list' ]]; then
 		catLinkHeaders "$linkDoc"
 		return 0
 	elif [[ "$linkName" == 'edit' ]]; then
