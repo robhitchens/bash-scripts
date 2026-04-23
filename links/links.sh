@@ -51,6 +51,11 @@ function getLink {
 	# TODO example: cat ~/links | grep -A1 -i '# azure portal' | grep -v -E '^#.*'
 }
 
+function catLinkHeaders {
+	local linkDoc="$1"
+	grep -E '^#' "$linkDoc" | sed -E 's/^#(.*)/\1/'
+}
+
 function install {
 	# TODO get full path of script
 	# TODO install main script in /usr/local/bin
@@ -129,6 +134,11 @@ function main {
 
 	((skipCount += 1))
 	local linkName="${!skipCount}"
+	if [[ "$linkName" == 'cat' ]]; then
+		catLinkHeaders "$linkDoc"
+		return 0
+	fi
+
 	local link="$(getLink "$linkName" "$linkDoc")"
 
 	if [[ -z "$link" ]]; then
