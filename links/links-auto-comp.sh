@@ -9,11 +9,20 @@ function _links_getFriendlyNames {
 	# TODO will have to parse args for -f file
 	# TODO if -f is not provided then default to $LINKSDOC var
 	# TODO exit if file is empty
+	local linkDoc="$1"
+
+	local linkNames=$(grep -E '^#.*' "$linkDoc" | sed -E 's/^#[ ]?(.*)/\1/')
+	printf '%s\n' "${linkNames[@]}"
 }
 
 function _links_processArg {
 	:
 	# TODO not sure what I'm gonna do with this here.
+	# example processing link friendly names
+	result=$(_links_getFriendlyNames "$linkDoc")
+	while IFS=$'\n' read -r line; do
+		echo "Line: $line"
+	done <<<$result
 }
 
 function _links_auto_comp {
