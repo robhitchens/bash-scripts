@@ -63,14 +63,22 @@ function install {
 	# TODO install main script in /usr/local/bin
 	# TODO install auto-comp script in bash autocomplete folder
 	local symlink='/usr/local/bin/links'
+	local completion_symlink='/etc/bash_completion.d/links'
 	if [[ -f $symlink ]]; then
 		echo "Removing existing sym links: $symlink" >&2
 		rm -f $symlink
-	else
-		local scriptLocation=$(find . -type f -iname 'links.sh' | xargs realpath --relative-to=/ | sed -E 's/(.*)/\/\1/')
-		echo "Adding symlink: $symlink"
-		ln -s $scriptLocation $symlink
 	fi
+	if [[ -f $completion_symlink ]]; then
+		echo "Removing existing sym links: $completion_symlink" >&2
+		rm -f "$completion_symlink"
+	fi
+	local scriptLocation=$(find . -type f -iname 'links.sh' | xargs realpath --relative-to=/ | sed -E 's/(.*)/\/\1/')
+	echo "Adding symlink: $symlink"
+	ln -s $scriptLocation $symlink
+
+	local scriptLocation=$(find . -type f -iname 'links-auto-comp.sh' | xargs realpath --relative-to=/ | sed -E 's/(.*)/\/\1/')
+	echo "Adding symlink: $completion_symlink"
+	ln -s $scriptLocation $completion_symlink
 }
 
 function main {
