@@ -3,7 +3,7 @@
 # TODO look into using /etc/bash_completion.d/ for installing auto-complete scripts.
 # FIXME this will probably break if I include flags for test.
 # TODO this works locally, but doesn't appear to work on my machine at work. Will need to investigate what's different.
-function _test_complete {
+function _mule_test_complete {
 	local argStartIndex="$1"
 	local word="$2"
 	# Assuming current working directory is root of project.
@@ -25,7 +25,7 @@ function _test_complete {
 }
 
 # TODO to make this work will need to write a mini completion engine, maybe during install could plop some kind of a map file in ~/.config/mule or something.
-function _httpRequest_complete {
+function _mule_httpRequest_complete {
 	local argStartIndex="$1"
 	local word="$2"
 	local options=('b' 'body' 'h' 'headers' 'q' 'queryParams' 'u' 'uriParams')
@@ -50,7 +50,7 @@ function _httpRequest_complete {
 	COMPREPLY=($(compgen -W "${options[*]}" "$word"))
 }
 
-function _auto_complete {
+function _mule_auto_comp {
 	# Note: once a flag has been selected, should probably remove it from the list of options
 	local firstLevelOptions=('-h' 'help' 'hr' 'http:request' 'install' 'test' 'dw' '-w' '-v' '-t' '-l')
 	# Notes: CWORD is the current index of words trying to be completed
@@ -72,12 +72,12 @@ function _auto_complete {
 	fi
 	case "$(echo "${COMP_WORDS[argStartIndex]}" | sed 's/-/\\:/')" in
 	test)
-		_test_complete "$argStartIndex" "$word"
+		_mule_test_complete "$argStartIndex" "$word"
 		return 0
 		;;
 		# FIXME: may need to refactor bash args to not contain ':'. Tab completion seems to break words with ':' into three separate words. i.e. http:request becomes http : request
 	http:request | hr)
-		_httpRequest_complete "$argStartIndex" "$word"
+		_mule_httpRequest_complete "$argStartIndex" "$word"
 		return 0
 		;;
 	*)
@@ -87,4 +87,4 @@ function _auto_complete {
 }
 
 # Registering auto complete with ml and mule symlinks, assuming they're installed already.
-complete -F _auto_complete ml mule
+complete -F _mule_auto_comp ml mule
