@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 declare -A flags
+declare -i skipCount
 
 function hereDoc {
 	# TODO document global var in hereDoc ($WINBROWSER, $CLIBROWSER, $BROWSER)
@@ -20,14 +21,12 @@ function hereDoc {
 
 		Options:
 		  --help|-h                         Prints help doc to stdout
-		  --file                            Link file to be searched                                
-		  -w                                Opens link using \$WINBROWSER variable
-		  -c                                Opens link using \$CLIBROWSER variable
-		Commands:
-		  install                           Installs the script under /usr/local/bin and auto complete script under ...
-		  list                              Lists out link headers from link doc
-		  edit                              Opens up link doc using \$EDITOR
-		  help                              Prints help doc to stdout
+		  --install                         Installs the script under /usr/local/bin and auto complete script under ...
+		  --list|-l                         Lists out link headers from link doc
+		  --edit|-e                         Opens up link doc using \$EDITOR
+		  --file|-f                         Link file to be searched                                
+		  --win|-w                          Opens link using \$WINBROWSER variable
+		  --cli|-c                          Opens link using \$CLIBROWSER variable
 	EOF
 }
 
@@ -81,6 +80,66 @@ function install {
 	ln -s $scriptLocation $completion_symlink
 }
 
+function handleOneOffOptions {
+	if [[ "$1" == '--help' || "$1" == '-h' || "$1" == '' ]]; then
+		hereDoc
+		return 0
+	fi
+
+	if [[ "$1" == '--install' ]]; then
+		install
+		return 0
+	fi
+
+	return 1
+}
+
+function setFlags {
+	for ((i = 1; i <= $#; i++)); do
+		local arg="${!i}"
+		local flag="$(echo "$arg" | grep -E '^(\-\w{1}|\-{2}\w+)$')"
+		if [[ -n $flag ]]; then
+			case "$flag" in
+			--win | -w)
+				flags['win']=true
+				((skipCount += 1))
+				;;
+			--cli | -c)
+				flags['cli']=true
+				((skipCount += 1))
+				;;
+			--list | -l)
+				flags['list']=true
+				((skipCount += 1))
+				;;
+			--edit | -e)
+				flags['edit']=true
+				((skipCount += 1))
+				;;
+			--file | -f)
+				((i++))
+				local file="${!i}"
+				if [[ -n "${!i}" ]]; then
+					local file="${!i}"
+				fi
+				flags['file']="$file"
+				((skipCount += 2))
+				;;
+			*)
+				echo "Unknown flag: $flag" >&2
+				return 1
+				;;
+			esac
+		fi
+	done
+
+	if [[ -z "${flags['file']}" ]]; then
+		flags['file']="$LINKSDOC"
+	fi
+
+	echo "$skipCount" >&2
+}
+
 function main {
 	# TODO parse arguemnts
 	# TODO handle --help arg or no args, call hereDoc, and return
@@ -95,64 +154,27 @@ function main {
 	# TODO return with error if empty.
 
 	# TODO interface links [-w|-c] [-f file] [linkName]
-	if [[ "$1" == 'help' || "$1" == '--help' || "$1" == '-h' || "$1" == '' ]]; then
-		hereDoc
+	handleOneOffOptions "$@"
+	if (($? == 0)); then
 		return 0
 	fi
 
-	if [[ "$1" == 'install' ]]; then
-		install
-		return 0
+	setFlags "$@"
+	if (($? == 1)); then
+		return 1
 	fi
 
-	local skipCount=0
-	while getopts "wc" flag; do
-		case "$flag" in
-		w)
-			flags['win']=true
-			((skipCount += 1))
-			;;
-		c)
-			flags['cli']=true
-			((skipCount += 1))
-			;;
-		*)
-			echo "Unknown flag: $flag" >&2
-			flags['default']=true
-			;;
-		esac
-	done
-
-	local input=()
-	local inputLen="$#"
-	#input="${input[@]:((skipCount)):((inputLen - skipCount))}"
-	local linkDoc
-	for ((i = skipCount; i < $#; i++)); do
-		local arg="${!i}"
-		if [[ '--file' == "$arg" ]]; then
-			((i += 1))
-			((skipCount += 2))
-			linkDoc="${!i}"
-			if [[ -z "$linkDoc" ]]; then
-				linkDoc="$LINKSDOC"
-			fi
-			break
-		else
-			linkDoc="$LINKSDOC"
-		fi
-	done
+	if [[ -n "${flags['list']}" ]]; then
+		catLinkHeaders "${flags['file']}"
+		return 0
+	elif [[ -n "${flags['edit']}" ]]; then
+		$EDITOR "${flags['file']}"
+		return 0
+	fi
 
 	((skipCount += 1))
 	local linkName="${!skipCount}"
-	if [[ "$linkName" == 'list' ]]; then
-		catLinkHeaders "$linkDoc"
-		return 0
-	elif [[ "$linkName" == 'edit' ]]; then
-		$EDITOR "$linkDoc"
-		return 0
-	fi
-
-	local link="$(getLink "$linkName" "$linkDoc")"
+	local link="$(getLink "$linkName" "${flags['file']}")"
 
 	if [[ -z "$link" ]]; then
 		echo "Link name '$linkName' not found" >&2
