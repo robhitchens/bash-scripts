@@ -136,8 +136,6 @@ function setFlags {
 	if [[ -z "${flags['file']}" ]]; then
 		flags['file']="$LINKSDOC"
 	fi
-
-	echo "$skipCount" >&2
 }
 
 function main {
