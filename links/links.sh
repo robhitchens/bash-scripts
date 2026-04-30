@@ -97,7 +97,10 @@ function handleOneOffOptions {
 function setFlags {
 	for ((i = 1; i <= $#; i++)); do
 		local arg="${!i}"
-		local flag="$(echo "$arg" | grep -E '^(\-\w{1}|\-{2}\w+)$')"
+		# TODO could add support for combination single tack flags i.e. -ef
+		# TODO maybe replace grep with bash regex
+		local flag="$(grep -E '^(\-\w{1}|\-{2}\w+)$' <<<"$arg")"
+		# TODO would then need to remove '-' from flag, or skip over - and process options character by character
 		if [[ -n $flag ]]; then
 			case "$flag" in
 			--win | -w)
@@ -119,9 +122,6 @@ function setFlags {
 			--file | -f)
 				((i++))
 				local file="${!i}"
-				if [[ -n "${!i}" ]]; then
-					local file="${!i}"
-				fi
 				flags['file']="$file"
 				((skipCount += 2))
 				;;
@@ -136,6 +136,8 @@ function setFlags {
 	if [[ -z "${flags['file']}" ]]; then
 		flags['file']="$LINKSDOC"
 	fi
+
+	# TODO should add some validation to guard against invalid option state.
 }
 
 function main {
