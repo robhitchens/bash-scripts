@@ -35,7 +35,7 @@ function _links_getLinkDoc {
 
 function _links_auto_comp {
 	IFS=$'\n'
-	local firstLevelOptions=('help' 'install' 'list' 'edit' '-h' '-w' '-c' '--help' '--file')
+	local firstLevelOptions=('--help' '-h' '--install' '--list' '-l' '--edit' '-e' '--file' '-f' '--win' '-w' '--cli' '-c')
 	local word="${COMP_WORDS[COMP_CWORD]}"
 	# TODO figure out how I want autocomplete to work.
 	# --file can only be provided once
