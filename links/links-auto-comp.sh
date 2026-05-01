@@ -33,9 +33,23 @@ function _links_getLinkDoc {
 	echo "$linkDoc"
 }
 
+function _links_getOptions {
+	local opts=('--help' '-h' '--install' '--list' '-l' '--edit' '-e' '--file' '-f' '--win' '-w' '--cli' '-c')
+	printf '%s\n' "${opts[@]}"
+}
+
+function _links_filterOptions {
+	local completedOptions="$1"
+	local opts=($(_links_getOptions))
+
+	:
+	# TODO add filtering of options with flags already provided by end user
+}
+
 function _links_auto_comp {
 	IFS=$'\n'
-	local firstLevelOptions=('--help' '-h' '--install' '--list' '-l' '--edit' '-e' '--file' '-f' '--win' '-w' '--cli' '-c')
+	local firstLevelOptions=($(_links_getOptions))
+	# TODO might simplify logic and just detect if input starts with a '-' and complete flags, otherwise complete links names
 	local word="${COMP_WORDS[COMP_CWORD]}"
 	# TODO figure out how I want autocomplete to work.
 	# --file can only be provided once
