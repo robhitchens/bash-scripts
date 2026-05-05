@@ -900,6 +900,12 @@ function runMunitTest {
 	local command=""
 	if [[ -n ${args[0]} ]]; then
 		command+="-Dmunit.test=${args[0]}"
+		if [[ -n "$SECURE_KEY" ]]; then
+			command+=" -Dsecure.key=$SECURE_KEY"
+		fi
+		if [[ -n "$MULE_ENV" ]]; then
+			command+=" -Denv=$MULE_ENV"
+		fi
 	fi
 	if [[ -n ${args[1]} ]]; then
 		command+="#${args[1]}"
