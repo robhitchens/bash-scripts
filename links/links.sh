@@ -34,10 +34,11 @@ function getLink {
 	local linkName="$1"
 	local linkDoc="$2"
 
-	local linkVal="$(grep -A1 -i "$linkName" "$linkDoc" | grep -v -E '^#.*')"
+	local linkVal="$(grep -A1 -i -E "^#(.*)$linkName(.*)$" "$linkDoc" | grep -v -E '^#.*')"
 
 	if (($(echo "$linkVal" | wc -l) > 1)); then
 		echo "Duplicate values returned for link name '$linkName'" >&2
+		echo "Link values: $linkVal" >&2
 		# TODO add support to allow interactive selection
 		return 1
 	else
