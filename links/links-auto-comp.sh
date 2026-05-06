@@ -39,11 +39,16 @@ function _links_getOptions {
 }
 
 function _links_filterOptions {
-	local completedOptions="$1"
+	local completedOptions=($@)
 	local opts=($(_links_getOptions))
-
-	:
-	# TODO add filtering of options with flags already provided by end user
+	local len="${#opts[@]}"
+	for ((i = 0; i < len; i++)); do
+		if [[ " ${completedOptions[@]} " =~ " ${opts[$i]} " ]]; then
+			:
+		else
+			printf '%s\n' "${opts[$i]}"
+		fi
+	done
 }
 
 function _links_auto_comp {
