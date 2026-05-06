@@ -21,6 +21,8 @@ Plug 'altercation/vim-colors-solarized', { 'branch' : 'master' }
 Plug 'junegunn/rainbow_parentheses.vim'
 "Git gutter"
 Plug 'airblade/vim-gitgutter', { 'branch': 'main' }
+"Diff unit syntax"
+Plug 'rickhowe/diffunitsyntax', { 'branch': 'master'}
 call plug#end()
 
 let g:material_theme_style = 'ocean'
