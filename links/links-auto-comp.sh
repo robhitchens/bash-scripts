@@ -42,10 +42,13 @@ function _links_filterOptions {
 	local completedOptions=($@)
 	local opts=($(_links_getOptions))
 	local len="${#opts[@]}"
+	# TODO if options provided are either --help -h or --install, no further options should be allowed
+	# TODO if --list is provided then -l --edit -e --win -w --cli -c --install --help -h should not be provided (only --file or -f should be allowed further options)
+	# TODO if --edit is provided then -e --list -l --win -w --cli -c --install --help -h should not be provided (only --file or -f should be allowed further options)
+	# TODO if --win or -w is provided then --cli -c should not be provided
 	for ((i = 0; i < len; i++)); do
-		if [[ " ${completedOptions[@]} " =~ " ${opts[$i]} " ]]; then
-			:
-		else
+		# TODO should invert logic to reduce code and remove empty if scope
+		if [[ ! " ${completedOptions[@]} " =~ " ${opts[$i]} " ]]; then
 			printf '%s\n' "${opts[$i]}"
 		fi
 	done
