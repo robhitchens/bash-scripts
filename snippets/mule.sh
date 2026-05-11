@@ -87,6 +87,9 @@ Commands (Snippets):
     children:
         - errorhandler|eh               Generates an error-handler template within the parent element
   raise|re                              Generates a raise-error template
+  errorHandler|eh                       Generates an error-handler template
+  onErrorContinue|oec                   Generates an on-error-continue template
+  onErrorPropagate|oep                  Generates an on-error-propagate template
   batch:job|b [children]                Generates a batch scope template
     children:
         - process-records|pr [children] Generates a batch:process-records template within the parent element
@@ -502,6 +505,34 @@ function raiseError {
 doc:id      = ':doc:id:'
 type        = ':type:'
 description = ':description:')"
+}
+################################################################################
+function errorHandler {
+	echo "error-handler(name   = ':name:'
+                  doc:id = ':doc:id:')
+    {
+      :children:
+    }"
+}
+################################################################################
+function onErrorContinue {
+	echo "on-error-continue(enableNotifications = true
+                          logException        = true
+                          doc:name            = 'On Error Continue'
+                          doc:id              = ':doc:id:'
+                          type                = ':type:') {
+                          :children:
+                        }"
+}
+################################################################################
+function onErrorPropagate {
+	echo "on-error-propagate(enableNotifications = true
+                           logException        = true
+                           doc:name            = 'On Error Propagate'
+                           doc:id              = ':doc:id:'
+                           type                = ':type:') {
+                           :children:
+                         }"
 }
 ################################################################################
 function batchJob {
@@ -1035,6 +1066,15 @@ Cannot process further" >&2
 		;;
 	raise-error | re)
 		content="$(raiseError "${commands[@]}")"
+		;;
+	errorHandler | eh)
+		content="$(errorHandler "${commands[@]}")"
+		;;
+	onErrorContinue | oec)
+		content="$(onErrorContinue "${commands[@]}")"
+		;;
+	onErrorPropagate | oep)
+		content="$(onErrorPropagate "${commands[@]}")"
 		;;
 	batch:job | b)
 		content="$(batchJob "${commands[@]}")"
