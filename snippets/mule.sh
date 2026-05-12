@@ -38,9 +38,12 @@ Description:
   As shorthand: mr { f { hr b h } tr p }. 
   WIP: attributes can be provided to an element using a bash syntax array. e.g. flow-ref [ doc:name 'Some flow' name a-referenced-flow ]
 
+  The global variable ML_AUTO_DOC_ID can be set so that the :doc:id: attribute is always populated in supported templates using the uuidgen command.
+
 
 Options:
   -h|--help                             Prints help doc to stdout
+  -i|                                   Automatically inserts the :doc:id: attribute using uuidgen as the input attribute
   -w|--wrap                             Wrap flag, wraps content read from stdin with snippet provided as args.
   -v|--verbose                          Verbose flag for test runner
   -t|--timed                            Time flag for test runner
@@ -192,7 +195,7 @@ function httpRequest {
 	#      with child string. May want to figure out validator logic or something before attempting to output invalid xmq.
 	echo "http:request(method     = ':method:'
              doc:name   = ':name:'
-             doc:id     = $(uuidgen)
+             doc:id     = ':doc:id:'
              config-ref = ':config-ref:'
              path       = ':path:'
              sendCorrelationId = ALWAYS
@@ -319,7 +322,7 @@ function transform {
 function setVariable {
 	echo "set-variable(value        = ':value:'
                      doc:name     = ':doc:name:'
-                     doc:id       = '$(uuidgen)'
+                     doc:id       = ':doc:id:'
                      variableName = ':variableName:')"
 }
 ################################################################################
@@ -993,6 +996,9 @@ function processCommand {
 			commands+=("${!i}")
 		fi
 	done
+	if [[ "$docId" == true ]]; then
+		attributes+=(':doc:id:' "$(uuidgen)")
+	fi
 	if ((isAttribute == 1)); then
 		echo "Command '${@:1}' has attributes that are unbalanced. 
 Command may be missing ']' to close attributes expression. 
@@ -1171,8 +1177,12 @@ function main {
 
 	local skipCount=0
 	# FIXME: should add handling of getopts for sub functions, instead of handling at top.
-	while getopts "wvlth" flag; do
+	while getopts "iwvlth" flag; do
 		case "$flag" in
+		i)
+			docId=true
+			((skipCount += 1))
+			;;
 		w)
 			wrap=true
 			((skipCount += 1))
@@ -1199,6 +1209,9 @@ function main {
 			;;
 		esac
 	done
+	if [[ "$ML_AUTO_DOC_ID" == true ]]; then
+		docId=true
+	fi
 	# FIXME refactor logic to parse commands
 	if [[ "$1" == 'test' ]]; then
 		runMunitTest "${@:1}"

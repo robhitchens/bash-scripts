@@ -6,6 +6,11 @@ readonly uuidRegex='[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-
 
 # TODO could reduce the amount of tests by adding support for parameterized tests somehow, at least parameterized input.
 
+#BEFORE
+function setup {
+	declare -g ML_AUTO_DOC_ID=false
+}
+
 #TEST
 function muleRoot_test {
 	local output="$(mule muleRoot)"
@@ -1112,6 +1117,86 @@ function setVariable_shorthand_test {
 doc:name = ':doc:name:'
 doc:id = ':doc:id:'
 variableName = ':variableName:')"
+}
+
+#TEST
+function errorHandler_test {
+	local output="$(mule errorHandler)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "error-handler(name   = ':name:'
+                  doc:id = ':doc:id:')
+    {
+      :children:
+    }"
+}
+
+#TEST
+function errorHandler_shorthand_test {
+	local output="$(mule eh)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "error-handler(name   = ':name:'
+                  doc:id = ':doc:id:')
+    {
+      :children:
+    }"
+}
+
+#TEST
+function onErrorContinue_test {
+	local output="$(mule onErrorContinue)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "on-error-continue(enableNotifications = true
+                          logException        = true
+                          doc:name            = 'On Error Continue'
+                          doc:id              = ':doc:id:'
+                          type                = ':type:') {
+                          :children:
+                        }"
+}
+
+#TEST
+function onErrorContinue_shorthand_test {
+	local output="$(mule oec)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "on-error-continue(enableNotifications = true
+                          logException        = true
+                          doc:name            = 'On Error Continue'
+                          doc:id              = ':doc:id:'
+                          type                = ':type:') {
+                          :children:
+                        }"
+}
+
+#TEST
+function onErrorPropagate_test {
+	local output="$(mule onErrorPropagate)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "on-error-propagate(enableNotifications = true
+                           logException        = true
+                           doc:name            = 'On Error Propagate'
+                           doc:id              = ':doc:id:'
+                           type                = ':type:') {
+                           :children:
+                         }"
+}
+
+#TEST
+function onErrorPropagate_shorthand_test {
+	local output="$(mule oep)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "on-error-propagate(enableNotifications = true
+                           logException        = true
+                           doc:name            = 'On Error Propagate'
+                           doc:id              = ':doc:id:'
+                           type                = ':type:') {
+                           :children:
+                         }"
 }
 
 # TODO add more unit tests validating behavior of all template commands.
