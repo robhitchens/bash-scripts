@@ -933,6 +933,7 @@ function runMunitTest {
 	local args=(${@:2})
 	local command=""
 	if [[ -n ${args[0]} ]]; then
+		# FIXME should handle if args[0] is a directory here.
 		command+="-Dmunit.test=${args[0]}"
 	fi
 	if [[ -n ${args[1]} ]]; then
