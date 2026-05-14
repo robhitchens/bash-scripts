@@ -6,7 +6,7 @@ readonly uuidRegex='[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-
 
 # TODO could reduce the amount of tests by adding support for parameterized tests somehow, at least parameterized input.
 
-#BEFORE
+#SETUP
 function setup {
 	declare -g ML_AUTO_DOC_ID=false
 }

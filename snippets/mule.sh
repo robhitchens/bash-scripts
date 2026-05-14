@@ -186,7 +186,7 @@ function httpRequest {
 			;;
 		*)
 			echo "Unsupported operation: $item" >&2
-			exit 1
+			#return 1
 			;;
 		esac
 	done
