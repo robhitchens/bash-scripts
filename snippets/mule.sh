@@ -976,7 +976,7 @@ function run {
 }
 
 function processCommand {
-	local element="$1"
+	local element=$1
 	local content=''
 	local length="$#"
 	local attributes=()
@@ -1012,6 +1012,8 @@ Maybe missing key or value?
 Cannot process further" >&2
 		exit 1
 	fi
+	# remove leading whitespace and trailing whitespace
+	element="$(echo "$element" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
 	case "$element" in
 	# TODO use split operation on arguments here before passing to functions.
 	# TODO should find way to break out test and run command from this logic, maybe a simple lookahead check in main?
@@ -1255,6 +1257,7 @@ function main {
 		# FIXME add logic wrapping processCommand with the read loop, will be easier to control advancing the loop and adding recursion.
 		#       will have to see how this affects performance, but the use case is for pretty much evaluating a more complex template in line.
 		# TODO add logic here to handle processing nested elements. For now will only allow nesting on parsing stdin, (can add support for reading from file later)
+		local scopeOpen=false
 		while read -r line; do
 			# Pseudo logic:
 			#   if line contains '{'; then push processCommand onto stack? push 'next wrap command' onto stack?
@@ -1272,7 +1275,20 @@ function main {
 			#   processCommand -w mur
 			#   NOTE: this will work for simple cases, might work if continually pushing and popping stack, effective tree traversal will be depth first
 			#   NOTE: for deep nested elements, will need to process wrap commands and store rendered result.
-			processCommand $line
+			# Trying to remember what my final idea was regarding this
+			if [[ "$line" =~ (.*)[{] ]]; then
+				echo "line ended with { : '${BASH_REMATCH[1]}'" >&2
+				scopeOpen=true
+				processCommand "${BASH_REMATCH[1]}"
+			elif [[ "$line" =~ (.*)[}] ]]; then
+				echo "line ended with } : '${BASH_REMATCH[1]}'" >&2
+				scopeOpen=false
+			else
+				if [[ -n "$line" ]]; then
+					processCommand "$line"
+				fi
+				echo "line didn't match : '$line'" >&2
+			fi
 		done
 	fi
 }
