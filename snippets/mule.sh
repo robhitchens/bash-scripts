@@ -976,7 +976,7 @@ function run {
 }
 
 function processCommand {
-	local element=$1
+	local element="$1"
 	local content=''
 	local length="$#"
 	local attributes=()
@@ -1258,7 +1258,8 @@ function main {
 		#       will have to see how this affects performance, but the use case is for pretty much evaluating a more complex template in line.
 		# TODO add logic here to handle processing nested elements. For now will only allow nesting on parsing stdin, (can add support for reading from file later)
 		local scopeOpen=false
-		while read -r line; do
+		while IFS=$'\n' read -r line; do
+			echo "$line" >&2
 			# Pseudo logic:
 			#   if line contains '{'; then push processCommand onto stack? push 'next wrap command' onto stack?
 			#   if line contains '}'; then pop children processCommands, render and prepend to var, pop top process command and render, replace :children: with content.
@@ -1279,13 +1280,14 @@ function main {
 			if [[ "$line" =~ (.*)[{] ]]; then
 				echo "line ended with { : '${BASH_REMATCH[1]}'" >&2
 				scopeOpen=true
-				processCommand "${BASH_REMATCH[1]}"
+				local match="${BASH_REMATCH[1]}"
+				processCommand ${match// //\\ }
 			elif [[ "$line" =~ (.*)[}] ]]; then
 				echo "line ended with } : '${BASH_REMATCH[1]}'" >&2
 				scopeOpen=false
 			else
 				if [[ -n "$line" ]]; then
-					processCommand "$line"
+					processCommand $line
 				fi
 				echo "line didn't match : '$line'" >&2
 			fi
