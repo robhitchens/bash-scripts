@@ -1279,6 +1279,13 @@ function main {
 			#   NOTE: this will work for simple cases, might work if continually pushing and popping stack, effective tree traversal will be depth first
 			#   NOTE: for deep nested elements, will need to process wrap commands and store rendered result.
 			# Trying to remember what my final idea was regarding this
+			# TODO may breakout into separate recursive function call to deal with scoping.
+			#      It's not how I initially intended it to work, but so be it.
+			#      Alternatively, could do some pre-processing on the output of processCommand to look for :children: lines
+			#      Would need to store remaining output lines, and be able to stack them and then write them in reverse order as scope end is encountered.
+			#      Could use and array of remaining strings and pop from the end, or store in temp file and use tac to read file in reverse order.
+			# TODO for dealing with multiple potential child elements, could include identifier at end of scope to say what block it belongs to. Wouldn't really be needed if templates are more composable. Default would be :children:
+			#      Would also have to handle new scopes opened without a command. Or use anonymous scopes and process children elements in order.
 			if [[ "$line" =~ [*][:] ]]; then
 				commentBlock=false
 				continue
@@ -1287,19 +1294,16 @@ function main {
 				continue
 			fi
 			if [[ "$line" =~ (.*)[{] ]]; then
-				#echo "line ended with { : '${BASH_REMATCH[1]}'" >&2
 				scopeOpen=true
 				# FIXME: hack to deal with needing to keep whitespace in strings escaped
 				content="$(eval "processCommand ${BASH_REMATCH[1]}")"
 			elif [[ "$line" =~ (.*)[}] ]]; then
-				#echo "line ended with } : '${BASH_REMATCH[1]}'" >&2
 				scopeOpen=false
 			else
 				if [[ -n "$line" ]]; then
 					# FIXME: hack to deal with needing to keep whitespace in strings escaped
 					content="$(eval "processCommand $line")"
 				fi
-				#echo "line didn't match : '$line'" >&2
 			fi
 			# TODO fix with the usage of the scopeOpen variable?
 			#      may have to rethink this approach
@@ -1309,7 +1313,7 @@ function main {
 				finalOutput="${finalOutput/:children:/$content}"
 			fi
 		done
-		echo "$finalOutput"
+		echo "$finalOutput" | xmq
 	fi
 }
 main "$@"
