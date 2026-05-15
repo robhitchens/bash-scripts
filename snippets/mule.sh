@@ -1258,8 +1258,10 @@ function main {
 		#       will have to see how this affects performance, but the use case is for pretty much evaluating a more complex template in line.
 		# TODO add logic here to handle processing nested elements. For now will only allow nesting on parsing stdin, (can add support for reading from file later)
 		local scopeOpen=false
+		local commentBlock=false
+		local finalOutput=""
 		while IFS=$'\n' read -r line; do
-			echo "$line" >&2
+			local content=""
 			# Pseudo logic:
 			#   if line contains '{'; then push processCommand onto stack? push 'next wrap command' onto stack?
 			#   if line contains '}'; then pop children processCommands, render and prepend to var, pop top process command and render, replace :children: with content.
@@ -1277,21 +1279,37 @@ function main {
 			#   NOTE: this will work for simple cases, might work if continually pushing and popping stack, effective tree traversal will be depth first
 			#   NOTE: for deep nested elements, will need to process wrap commands and store rendered result.
 			# Trying to remember what my final idea was regarding this
+			if [[ "$line" =~ [*][:] ]]; then
+				commentBlock=false
+				continue
+			elif [[ "$line" =~ [:][*] || $commentBlock == true ]]; then
+				commentBlock=true
+				continue
+			fi
 			if [[ "$line" =~ (.*)[{] ]]; then
-				echo "line ended with { : '${BASH_REMATCH[1]}'" >&2
+				#echo "line ended with { : '${BASH_REMATCH[1]}'" >&2
 				scopeOpen=true
-				local match="${BASH_REMATCH[1]}"
-				processCommand ${match// //\\ }
+				# FIXME: hack to deal with needing to keep whitespace in strings escaped
+				content="$(eval "processCommand ${BASH_REMATCH[1]}")"
 			elif [[ "$line" =~ (.*)[}] ]]; then
-				echo "line ended with } : '${BASH_REMATCH[1]}'" >&2
+				#echo "line ended with } : '${BASH_REMATCH[1]}'" >&2
 				scopeOpen=false
 			else
 				if [[ -n "$line" ]]; then
-					processCommand $line
+					# FIXME: hack to deal with needing to keep whitespace in strings escaped
+					content="$(eval "processCommand $line")"
 				fi
-				echo "line didn't match : '$line'" >&2
+				#echo "line didn't match : '$line'" >&2
+			fi
+			# TODO fix with the usage of the scopeOpen variable?
+			#      may have to rethink this approach
+			if [[ -z "$finalOutput" ]]; then
+				finalOutput="$content"
+			else
+				finalOutput="${finalOutput/:children:/$content}"
 			fi
 		done
+		echo "$finalOutput"
 	fi
 }
 main "$@"

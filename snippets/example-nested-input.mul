@@ -1,9 +1,12 @@
-mur {
+mr {
     f [ :name: 'flow1' ] {
         l [ :level: info :message: 'test message' ]
         l [ :level: debug :message: 'test message debug' ]
     }
     f [ :name: 'flow2' ] {
+        t eh {
+            tr v [ :name-0: someVar ] 
+        }
         l [ :level: info :message: 'another test message' ]
     }
 }
