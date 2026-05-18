@@ -1286,6 +1286,8 @@ function main {
 			#      Could use and array of remaining strings and pop from the end, or store in temp file and use tac to read file in reverse order.
 			# TODO for dealing with multiple potential child elements, could include identifier at end of scope to say what block it belongs to. Wouldn't really be needed if templates are more composable. Default would be :children:
 			#      Would also have to handle new scopes opened without a command. Or use anonymous scopes and process children elements in order.
+			# If breaking the logic out into a recursive function would need to make sure scopeOpen is local, and initialized at the beginning of the scope
+			# TODO may attempt to write logic to stream processing, but that'll be harder than using command substitution and templating.
 			if [[ "$line" =~ [*][:] ]]; then
 				commentBlock=false
 				continue
