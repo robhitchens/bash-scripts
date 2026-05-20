@@ -1137,6 +1137,70 @@ Cannot process further" >&2
 	echo "$content"
 }
 
+function processNestedCommands {
+	# TODO break out this logic into a separate function. Will use recursion and local vars to manage state of processing scopes.
+	# TODO add named scoping with :children: as default. Will make things easier when there needs to be separate children keyword substitution.
+	local scopeOpen=false
+	local commentBlock=false
+	local finalOutput=""
+	while IFS=$'\n' read -r line; do
+		local content=""
+		# Pseudo logic:
+		#   if line contains '{'; then push processCommand onto stack? push 'next wrap command' onto stack?
+		#   if line contains '}'; then pop children processCommands, render and prepend to var, pop top process command and render, replace :children: with content.
+		#   else push processCommand onto stack
+		#   finally echo output to stdout?
+		#   example input:
+		#   mur {
+		#       f [ :name: flow1 ]
+		#       f [ :name: flow2 ]
+		#   }
+		#   stack commands would look like (from top to bottom)
+		#   processCommand 'f [ :name: flow2 ]'
+		#   processCommand 'f [ :name: flow1 ]'
+		#   processCommand -w mur
+		#   NOTE: this will work for simple cases, might work if continually pushing and popping stack, effective tree traversal will be depth first
+		#   NOTE: for deep nested elements, will need to process wrap commands and store rendered result.
+		# Trying to remember what my final idea was regarding this
+		# TODO may breakout into separate recursive function call to deal with scoping.
+		#      It's not how I initially intended it to work, but so be it.
+		#      Alternatively, could do some pre-processing on the output of processCommand to look for :children: lines
+		#      Would need to store remaining output lines, and be able to stack them and then write them in reverse order as scope end is encountered.
+		#      Could use and array of remaining strings and pop from the end, or store in temp file and use tac to read file in reverse order.
+		# TODO for dealing with multiple potential child elements, could include identifier at end of scope to say what block it belongs to. Wouldn't really be needed if templates are more composable. Default would be :children:
+		#      Would also have to handle new scopes opened without a command. Or use anonymous scopes and process children elements in order.
+		# If breaking the logic out into a recursive function would need to make sure scopeOpen is local, and initialized at the beginning of the scope
+		# TODO may attempt to write logic to stream processing, but that'll be harder than using command substitution and templating.
+		if [[ "$line" =~ [*][:] ]]; then
+			commentBlock=false
+			continue
+		elif [[ "$line" =~ [:][*] || $commentBlock == true ]]; then
+			commentBlock=true
+			continue
+		fi
+		if [[ "$line" =~ (.*)[{] ]]; then
+			scopeOpen=true
+			# FIXME: hack to deal with needing to keep whitespace in strings escaped
+			content="$(eval "processCommand ${BASH_REMATCH[1]}")"
+		elif [[ "$line" =~ (.*)[}] ]]; then
+			scopeOpen=false
+		else
+			if [[ -n "$line" ]]; then
+				# FIXME: hack to deal with needing to keep whitespace in strings escaped
+				content="$(eval "processCommand $line")"
+			fi
+		fi
+		# TODO fix with the usage of the scopeOpen variable?
+		#      may have to rethink this approach
+		if [[ -z "$finalOutput" ]]; then
+			finalOutput="$content"
+		else
+			finalOutput="${finalOutput/:children:/$content}"
+		fi
+	done
+	echo "$finalOutput"
+}
+
 function installScript {
 	# TODO should add flag to shorthand install
 	# TODO should add flag for uninstall, instead of confusing behavior
@@ -1253,68 +1317,7 @@ function main {
 		fi
 		# is process connected to pipe/redirected input?
 	elif [[ ! -t 0 ]]; then
-		# FIXME rework to preprocess for curly braces and batch up runs of processCommand
-		# FIXME add logic wrapping processCommand with the read loop, will be easier to control advancing the loop and adding recursion.
-		#       will have to see how this affects performance, but the use case is for pretty much evaluating a more complex template in line.
-		# TODO add logic here to handle processing nested elements. For now will only allow nesting on parsing stdin, (can add support for reading from file later)
-		local scopeOpen=false
-		local commentBlock=false
-		local finalOutput=""
-		while IFS=$'\n' read -r line; do
-			local content=""
-			# Pseudo logic:
-			#   if line contains '{'; then push processCommand onto stack? push 'next wrap command' onto stack?
-			#   if line contains '}'; then pop children processCommands, render and prepend to var, pop top process command and render, replace :children: with content.
-			#   else push processCommand onto stack
-			#   finally echo output to stdout?
-			#   example input:
-			#   mur {
-			#       f [ :name: flow1 ]
-			#       f [ :name: flow2 ]
-			#   }
-			#   stack commands would look like (from top to bottom)
-			#   processCommand 'f [ :name: flow2 ]'
-			#   processCommand 'f [ :name: flow1 ]'
-			#   processCommand -w mur
-			#   NOTE: this will work for simple cases, might work if continually pushing and popping stack, effective tree traversal will be depth first
-			#   NOTE: for deep nested elements, will need to process wrap commands and store rendered result.
-			# Trying to remember what my final idea was regarding this
-			# TODO may breakout into separate recursive function call to deal with scoping.
-			#      It's not how I initially intended it to work, but so be it.
-			#      Alternatively, could do some pre-processing on the output of processCommand to look for :children: lines
-			#      Would need to store remaining output lines, and be able to stack them and then write them in reverse order as scope end is encountered.
-			#      Could use and array of remaining strings and pop from the end, or store in temp file and use tac to read file in reverse order.
-			# TODO for dealing with multiple potential child elements, could include identifier at end of scope to say what block it belongs to. Wouldn't really be needed if templates are more composable. Default would be :children:
-			#      Would also have to handle new scopes opened without a command. Or use anonymous scopes and process children elements in order.
-			# If breaking the logic out into a recursive function would need to make sure scopeOpen is local, and initialized at the beginning of the scope
-			# TODO may attempt to write logic to stream processing, but that'll be harder than using command substitution and templating.
-			if [[ "$line" =~ [*][:] ]]; then
-				commentBlock=false
-				continue
-			elif [[ "$line" =~ [:][*] || $commentBlock == true ]]; then
-				commentBlock=true
-				continue
-			fi
-			if [[ "$line" =~ (.*)[{] ]]; then
-				scopeOpen=true
-				# FIXME: hack to deal with needing to keep whitespace in strings escaped
-				content="$(eval "processCommand ${BASH_REMATCH[1]}")"
-			elif [[ "$line" =~ (.*)[}] ]]; then
-				scopeOpen=false
-			else
-				if [[ -n "$line" ]]; then
-					# FIXME: hack to deal with needing to keep whitespace in strings escaped
-					content="$(eval "processCommand $line")"
-				fi
-			fi
-			# TODO fix with the usage of the scopeOpen variable?
-			#      may have to rethink this approach
-			if [[ -z "$finalOutput" ]]; then
-				finalOutput="$content"
-			else
-				finalOutput="${finalOutput/:children:/$content}"
-			fi
-		done
+		local finalOutput="$(processNestedCommands)"
 		echo "$finalOutput" | xmq
 	fi
 }
