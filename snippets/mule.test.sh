@@ -336,8 +336,7 @@ function choiceRouter_noargs_test {
 	assert "$output" isNotEmpty &&
 		assert "$output" equalsIgnoringWhitespace "choice(doc:name=':doc:name:')
 {
-
-
+  :children:
 }"
 }
 
@@ -348,8 +347,7 @@ function choiceRouter_noargs_shorthand_test {
 	assert "$output" isNotEmpty &&
 		assert "$output" equalsIgnoringWhitespace "choice(doc:name=':doc:name:')
 {
-
-
+  :children:
 }"
 }
 
@@ -363,8 +361,7 @@ function choiceRouter_allArgs_shorthand_test {
     when(expression='#[:expression:]')
 {
     :children:
-}
-    otherwise {
+}otherwise {
     :children:
 }
 }"

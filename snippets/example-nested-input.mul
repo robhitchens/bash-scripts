@@ -9,6 +9,19 @@ mr {
         }
         l [ :level: info :message: 'another test message' ]
     }
+    f [ :name: 'flow3' ] {
+      cr {
+:*
+TODO below doesn't appear to work
+*:
+        crw {
+          re 
+        }
+        cro {
+          l [ :level: info :message: 'other condition' ] 
+        }
+      }
+    }
 }
 
 :*
@@ -34,4 +47,7 @@ then clear replace var with new rendered content.
 Another idea would be to stream render it and count the ending braces. would just replace them upon hitting EOF.
 For this approach would need to replace :children: element with nothing and remove the last '}'.
 This way I don't have to capture anything and can immediately write to stdout.
+
+TODO: if I'm gonna be exposing structured element shortcuts in commands, I might as well add a tokenizer first pass
+It would at least help me add a validation step. But with this complexity I should probably start porting things to Go instead of continuing in bash.
 *:

@@ -84,12 +84,17 @@ Commands (Snippets):
         - payload|p [#]                 Generates the ee:message and ee:set-payload templates with a default dataweave expression within the parent element.
         - variables|v [#]               Generates a ee:variables template with the given (number) of ee:set-variable element templates.
         - attributes|a [#]              Generates the ee:attributes tempalte with the given (number) of ee:set-attribute element templates.
-  transform:set-payload|trp             Temporary shortcut for transform payload
-  set-variable:sv                       Generates a set-variable template
+  trp [#]                               Generates a ee:message ee:set-payload template. Accepts '0' as a number to set empty ee:message element
+  trv [#]                               Generates a ee:variables template with the given (number) of ee:set-variable element templates.
+  tra                                   Generates a ee:set-attributes template
+  set-variable|sv                       Generates a set-variable template
+  set-payload|sp                        WIP: Generates a set-payload template
   choiceRouter|cr [children...]         Generates a choice template with the provided child element templates.
     children:
         - when|w [#]                    Generates the given (number) of when templates within the parent element.
         - otherwise|o                   Generates a otherwise template within the parent element.
+  crw                                   Generates a when template
+  cro                                   Generates a otherwise template
   scatterGather|sg [children...]        Generates a scatter-gather tempalte with the provided child elements.
     children:
         - route|r [#]                   Generates the given (number) of route templates within the parent element.
@@ -339,18 +344,20 @@ function setVariable {
 }
 ################################################################################
 function choiceWhen {
-	local params="$1"
-	if [[ -z "$params" ]]; then
-		local instances="1"
-	fi
+	# FIXME cleanup and update documentation
+	# TODO might get rid of the parameterization logic from here
+	#local params="$1"
+	#if [[ -z "$params" ]]; then
+	#	local instances="1"
+	#fi
 	local children=""
-	for ((i = 0; i < instances; i++)); do
-		children+="when(expression='#[:expression:]')
+	#for ((i = 0; i < instances; i++)); do
+	children+="when(expression='#[:expression:]')
 {
     :children:
 }
 "
-	done
+	#done
 	echo "$children"
 }
 function choiceOtherwise {
@@ -362,6 +369,15 @@ function choiceRouter {
 	local subActions=(${@:2})
 	declare -A children
 	local length="${#subActions[@]}"
+	local parent="choice(doc:name=':doc:name:')
+{
+  :children:
+}
+"
+	if ((length == 0)); then
+		echo "$parent"
+		return 0
+	fi
 	for ((i = 0; i < length; i++)); do
 		case "${subActions[((i))]}" in
 		when | w)
@@ -380,12 +396,14 @@ function choiceRouter {
 			;;
 		esac
 	done
-	echo "choice(doc:name=':doc:name:')
-{
-    ${children['when']}
-    ${children['otherwise']}
-}
-"
+	local childElements=""
+	if [[ -n "${children['when']}" ]]; then
+		childElements="$childElements${children['when']}"
+	fi
+	if [[ -n "${children['otherwise']}" ]]; then
+		childElements="$childElements${children['otherwise']}"
+	fi
+	echo "${parent/:children:/$childElements}"
 }
 ################################################################################
 function scatterGatherRoute {
@@ -1075,11 +1093,26 @@ Cannot process further" >&2
 	transform | tr)
 		content="$(transform "${commands[@]}")"
 		;;
+	trp)
+		content="$(transformPayload "${commands[@]}")"
+		;;
+	trv)
+		content="$(transformVariables "${commands[@]}")"
+		;;
+	tra)
+		content="$(transformAttributes "${commands[@]}")"
+		;;
 	set-variable | sv)
 		content="$(setVariable "${commands[@]}")"
 		;;
 	choiceRouter | cr)
 		content="$(choiceRouter "${commands[@]}")"
+		;;
+	crw)
+		content="$(choiceWhen "${commands[@]}")"
+		;;
+	cro)
+		content="$(choiceOtherwise "${commands[@]}")"
 		;;
 	scatterGather | sg)
 		content="$(scatterGather "${commands[@]}")"
@@ -1240,18 +1273,18 @@ function main {
 	# is args 'help' sub command?
 	if [[ "$1" == '--help' || "$1" == 'help' ]]; then
 		fullDoc
-		exit 0
+		return 0
 	fi
 	# is first argument empty and input connected to terminal?
 	if [[ "$1" == '' && -t 0 ]]; then
 		fullDoc
-		exit 0
+		return 0
 	fi
 	# TODO should probably add an uninstall command, should remove symlink and config (or at least prompt user what they want to delete?)
 	# TODO should probably add a config command as well.
 	if [[ "$1" == 'install' ]]; then
 		installScript
-		exit 0
+		return 0
 	fi
 
 	local skipCount=0
@@ -1280,7 +1313,7 @@ function main {
 			;;
 		h)
 			fullDoc
-			exit 0
+			return 0
 			;;
 		*)
 			echo "Unknown flag: $flag" >&2
@@ -1294,7 +1327,7 @@ function main {
 	# FIXME refactor logic to parse commands
 	if [[ "$1" == 'test' ]]; then
 		runMunitTest "${@:1}"
-		exit 0
+		return 0
 	fi
 	# FIXME need to deal with mixed arguments+pipe for expression replacement in existing document and/or wrap stdin with argument
 	local argLength="$#"
