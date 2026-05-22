@@ -826,11 +826,12 @@ $(munitWithAttributes "$instances")
 function munitMock {
 	# TODO keeping implementation simple for now and just allowing generation of sub snippets.
 	local subActions="${@:2}"
+	local when=""
 	local children=""
 	for item in $subActions; do
 		case $item in
 		when | w)
-			children+="
+			when+="
 munit-tools:mock-when(doc:name = ':doc:name:'
 processor = ':processor:')
 {
@@ -865,7 +866,7 @@ munit-tools:then-return {
 			;;
 		esac
 	done
-	echo "$children"
+	echo "${when/:children:/$children}"
 }
 ################################################################################
 function dataweave {
@@ -1312,7 +1313,7 @@ function main {
 		# is process connected to pipe/redirected input?
 	elif [[ ! -t 0 ]]; then
 		local finalOutput="$(processNestedCommands)"
-		echo "$finalOutput" | xmq
+		echo "$finalOutput"
 	fi
 }
 main "$@"
