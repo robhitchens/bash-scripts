@@ -577,18 +577,21 @@ function munitTest {
 			# FIXME these need to be reworked. no need for echo
 			children['execution']="$(echo 'munit:execution
 {
+    :execution:
 }
 ')"
 			;;
 		validation | v)
 			children['validation']="$(echo 'munit:validation
 {
+    :validation:
 }
 ')"
 			;;
 		behavior | b)
 			children['behavior']="$(echo 'munit:behavior
 {
+    :behavior:
 }
 ')"
 			;;
@@ -1168,6 +1171,7 @@ function processCommandsRecursive {
 	if [[ "$line" =~ (.*)[{] ]]; then
 		scopeOpen=true
 		# FIXME: hack to deal with needing to keep whitespace in strings escaped
+		# TODO: deal with named substitutions, not sure how I will deal with this in the current implementation.
 		content="$(eval "processCommand ${BASH_REMATCH[1]}")"
 		children="$(processCommandsRecursive "$scopeOpen" "$commentBlock")"
 		content="${content/:children:/$children}"
