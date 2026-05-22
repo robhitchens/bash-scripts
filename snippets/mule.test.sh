@@ -585,6 +585,14 @@ function munitConfig_noArgs_shorthand_test {
 }
 
 #TEST
+function munitConfig_shorthand_attributes_test {
+	local output="$(mule muc [ :name: 'some-config-file.xml' ])"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "munit:config(name = 'some-config-file.xml')"
+}
+
+#TEST
 function munitTest_noArgs_test {
 	local output="$(mule munit:test)"
 
@@ -592,9 +600,7 @@ function munitTest_noArgs_test {
 		assert "$output" equalsIgnoringWhitespace "munit:test(name = ':name:'
 description = ':description:')
 {
- 
-    
-    
+   :children: 
 }"
 }
 
@@ -606,9 +612,7 @@ function munitTest_noArgs_shorthand_test {
 		assert "$output" equalsIgnoringWhitespace "munit:test(name = ':name:'
 description = ':description:')
 {
- 
-    
-    
+   :children: 
 }"
 }
 
@@ -622,13 +626,17 @@ description = ':description:')
 {
     munit:behavior
 {
+  :behavior:
 }
     munit:execution
 {
+  :execution:
 }
     munit:validation
 {
+  :validation:
 }
+
 }"
 }
 
@@ -642,13 +650,17 @@ description = ':description:')
 {
     munit:behavior
 {
+  :behavior:
 }
     munit:execution
 {
+  :execution:
 }
     munit:validation
 {
+  :validation:
 }
+
 }"
 }
 
@@ -986,8 +998,7 @@ function munitMock_allArgs_test {
 munit-tools:mock-when(doc:name = ':doc:name:'
 processor = ':processor:')
 {
-    :children:
-}
+
 munit-tools:with-attributes {
     munit-tools:with-attribute(attributeName = ':attributeName:'
     whereValue = ':whereValue:')
@@ -1000,6 +1011,7 @@ munit-tools:then-return {
     mediaType = application/json)
     }
     munit-tools:error(typeId = ':typeId:')
+}
 }"
 }
 
@@ -1012,8 +1024,7 @@ function munitMock_allArgs_shorthand_test {
 munit-tools:mock-when(doc:name = ':doc:name:'
 processor = ':processor:')
 {
-    :children:
-}
+
 munit-tools:with-attributes {
     munit-tools:with-attribute(attributeName = ':attributeName:'
     whereValue = ':whereValue:')
@@ -1026,7 +1037,9 @@ munit-tools:then-return {
     mediaType = application/json)
     }
     munit-tools:error(typeId = ':typeId:')
+}
 }"
+
 }
 
 #TEST

@@ -560,40 +560,46 @@ function batchJob {
 }
 ################################################################################
 function munitConfig {
-	# FIXME: rework to use attributes syntax for replacement
-	local name="$2"
-	if [[ -z "$name" ]]; then
-		name="':name:'"
-	fi
-	echo "munit:config(name = $name)"
+	echo "munit:config(name = ':name:')"
 }
 function munitTest {
 	# FIXME refactor to not subarray, move logic higher up in stack.
 	local subActions="${@:2}"
+	local parent="munit:test(name = ':name:'
+description = ':description:')
+{
+  :children:
+}
+"
+	if [[ -z "$subActions" ]]; then
+		echo "$parent"
+		return 0
+	fi
 	declare -A children
 	for item in $subActions; do
 		case $item in
 		execution | e)
 			# FIXME these need to be reworked. no need for echo
-			children['execution']="$(echo 'munit:execution
+			children['execution']="munit:execution
 {
     :execution:
 }
-')"
+"
+
 			;;
 		validation | v)
-			children['validation']="$(echo 'munit:validation
+			children['validation']="munit:validation
 {
     :validation:
 }
-')"
+"
 			;;
 		behavior | b)
-			children['behavior']="$(echo 'munit:behavior
+			children['behavior']="munit:behavior
 {
     :behavior:
 }
-')"
+"
 			;;
 		*)
 			echo "child element: $item not supported" >&2
@@ -601,14 +607,19 @@ function munitTest {
 			;;
 		esac
 	done
-	echo "munit:test(name = ':name:'
-description = ':description:')
-{
-    ${children['behavior']}
-    ${children['execution']}
-    ${children['validation']}
-}
-"
+
+	local childElements=""
+	if [[ -n "${children['behavior']}" ]]; then
+		childElements="$childElements${children['behavior']}"
+	fi
+	if [[ -n "${children['execution']}" ]]; then
+		childElements="$childElements${children['execution']}"
+	fi
+	if [[ -n "${children['validation']}" ]]; then
+		childElements="$childElements${children['validation']}"
+	fi
+
+	echo "${parent/:children:/$childElements}"
 }
 
 function munitSetEventVariables {
@@ -1028,11 +1039,13 @@ Maybe missing key or value?
 Cannot process further" >&2
 		exit 1
 	fi
+	# TODO take arguments ${@:1} and remove attributes from args
 	# remove leading whitespace and trailing whitespace
 	element="$(echo "$element" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
 	case "$element" in
 	# TODO use split operation on arguments here before passing to functions.
 	# TODO should find way to break out test and run command from this logic, maybe a simple lookahead check in main?
+	# TODO should remove long form variants of commands and only support short hand
 	test)
 		runMunitTest ${@:1}
 		;;
