@@ -34,8 +34,20 @@ Description:
     name = ':name-1:')
 
 
-  WIP: commands can be nested within { }. e.g. muleRoot { flow { http:request body headers } transform payload }.
-  As shorthand: mr { f { hr b h } tr p }. 
+  WIP: commands can be nested within { }. e.g. 
+    muleRoot { 
+        flow { 
+            http:request body headers 
+        } 
+        transform payload 
+    }
+  As shorthand: 
+    mr { 
+        f { 
+            hr b h 
+        }
+        tr p 
+    }
   WIP: attributes can be provided to an element using a bash syntax array. e.g. flow-ref [ doc:name 'Some flow' name a-referenced-flow ]
 
   The global variable ML_AUTO_DOC_ID can be set so that the :doc:id: attribute is always populated in supported templates using the uuidgen command.
