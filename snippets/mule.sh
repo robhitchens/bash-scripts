@@ -79,6 +79,10 @@ Commands (Snippets):
         - headers|h                     Generants an http:headers child element with a dataweave template within the parent element.
         - queryParams|q                 Generates an http:query-params child element within the parent element.
         - uriParams|u                   Generates an http:uri-params child element within the parent element.
+  hrb                                   Generates an http:body element
+  hrh                                   Generates an http:headers element
+  hrq                                   Generates an http:query-params element
+  hru                                   Generates an http:uri-params element.
   transform|tr [children...]            Generates ee:template element with the provided child element templates.
     children:
         - payload|p [#]                 Generates the ee:message and ee:set-payload templates with a default dataweave expression within the parent element.
@@ -146,7 +150,8 @@ EOF
 
 ################################################################################
 function httpRequestBody {
-	echo "http:body = '''#[%dw 2.0
+	echo "
+http:body = '''#[%dw 2.0
 output application/json skipNullOn=\"everywhere\"
 ---
 {}]'''    
@@ -154,7 +159,8 @@ output application/json skipNullOn=\"everywhere\"
 }
 
 function httpRequestHeaders {
-	echo "http:headers = '''#[%dw 2.0
+	echo "
+http:headers = '''#[%dw 2.0
 import p from Mule
 output application/java
 ---
@@ -166,7 +172,8 @@ output application/java
 }
 
 function httpRequestQueryParams {
-	echo "http:query-params = '''#[%dw 2.0
+	echo "
+http:query-params = '''#[%dw 2.0
 output application/java
 ---
 {}]'''
@@ -174,7 +181,8 @@ output application/java
 }
 
 function httpRequestUriParams {
-	echo "http:uri-params = '''#[%dw 2.0
+	echo "
+http:uri-params = '''#[%dw 2.0
 output application/java
 ---
 {}]'''
@@ -185,8 +193,23 @@ output application/java
 function httpRequest {
 	# FIXME refactor to not subarray, move logic higher up in stack.
 	local subActions="${@:2}"
+	local parent="http:request(method     = ':method:'
+             doc:name   = ':name:'
+             doc:id     = ':doc:id:'
+             config-ref = ':config-ref:'
+             path       = ':path:'
+             sendCorrelationId = ALWAYS
+             correlationId = #[correlationId]
+             target     = ':target:')
+{
+    :children:
+}
+"
+	if [[ -z $subActions ]]; then
+		echo "$parent"
+		return 0
+	fi
 	declare -A children
-
 	for item in $subActions; do
 		case "$item" in
 		body | b)
@@ -210,21 +233,20 @@ function httpRequest {
 	# TODO add sub commands aliases as main commands, refactor this implementation to template with :children: attribute.
 	#      here is child elements are present as part of command, then process in order and replace :children: attribute
 	#      with child string. May want to figure out validator logic or something before attempting to output invalid xmq.
-	echo "http:request(method     = ':method:'
-             doc:name   = ':name:'
-             doc:id     = ':doc:id:'
-             config-ref = ':config-ref:'
-             path       = ':path:'
-             sendCorrelationId = ALWAYS
-             correlationId = #[correlationId]
-             target     = ':target:')
-{
-    ${children['body']}
-    ${children['headers']}
-    ${children['uriParams']}
-    ${children['queryParams']}
-}
-"
+	local childElements=""
+	if [[ -n "${children['body']}" ]]; then
+		childElements="$childElements${children['body']}"
+	fi
+	if [[ -n "${children['headers']}" ]]; then
+		childElements="$childElements${children['headers']}"
+	fi
+	if [[ -n "${children['uriParams']}" ]]; then
+		childElements="$childElements${children['uriParams']}"
+	fi
+	if [[ -n "$children['queryParams']}" ]]; then
+		childElements="$childElements${children['queryParams']}"
+	fi
+	echo "${parent/:children:/$childElements}"
 }
 ################################################################################
 function transformPayload {
@@ -1089,6 +1111,18 @@ Cannot process further" >&2
 		;;
 	http:request | hr)
 		content="$(httpRequest "${commands[@]}")"
+		;;
+	hrb)
+		content="$(httpRequestBody "${commands[@]}")"
+		;;
+	hrh)
+		content="$(httpRequestHeaders "${commands[@]}")"
+		;;
+	hrq)
+		content="$(httpRequestQueryParams "${commands[@]}")"
+		;;
+	hru)
+		content="$(httpRequestUriParams "${commands[@]}")"
 		;;
 	transform | tr)
 		content="$(transform "${commands[@]}")"

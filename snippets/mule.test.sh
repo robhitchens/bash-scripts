@@ -149,10 +149,7 @@ function httpRequest_noArgs_test {
              correlationId = #[correlationId]
              target     = ':target:')
 {
-    
-    
-    
-    
+   :children: 
 }"
 }
 
@@ -170,10 +167,7 @@ function httpRequest_noArgs_shorthand_test {
              correlationId = #[correlationId]
              target     = ':target:')
 {
-    
-    
-    
-    
+   :children: 
 }"
 }
 
@@ -191,6 +185,7 @@ function httpRequest_allArgs_test {
              correlationId = #[correlationId]
              target     = ':target:')
 {
+
     http:body = '''#[%dw 2.0
 output application/json skipNullOn=\"everywhere\"
 ---
@@ -228,6 +223,7 @@ function httpRequest_allArgs_shorthand_test {
              correlationId = #[correlationId]
              target     = ':target:')
 {
+
     http:body = '''#[%dw 2.0
 output application/json skipNullOn=\"everywhere\"
 ---
