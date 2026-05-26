@@ -99,9 +99,10 @@ Commands (Snippets):
         - otherwise|o                   Generates a otherwise template within the parent element.
   crw                                   Generates a when template
   cro                                   Generates a otherwise template
-  scatterGather|sg [children...]        Generates a scatter-gather tempalte with the provided child elements.
+  scatterGather|sg [children...]        Generates a scatter-gather template with the provided child elements.
     children:
         - route|r [#]                   Generates the given (number) of route templates within the parent element.
+  sgr                                   Generates a scatter-gather route template
   jsonLogger|jl                         Generates a jsonlogger template
   log|l                                 Generates a log template
   flow|f [name]                         Generates a flow template with the given flow name
@@ -430,6 +431,7 @@ function choiceRouter {
 ################################################################################
 function scatterGatherRoute {
 	# Assuming type check has been performed ahead of invocation.
+	# TODO need to fix processing of params for scatter gather
 	local params="$1"
 	if [[ -z "$params" ]]; then
 		params="1"
@@ -1150,6 +1152,9 @@ Cannot process further" >&2
 		;;
 	scatterGather | sg)
 		content="$(scatterGather "${commands[@]}")"
+		;;
+	sgr)
+		content="$(scatterGatherRoute "${commands[@]}")"
 		;;
 	jsonLogger | jl)
 		content="$(jsonLogger "${commands[@]}")"
