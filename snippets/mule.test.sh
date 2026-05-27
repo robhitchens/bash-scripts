@@ -370,7 +370,7 @@ function scatterGather_noArgs_test {
 	assert "$output" isNotEmpty &&
 		assert "$output" equalsIgnoringWhitespace "scatter-gather(doc:name = Scatter-Gather)
 {
- 
+    :children: 
 }"
 }
 
@@ -381,18 +381,19 @@ function scatterGather_noArgs_shorthand_test {
 	assert "$output" isNotEmpty &&
 		assert "$output" equalsIgnoringWhitespace "scatter-gather(doc:name = Scatter-Gather)
 {
- 
+    :children: 
 }"
 }
 
 #TEST
 function scatterGather_allArgs_test {
-	local output="$(mule scatterGather r 1)"
+	local output="$(mule scatterGather route 1)"
 
 	assert "$output" isNotEmpty &&
 		assert "$output" equalsIgnoringWhitespace "scatter-gather(doc:name = Scatter-Gather)
 {
 route {
+    :children:
 }
 }"
 }
@@ -405,7 +406,18 @@ function scatterGather_allArgs_shorthand_test {
 		assert "$output" equalsIgnoringWhitespace "scatter-gather(doc:name = Scatter-Gather)
 {
 route {
+    :children:
 }
+}"
+}
+
+#TEST
+function scatterGatherRoute_test {
+	local output="$(mule sgr)"
+
+	assert "$output" isNotEmpty &&
+		assert "$output" equalsIgnoringWhitespace "route {
+    :children:
 }"
 }
 

@@ -439,6 +439,7 @@ function scatterGatherRoute {
 	local children=""
 	for ((i = 0; i < params; i++)); do
 		children+="route {
+        :children:
 }
 "
 	done
@@ -447,6 +448,16 @@ function scatterGatherRoute {
 function scatterGather {
 	local subActions=(${@:2})
 	local length="${#subActions[@]}"
+	local parent="scatter-gather(doc:name = Scatter-Gather)
+{
+    :children:
+}
+"
+	if ((length == 0)); then
+		echo "$parent"
+		return 0
+	fi
+
 	declare -A children
 	for ((i = 0; i < length; i++)); do
 		case "${subActions[((i))]}" in
@@ -463,14 +474,12 @@ function scatterGather {
 			;;
 		esac
 	done
-	echo "scatter-gather(doc:name = Scatter-Gather)
-{
-    ${children['route']}
-}
-"
-	#       scatter-gather(doc:name = Scatter-Gather
-	#                        doc:id   = 0a6cff33-437e-4a9a-b8c0-1aef9072635f)
-	#         {
+
+	local childElements=""
+	if [[ -n "${children['route']}" ]]; then
+		childElements="$childElements${children['route']}"
+	fi
+	echo "${parent/:children:/$childElements}"
 }
 ################################################################################
 function jsonLogger {
@@ -1154,7 +1163,7 @@ Cannot process further" >&2
 		content="$(scatterGather "${commands[@]}")"
 		;;
 	sgr)
-		content="$(scatterGatherRoute "${commands[@]}")"
+		content="$(scatterGatherRoute "${commands[@]:1}")"
 		;;
 	jsonLogger | jl)
 		content="$(jsonLogger "${commands[@]}")"
@@ -1277,14 +1286,6 @@ $(processCommandsRecursive "$scopeOpen" "$commentBlock")"
 	fi
 }
 
-# Is recursion in bash a good idea? probably not.
-function processNestedCommands {
-	# TODO should try to see if I can get away with just copying variables between processes, actually it might not work.
-	local scopeOpen=false
-	local commentBlock=false
-	echo "$(processCommandsRecursive "$scopeOpen" "$commentBlock")"
-}
-
 function installScript {
 	# TODO should add flag to shorthand install
 	# TODO should add flag for uninstall, instead of confusing behavior
@@ -1401,7 +1402,9 @@ function main {
 		fi
 		# is process connected to pipe/redirected input?
 	elif [[ ! -t 0 ]]; then
-		local finalOutput="$(processNestedCommands)"
+		local scopeOpen=false
+		local commentBlock=false
+		local finalOutput="$(processCommandsRecursive $scopeOpen $commentBlock)"
 		echo "$finalOutput"
 	fi
 }
