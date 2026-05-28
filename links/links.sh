@@ -55,7 +55,9 @@ function getLink {
 
 function catLinkHeaders {
 	local linkDoc="$1"
+	# TODO refactor to List a markdown like syntax for names and actual links values
 	grep -E '^#' "$linkDoc" | sed -E 's/^#(.*)/\1/'
+	# []()
 }
 
 function install {
