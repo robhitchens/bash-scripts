@@ -53,17 +53,29 @@ function getLink {
 	# TODO example: cat ~/links | grep -A1 -i '# azure portal' | grep -v -E '^#.*'
 }
 
-function catLinkHeaders {
+function listLinksWithHeaders {
+	local linkTemplate="[:header:](:link:)"
 	local linkDoc="$1"
-	# TODO refactor to List a markdown like syntax for names and actual links values
-	grep -E '^#' "$linkDoc" | sed -E 's/^#(.*)/\1/'
-	# []()
+	local link="$linkTemplate"
+	while IFS=$'\n' read -r line; do
+		if [[ "$line" == '--' ]]; then
+			link="$linkTemplate"
+			continue
+		fi
+		if [[ "$line" =~ ^#\ (.*) ]]; then
+			link="${link/:header:/${BASH_REMATCH[1]}}"
+		else
+			link="${link/:link:/$line}"
+		fi
+
+		if ! [[ "$link" =~ .*:header:|:link:.* ]]; then
+			echo "$link"
+		fi
+
+	done <<<$(grep -A1 -E '^#' "$linkDoc")
 }
 
 function install {
-	# TODO get full path of script
-	# TODO install main script in /usr/local/bin
-	# TODO install auto-comp script in bash autocomplete folder
 	local symlink='/usr/local/bin/links'
 	local completion_symlink='/etc/bash_completion.d/links'
 	if [[ -f $symlink ]]; then
@@ -144,19 +156,6 @@ function setFlags {
 }
 
 function main {
-	# TODO parse arguemnts
-	# TODO handle --help arg or no args, call hereDoc, and return
-	# TODO handle install arg
-	# TODO handle -w flag to open using $WINBROWSER var
-	# TODO handle -c flag to open using $CLIBROWSER var
-	# TODO handle -f flag to set $linksDoc variable
-	# TODO handle default case of no flags by using $BROWSER var
-	# TODO handle file pointer if provided
-	# TODO invoke getLink with link friendly name and file pointer
-	# TODO call $BROWSER with returned link if not empty
-	# TODO return with error if empty.
-
-	# TODO interface links [-w|-c] [-f file] [linkName]
 	handleOneOffOptions "$@"
 	if (($? == 0)); then
 		return 0
@@ -168,7 +167,7 @@ function main {
 	fi
 
 	if [[ -n "${flags['list']}" ]]; then
-		catLinkHeaders "${flags['file']}"
+		listLinksWithHeaders "${flags['file']}"
 		return 0
 	elif [[ -n "${flags['edit']}" ]]; then
 		$EDITOR "${flags['file']}"
@@ -190,19 +189,19 @@ function main {
 			return 1
 		fi
 		"$WINBROWSER" "$link"
+		return 0
 	elif [[ "${flags['cli']}" == true ]]; then
 		if [[ -z "$CLIBROWSER" ]]; then
 			echo "Global variable CLIBROWSER not set" >&2
 			return 1
 		fi
 		"$CLIBROWSER" "$link"
+		return 0
 	else
 		"$BROWSER" "$link"
+		return 0
 	fi
 
 }
 
-if [[ -z "$SCRIPTDEBUG" ]]; then
-	main "$@"
-	exit "$?"
-fi
+main "$@"
