@@ -15,15 +15,16 @@ Synopsis:
   git-commit-template poops out a formatted template to stdout
 
 Description:
+  TODO fill out description.
 
 Options:
   -h|--help                             Prints help doc to stdout
   -i|--install                          Installs script under /usr/local/bin
   -m|--manual                           Prints out template without processing
-  -c|--changeNumber
-  -t|--title
-  -W|--why
-  -w|--what
+  -c|--changeNumber                     Populates the change number of the commit message template. First instance sets the value.
+  -t|--title                            Populates the title of the commit messaage template. First instance sets the value.
+  -W|--why                              Populates the why section of the commit message template. First instance sets the value.
+  -w|--what                             Populates the what section of the commit message template. Multiple 'what' options can be provided; instances will be formatted as a dash denoted list.
 EOF
 }
 
