@@ -3,7 +3,7 @@
 # TODO add install script
 # Alternatively could work on a simple vim script function to poop out template
 
-declare -g changeNumber="" title="" why="" what=() echoHelp=false install=false
+declare -g changeNumber="" title="" why="" what=() echoHelp=false install=false manual=false
 
 function fullDoc {
 	cat <<EOF
@@ -19,6 +19,7 @@ Description:
 Options:
   -h|--help                             Prints help doc to stdout
   -i|--install                          Installs script under /usr/local/bin
+  -m|--manual                           Prints out template without processing
   -c|--changeNumber
   -t|--title
   -W|--why
@@ -44,6 +45,10 @@ function parseArgs {
 				;;
 			install)
 				install=true
+				return 0
+				;;
+			manual)
+				manual=true
 				return 0
 				;;
 			changeNumber)
@@ -88,6 +93,10 @@ function parseArgs {
 				;;
 			i)
 				install=true
+				return 0
+				;;
+			m)
+				manual=true
 				return 0
 				;;
 			c)
@@ -166,6 +175,10 @@ What:
 
 :what:
 "
+	if [[ $manual == true ]]; then
+		echo "$template"
+		return 0
+	fi
 	if [[ -n "$changeNumber" ]]; then
 		template="${template/:changeNumber:/$changeNumber}"
 	fi
