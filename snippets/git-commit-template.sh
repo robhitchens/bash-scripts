@@ -8,8 +8,12 @@ declare -g changeNumber="" title="" why="" what=() echoHelp=false install=false 
 function fullDoc {
 	cat <<EOF
 Usage:
-  git-commit-template [OPTS]
-  gct [OPTS]
+  git-commit-template [-h | --help] [-i | --install] [-m | --manual] 
+                      [-c | --changeNumber <value>] [-t | --title <value>]
+                      [-W | --why <value>] [-w | --what <value>]
+  gct [-h | --help] [-i | --install] [-m | --manual] 
+      [-c | --changeNumber <value>] [-t | --title <value>]
+      [-W | --why <value>] [-w | --what <value>]
 
 Synopsis:
   git-commit-template poops out a formatted template to stdout
