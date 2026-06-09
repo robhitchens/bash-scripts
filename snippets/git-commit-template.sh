@@ -33,9 +33,10 @@ function parseArgs {
 		return 0
 	fi
 
-	for ((i = 0; i < $#; i++)); do
-		if [[ "${!i}" =~ ^--(.+)$ ]]; then
-			local arg="${BASH_REMATCH[1]}"
+	for ((i = 1; i < $# + 1; i++)); do
+		local arg="${!i}"
+		if [[ "$arg" =~ ^--(.+)$ ]]; then
+			arg="${BASH_REMATCH[1]}"
 			case "$arg" in
 			help)
 				echoHelp=true
@@ -78,8 +79,8 @@ function parseArgs {
 				;;
 			esac
 		fi
-		if [[ "${!i}" =~ ^-(.+)$ ]]; then
-			local arg="${BASH_REMATCH[1]}"
+		if [[ "$arg" =~ ^-(.+)$ ]]; then
+			arg="${BASH_REMATCH[1]}"
 			case "$arg" in
 			h)
 				echoHelp=true
@@ -147,12 +148,12 @@ function installScript {
 
 function main {
 	parseArgs "$@"
-	if [[ "$echoHelp" == "true" ]]; then
+	if [[ $echoHelp == true ]]; then
 		fullDoc
 		return 0
 	fi
-	if [[ "$installScript" == "true" ]]; then
-		install
+	if [[ $install == true ]]; then
+		installScript
 		return 0
 	fi
 	local template=":changeNumber:: :title:
