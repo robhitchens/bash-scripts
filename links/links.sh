@@ -34,15 +34,25 @@ function getLink {
 	local linkName="$1"
 	local linkDoc="$2"
 
-	local linkVal="$(grep -A1 -i -E "^#(.*)$linkName(.*)$" "$linkDoc" | grep -v -E '^#.*')"
+	local linkVal=($(grep -A1 -i -E "^#(.*)$linkName(.*)$" "$linkDoc" | grep -v -E '^#.*' | grep -v -E '^[-]{2}'))
 
-	if (($(echo "$linkVal" | wc -l) > 1)); then
-		echo "Duplicate values returned for link name '$linkName'" >&2
-		echo "Link values: $linkVal" >&2
-		# TODO add support to allow interactive selection
-		return 1
+	if ((${#linkVal[@]} > 1)); then
+		echo "Multiple values returned matching link name '$linkName'" >&2
+
+		for ((i = 0; i < ${#linkVal[@]}; i++)); do
+			echo "    $i. ${linkVal[i]}" >&2
+		done
+
+		echo -n "Choose the link you want [0-9]: " >&2
+		read -r selection
+
+		if [[ -n "$selection" ]]; then
+			echo "${linkVal[$selection]}"
+		else
+			echo "No selection made" >&2
+		fi
 	else
-		echo "$linkVal"
+		echo "${linkVal[0]}"
 	fi
 
 	# TODO grep $LINKSDOC for link friendly name, extract line number
