@@ -167,7 +167,12 @@ function main {
 	fi
 
 	if [[ -n "${flags['list']}" ]]; then
-		listLinksWithHeaders "${flags['file']}"
+		local output="$(listLinksWithHeaders "${flags['file']}")"
+		if [[ $LINKS_CONFIG_PRETTY_HEADERS == true ]]; then
+			echo "$output" | glow -w0
+		else
+			echo "$output"
+		fi
 		return 0
 	elif [[ -n "${flags['edit']}" ]]; then
 		$EDITOR "${flags['file']}"
