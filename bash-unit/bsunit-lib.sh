@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 
+# TODO add argument handling for outputting documentation for functions and arguments in lib
+
 function assert {
-	# TODO fillout
 	# example use assert $someVar equals $someValue
 	# example use assert $someVar notEquals $someValue
 	# example use assert $someVar isEmpty
 	# example use assert $someVar isNotEmpty
 	# example use assert ...
+	# TODO add support for an error message to be included in failed assertions.
 	local actual="$1"
 	local expected="$3"
 	case "$2" in
