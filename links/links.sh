@@ -10,7 +10,7 @@ function hereDoc {
 	# TODO document interface
 	cat <<-EOF
 		Usage:
-		  links [OPTS] [LINKNAME]
+		  links [-h | --help] [--install] [-l | --list] [-e | --edit] [-f | --file fileName] [-w | --win] [-c | --cli] [LINKNAME]
 
 		Synopsis:
 		  links is a simple utility to open links saved in a text file in a browser
