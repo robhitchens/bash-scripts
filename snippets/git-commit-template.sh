@@ -8,23 +8,29 @@ declare -g changeNumber="" title="" why="" what=() echoHelp=false install=false 
 function fullDoc {
 	cat <<EOF
 Usage:
-  git-commit-template [-h | --help] [-i | --install] [-m | --manual] 
-                      [-c | --changeNumber <value>] [-t | --title <value>]
-                      [-W | --why <value>] [-w | --what <value>]
-  gct [-h | --help] [-i | --install] [-m | --manual] 
-      [-c | --changeNumber <value>] [-t | --title <value>]
-      [-W | --why <value>] [-w | --what <value>]
+  git-commit-template [-h | --help] [-i | --install] [-c | --changeNumber <value>] 
+                      [-t | --title <value>] [-W | --why <value>] [-w | --what <value>]
+  gct [-h | --help] [-i | --install] [-c | --changeNumber <value>] 
+      [-t | --title <value>] [-W | --why <value>] [-w | --what <value>]
 
 Synopsis:
-  git-commit-template poops out a formatted template to stdout
+  git-commit-template writes a formatted commit message template to stdout.
 
 Description:
-  TODO fill out description.
+  git-commit-template is a tool for generating a template commit message following
+  an opinionated format for a first commit on a branch to be squash merged.
+
+  The template contains placeholder values for :changeNumber: :title: :what: and :why:.
+  While the properties change number, title, and what accepts only a single value, the 
+  :why: property can accept multiple values (provided in the form of [-w value]...).
+
+  TODO add length validation for title line.
+  TODO add processing for stdin.
+  TODO add line wrap auto formatting for why and what parameters.
 
 Options:
   -h|--help                             Prints help doc to stdout
   -i|--install                          Installs script under /usr/local/bin
-  -m|--manual                           Prints out template without processing
   -c|--changeNumber                     Populates the change number of the commit message template. First instance sets the value.
   -t|--title                            Populates the title of the commit messaage template. First instance sets the value.
   -W|--why                              Populates the why section of the commit message template. First instance sets the value.
@@ -35,28 +41,24 @@ EOF
 function parseArgs {
 	# TODO should probably add some guards against using mixed flags or providing the same flag twice.
 	if (($# == 0)); then
-		echoHelp=true
+		manual=true
 		return 0
 	fi
 
 	for ((i = 1; i < $# + 1; i++)); do
 		local arg="${!i}"
-		if [[ "$arg" =~ ^--(.+)$ ]]; then
+		if [[ "$arg" =~ ^--(.+)$ || "$arg" =~ ^-(.+)$ ]]; then
 			arg="${BASH_REMATCH[1]}"
 			case "$arg" in
-			help)
+			help | h)
 				echoHelp=true
 				return 0
 				;;
-			install)
+			install | i)
 				install=true
 				return 0
 				;;
-			manual)
-				manual=true
-				return 0
-				;;
-			changeNumber)
+			changeNumber | c)
 				((i++))
 				if [[ -z "$changeNumber" ]]; then
 					changeNumber="${!i}"
@@ -64,7 +66,7 @@ function parseArgs {
 					echo "changeNumber already set" >&2
 				fi
 				;;
-			title)
+			title | t)
 				((i++))
 				if [[ -z "$title" ]]; then
 					title="${!i}"
@@ -72,7 +74,7 @@ function parseArgs {
 					echo "title already set" >&2
 				fi
 				;;
-			why)
+			why | W)
 				((i++))
 				if [[ -z "$why" ]]; then
 					why="${!i}"
@@ -80,57 +82,12 @@ function parseArgs {
 					echo "why already set" >&2
 				fi
 				;;
-			what)
+			what | w)
 				((i++))
-				what+=("{!i}")
+				what+=("${!i}")
 				;;
 			*)
 				echo "Unrecognized option: $i" >&2
-				;;
-			esac
-		fi
-		if [[ "$arg" =~ ^-(.+)$ ]]; then
-			arg="${BASH_REMATCH[1]}"
-			case "$arg" in
-			h)
-				echoHelp=true
-				return 0
-				;;
-			i)
-				install=true
-				return 0
-				;;
-			m)
-				manual=true
-				return 0
-				;;
-			c)
-				((i++))
-				if [[ -z "$changeNumber" ]]; then
-					changeNumber="${!i}"
-				else
-					echo "changeNumber already set" >&2
-				fi
-				;;
-			t)
-				((i++))
-				if [[ -z "$title" ]]; then
-					title="${!i}"
-				else
-					echo "title already set" >&2
-				fi
-				;;
-			W)
-				((i++))
-				if [[ -z "$why" ]]; then
-					why="${!i}"
-				else
-					echo "why already set" >&2
-				fi
-				;;
-			w)
-				((i++))
-				what+=("${!i}")
 				;;
 			esac
 		fi
