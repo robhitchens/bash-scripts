@@ -70,6 +70,8 @@ function listLinksWithHeaders {
 	local linkTemplate="[:header:](:link:)"
 	local linkDoc="$1"
 	local link="$linkTemplate"
+	# TODO should pipe links pre render to sort first.
+	local output=()
 	while IFS=$'\n' read -r line; do
 		if [[ "$line" == '--' ]]; then
 			link="$linkTemplate"
@@ -82,10 +84,12 @@ function listLinksWithHeaders {
 		fi
 
 		if ! [[ "$link" =~ .*:header:|:link:.* ]]; then
-			echo "$link"
+			output+=("$link")
 		fi
 
 	done <<<$(grep -A1 -E '^#' "$linkDoc")
+
+	(for item in "${output[@]}"; do echo "$item"; done) | sort
 }
 
 function install {
