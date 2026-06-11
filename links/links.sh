@@ -70,8 +70,8 @@ function listLinksWithHeaders {
 	local linkTemplate="[:header:](:link:)"
 	local linkDoc="$1"
 	local link="$linkTemplate"
-	# TODO should pipe links pre render to sort first.
 	local output=()
+
 	while IFS=$'\n' read -r line; do
 		if [[ "$line" == '--' ]]; then
 			link="$linkTemplate"
