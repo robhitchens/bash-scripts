@@ -18,6 +18,9 @@ function hereDoc {
 		Description:
 		  If no option for a browser is provided, then the bash default \$BROWSER will be used.
 		  Default link doc can be set with LINKSDOC global variable
+		          
+		Config:
+		  LINKS_CONFIG_PRETTY_HEADERS     Boolean: if true, then --list (-l) will pipe output of headers through glow (if present)
 
 		Options:
 		  --help|-h                         Prints help doc to stdout
