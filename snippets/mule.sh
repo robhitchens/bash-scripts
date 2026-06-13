@@ -121,11 +121,17 @@ Commands (Snippets):
             - step|s [children]         Generates a batch:step template within the parent element
                - aggregator|a           Generates a batch:aggregator template within the parent element
   munit:config|muc [name]               Generates an munit config template with the given name
+  mute                                  Generates an munit:execution template
+  mutv                                  Generates an munit:validate template
+  mutb                                  Generates an munit:behavior template
   munit:test|mut [children...]          Generates an munit test
     children:
         - execution|e                   Generates an munit:execution template within the parent
         - validate|v                    Generates an munit:validate template within the parent
         - behavior|b                    Generates an munit:behavior template within the parent
+  musp                                  Generates an munit:set-payload template
+  musv                                  Generates an munit:set-variables template
+  musa                                  Generates an munit:set-attribute template
   munit:set-event|mus [children...]     Generates an munit:set-event template with valid child elements
     children:
         - payload|p                     Generates an munit:set-payload template within the parent
@@ -613,6 +619,31 @@ function batchJob {
 function munitConfig {
 	echo "munit:config(name = ':name:')"
 }
+
+function munitTestExecution {
+	echo "munit:execution
+{
+    :children:
+}
+"
+}
+
+function munitTestBehavior {
+	echo "munit:behavior
+{
+    :children:
+}
+"
+}
+
+function munitTestValidation {
+	echo "munit:validation
+{
+    :children:
+}
+"
+}
+
 function munitTest {
 	# FIXME refactor to not subarray, move logic higher up in stack.
 	local subActions="${@:2}"
@@ -630,27 +661,13 @@ description = ':description:')
 	for item in $subActions; do
 		case $item in
 		execution | e)
-			# FIXME these need to be reworked. no need for echo
-			children['execution']="munit:execution
-{
-    :execution:
-}
-"
-
+			children['execution']="$(munitTestExecution)"
 			;;
 		validation | v)
-			children['validation']="munit:validation
-{
-    :validation:
-}
-"
+			children['validation']="$(munitTestValidation)"
 			;;
 		behavior | b)
-			children['behavior']="munit:behavior
-{
-    :behavior:
-}
-"
+			children['behavior']="$(munitTestBehavior)"
 			;;
 		*)
 			echo "child element: $item not supported" >&2
@@ -687,7 +704,7 @@ function munitSetEventVariables {
     value = '''#[%dw 2.0
 output application/json
 ---
-{}]'''
+{:value-$i:}]'''
     mediaType = application/json)
 "
 	done
@@ -722,20 +739,33 @@ function munitSetEventAttributes {
 	echo "$children"
 }
 
+function munitSetEventPayload {
+	echo "munit:payload(value = '''#[%dw 2.0
+output application/json
+---
+:value:]'''
+mediaType = application/json)
+"
+}
+
 function munitSetEvent {
 	# FIXME refactor to not subarray, move logic higher up in stack.
 	local subActions=(${@:2})
 	declare -A children
 	local length="${#subActions[@]}"
+	local parent="munit:set-event(doc:name = 'set event')
+{
+    :children:
+}
+"
+	if ((length == 0)); then
+		echo "$parent"
+		return 0
+	fi
 	for ((i = 0; i < length; i++)); do
 		case "${subActions[((i))]}" in
 		payload | p)
-			children['payload']="munit:payload(value = '''#[%dw 2.0
-output application/json
----
-{}]'''
-mediaType = application/json)
-"
+			children['payload']="$(munitSetEventPayload)"
 			;;
 		variables | v)
 			if [[ -n "$(echo "${subActions[((i + 1))]}" | grep -E '[0-9]')" ]]; then
@@ -757,13 +787,17 @@ mediaType = application/json)
 			;;
 		esac
 	done
-	echo "munit:set-event(doc:name = 'set event')
-{
-    ${children['payload']}
-    ${children['attributes']}
-    ${children['variables']}
-}
-"
+	local childElement=""
+	if [[ -n "${children['payload']}" ]]; then
+		childElement="$childElement${children['payload']}"
+	fi
+	if [[ -n "${children['attributes']}" ]]; then
+		childElement="$childElement${children['attributes']}"
+	fi
+	if [[ -n "${children['variables']}" ]]; then
+		childElement="$childElement${children['variables']}"
+	fi
+	echo "${parent/:children:/$childElement}"
 }
 function munitAssert {
 	# FIXME refactor to not subarray, move logic higher up in stack.
@@ -1204,8 +1238,26 @@ Cannot process further" >&2
 	munit:test | mut)
 		content="$(munitTest "${commands[@]}")"
 		;;
+	mutb)
+		content="$(munitTestBehavior "${commands[@]}")"
+		;;
+	mute)
+		content="$(munitTestExecution "${commands[@]}")"
+		;;
+	mutv)
+		content="$(munitTestValidation "${commands[@]}")"
+		;;
 	munit:set-event | mus)
 		content="$(munitSetEvent "${commands[@]}")"
+		;;
+	musp)
+		content="$(munitSetEventPayload "${commands[@]}")"
+		;;
+	musa)
+		content="$(munitSetEventAttributes "${commands[@]}")"
+		;;
+	musv)
+		content="$(munitSetEventVariables "${commands[@]}")"
 		;;
 	munit:assert | mua)
 		content="$(munitAssert "${commands[@]}")"
