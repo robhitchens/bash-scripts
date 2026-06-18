@@ -1102,6 +1102,7 @@ function processCommand {
 			# operating on that assumption for now.
 		elif [[ "${!i}" == "]" ]]; then
 			isAttribute=0
+			continue
 		fi
 		if ((isAttribute == 1)); then
 			attributes+=("${!i}")
