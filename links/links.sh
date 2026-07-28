@@ -10,7 +10,7 @@ function hereDoc {
 	# TODO document interface
 	cat <<-EOF
 		Usage:
-		  links [-h | --help] [--install] [-l | --list] [-e | --edit] [-f | --file fileName] [-w | --win] [-c | --cli] [LINKNAME]
+		  links [-h | --help] [--install] [-l | --list] [-e | --edit] [-f | --file fileName] [-w | --win] [-c | --cli] [LINKNAME] [SELECTION]
 
 		Synopsis:
 		  links is a simple utility to open links saved in a text file in a browser
@@ -36,23 +36,29 @@ function hereDoc {
 function getLink {
 	local linkName="$1"
 	local linkDoc="$2"
+	local linkSel="$3"
 
 	local linkVal=($(grep -A1 -i -E "^#(.*)$linkName(.*)$" "$linkDoc" | grep -v -E '^#.*' | grep -v -E '^[-]{2}'))
 
 	if ((${#linkVal[@]} > 1)); then
-		echo "Multiple values returned matching link name '$linkName'" >&2
-
-		for ((i = 0; i < ${#linkVal[@]}; i++)); do
-			echo "    $i. ${linkVal[i]}" >&2
-		done
-
-		echo -n "Choose the link you want [0-9]: " >&2
-		read -r selection
-
-		if [[ -n "$selection" ]]; then
-			echo "${linkVal[$selection]}"
+		if [[ -n "$linkSel" ]]; then
+			# TODO should add check to see if linkSel is valid or out of bounds.
+			echo "${linkVal[$linkSel]}"
 		else
-			echo "No selection made" >&2
+			echo "Multiple values returned matching link name '$linkName'" >&2
+
+			for ((i = 0; i < ${#linkVal[@]}; i++)); do
+				echo "    $i. ${linkVal[i]}" >&2
+			done
+
+			echo -n "Choose the link you want [0-9]: " >&2
+			read -r selection
+
+			if [[ -n "$selection" ]]; then
+				echo "${linkVal[$selection]}"
+			else
+				echo "No selection made" >&2
+			fi
 		fi
 	else
 		echo "${linkVal[0]}"
@@ -198,7 +204,9 @@ function main {
 
 	((skipCount += 1))
 	local linkName="${!skipCount}"
-	local link="$(getLink "$linkName" "${flags['file']}")"
+	((skipCount += 1))
+	local linkSelection="${!skipCount}"
+	local link="$(getLink "$linkName" "${flags['file']}" "$linkSelection")"
 
 	if [[ -z "$link" ]]; then
 		echo "Link name '$linkName' not found" >&2
