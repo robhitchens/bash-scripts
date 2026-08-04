@@ -18,9 +18,16 @@ function hereDoc {
 		Description:
 		  If no option for a browser is provided, then the bash default \$BROWSER will be used.
 		  Default link doc can be set with LINKSDOC global variable
+		      
+		  If multiple matches come back for a given link name, then the urls of the matches 
+		  will be shown as in indexed list and can be selected using 0-9.
+
+		  To shortcut the indexed list of multiple matches the selection can be provided after
+		  the linkname (e.g. "google 0" will select the first match with google in the header) 
 		          
 		Config:
 		  LINKS_CONFIG_PRETTY_HEADERS     Boolean: if true, then --list (-l) will pipe output of headers through glow (if present)
+		  LINKS_CONFIG_AUTO_BROWSER       Enum: values [win, cli, bro], will always prefer the selected option
 
 		Options:
 		  --help|-h                         Prints help doc to stdout
@@ -30,6 +37,7 @@ function hereDoc {
 		  --file|-f                         Link file to be searched                                
 		  --win|-w                          Opens link using \$WINBROWSER variable
 		  --cli|-c                          Opens link using \$CLIBROWSER variable
+		  --bro|-b                          Opens link using \$BROWSER variable
 	EOF
 }
 
@@ -178,6 +186,28 @@ function setFlags {
 	# TODO should add some validation to guard against invalid option state.
 }
 
+function validateConfig {
+	local errMsg=()
+	if [[ -v LINKS_CONFIG_PRETTY_HEADERS ]]; then
+		if [[ ! "$LINKS_CONFIG_PRETTY_HEADERS" =~ true|false ]]; then
+			errMsg+=("Config variable LINKS_CONFIG_PRETTY_HEADERS is not a boolean value of true or false")
+		fi
+	fi
+
+	if [[ -v LINKS_CONFIG_AUTO_BROWSER ]]; then
+		if [[ ! "$LINKS_CONFIG_AUTO_BROWSER" =~ win|cli|bro ]]; then
+			errMsg+=("Config variable LINKS_CONFIG_AUTO_BROWSER is not of enum string [win, cli, bro]")
+		fi
+	fi
+
+	if [[ -n "$errMsg" ]]; then
+		printf "%s\n" "${errMsg[@]}" >&2
+		return 1
+	else
+		return 0
+	fi
+}
+
 function main {
 	handleOneOffOptions "$@"
 	if (($? == 0)); then
@@ -189,6 +219,10 @@ function main {
 		return 1
 	fi
 
+	validateConfig
+	if (($? == 1)); then
+		return 1
+	fi
 	if [[ -n "${flags['list']}" ]]; then
 		local output="$(listLinksWithHeaders "${flags['file']}")"
 		if [[ $LINKS_CONFIG_PRETTY_HEADERS == true ]]; then
@@ -213,14 +247,14 @@ function main {
 		return 1
 	fi
 
-	if [[ "${flags['win']}" == true ]]; then
+	if [[ "${flags['win']}" == true || "$LINKS_CONFIG_AUTO_BROWSER" == 'win' ]]; then
 		if [[ -z "$WINBROWSER" ]]; then
 			echo "Global variable WINBROWSER not set" >&2
 			return 1
 		fi
 		"$WINBROWSER" "$link"
 		return 0
-	elif [[ "${flags['cli']}" == true ]]; then
+	elif [[ "${flags['cli']}" == true || "$LINKS_CONFIG_AUTO_BROWSER" == 'cli' ]]; then
 		if [[ -z "$CLIBROWSER" ]]; then
 			echo "Global variable CLIBROWSER not set" >&2
 			return 1
