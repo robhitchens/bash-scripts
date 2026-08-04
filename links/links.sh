@@ -247,6 +247,7 @@ function main {
 		return 1
 	fi
 
+	# TODO should add condition to let command line args override config
 	if [[ "${flags['win']}" == true || "$LINKS_CONFIG_AUTO_BROWSER" == 'win' ]]; then
 		if [[ -z "$WINBROWSER" ]]; then
 			echo "Global variable WINBROWSER not set" >&2
