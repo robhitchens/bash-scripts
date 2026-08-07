@@ -1019,13 +1019,13 @@ function filterTestOutput {
 	local display=0
 	while IFS=$'\n' read -r line; do
 		# TODO probably should use regexes to better forward and backwards compatible with different versions of MULE
-		if [[ "$line" == '[INFO] Running MULE_EE with version 4.9.0' ]]; then
+		if [[ "$line" =~ .*Running\ MULE_EE\ with\ version.* ]]; then
 			display=1
 		fi
-		if [[ "$line" == '[INFO] >>> munit:3.3.2:coverage-report (test) > [munit]test @ wsfs-clients-process-api >>>' ]]; then
+		if [[ "$line" =~ .*coverage-report.* ]]; then
 			display=0
 		fi
-		if [[ "$line" == '[INFO] BUILD FAILURE' ]]; then
+		if [[ "$line" == .*BUILD\ FAILURE.* ]]; then
 			display=1
 		fi
 		if ((display == 1)); then
