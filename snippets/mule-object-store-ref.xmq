@@ -1,0 +1,49 @@
+mule(xsi:schemaLocation = 'http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd'
+     xmlns:os           = http://www.mulesoft.org/schema/mule/os
+     xmlns              = http://www.mulesoft.org/schema/mule/core
+     xmlns:doc          = http://www.mulesoft.org/schema/mule/documentation
+     xmlns:xsi          = http://www.w3.org/2001/XMLSchema-instance)
+{
+    flow(name   = tempFlow
+         doc:id = 59efbd19-5838-4d2a-80af-9e1d5342ef66)
+    {
+        os:clear(doc:name = Clear
+                 doc:id   = 2f4a5d33-cdd0-4621-b037-7bb472d0d510)
+    }
+    flow(name   = tempFlow2
+         doc:id = f8fafa16-7825-4c20-a2f2-4a8d9998cd03)
+    {
+        os:remove(doc:name = Remove
+                  doc:id   = dfe970ba-7dfe-4a15-9e73-73701e58647f)
+    }
+    flow(name   = tempFlow3
+         doc:id = 259d8880-9ecb-4a0a-aed0-ed585b31307b)
+    {
+        os:retrieve(doc:name = Retrieve
+                    doc:id   = e1c274d8-fbe7-4f76-87cc-6b65be4230a4)
+    }
+    flow(name   = tempFlow4
+         doc:id = 905798fe-3961-46ce-a2e4-6a3edeacaca1)
+    {
+        os:retrieve-all(doc:name = 'Retrieve all'
+                        doc:id   = 92acc0d2-998e-46d8-af82-4744d82c3072)
+    }
+    flow(name   = tempFlow5
+         doc:id = 6425078e-9eff-462f-bf5d-fce33196f40d)
+    {
+        os:retrieve-all-keys(doc:name = 'Retrieve all keys'
+                             doc:id   = 489de73a-00bf-4d00-8de1-a3828bd0038b)
+    }
+    flow(name   = tempFlow6
+         doc:id = 11e66ff4-fa2a-42d3-a546-cfb181dd1534)
+    {
+        os:store(doc:name = Store
+                 doc:id   = 3035fb6e-5b4b-486e-9cc2-78160270b2ee)
+    }
+    flow(name   = tempFlow1
+         doc:id = 70b6e766-6f77-4e99-94a4-941f312210a1)
+    {
+        os:contains(doc:name = Contains
+                    doc:id   = c82302ee-6ca7-45ab-ad77-2ddf2c7a340c)
+    }
+}
