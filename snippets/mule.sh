@@ -491,7 +491,8 @@ function scatterGather {
 function jsonLogger {
 	echo "json-logger:logger(doc:name   = ':doc:name:'
         config-ref = JSON_Logger_Config
-        message    = ':message:')
+        message    = ':message:'
+        tracepoint = ':tracepoint:')
 "
 }
 ################################################################################
