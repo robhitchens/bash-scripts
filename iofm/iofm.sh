@@ -7,13 +7,14 @@ function processTokens {
 	# lazy detection if line starts with a ./ then its a parent directory.
 	# The format of the output tokens will be [context: $folder] (action) args...
 	local currentContext
+	local pipeIt
 	while IFS=$'\n' read -r line; do
-		if [[ -z pipeIt && "$line" =~ \(g\)\ c ]]; then
-			declare -g pipeIt true
+		if [[ -z "$pipeIt" && "$line" =~ \(g\)\ c ]]; then
+			pipeIt=true
 			echo "| catting all files"
 		fi
 		# If line starts with (action) then interpret arguments
-		if [[ "$line" =~ (.*)[:]$ ]]; then
+		if [[ "$line" =~ ^([.].*)[:]$ ]]; then
 			currentContext="${BASH_REMATCH[1]}"
 			echo "$line"
 		elif [[ "$line" =~ [\(](.*)[\)]\ (.*) ]]; then
@@ -22,6 +23,8 @@ function processTokens {
 			:
 			# Doing nothing at the moment
 			# echo "comment: ${BASH_REMATCH[1]}"
+		elif [[ "$line" =~ ^[.].*[:]$ ]]; then
+			echo "$line"
 		else
 			if [[ -n "$pipeIt" ]]; then
 				echo "[context: $currentContext] (c) $line"
@@ -30,14 +33,6 @@ function processTokens {
 			fi
 		fi
 	done
-}
-
-function pipeCat {
-	local parent="$1"
-	local file="$2"
-	while IFS=$'\n' read -r line; do
-		echo "| $line"
-	done < <(cat "$parent/$file")
 }
 
 function commentOutput {
@@ -56,7 +51,16 @@ function doAction {
 	case "$action" in
 	c)
 		echo "$args"
-		pipeCat "$context" "$args"
+		if [[ -f "$context/$args" ]]; then
+			commentOutput < <(cat -n "$context/$args")
+		elif [[ -d "$context/$args" ]]; then
+			# echo "| $args is a directory" >&2
+			:
+		else
+			# echo "| $context/$args doesn't exist" >&2
+			:
+		fi
+
 		;;
 	h)
 		local headArgs=($args)
@@ -163,6 +167,7 @@ function main {
 		ls -R
 	else
 		while read -r token; do
+			lineRead=true
 			if [[ "$token" =~ \[context:\ (.*)]\ [\(](.*)[\)]\ (.*) ]]; then
 				local context="${BASH_REMATCH[1]}"
 				local action="${BASH_REMATCH[2]}"
@@ -172,8 +177,9 @@ function main {
 				echo "$token"
 			fi
 		done < <(processTokens)
-	#local tokens="$(processTokens)"
-	#echo "${tokens[@]}"
+		if [[ ! "$lineRead" ]]; then
+			ls -R
+		fi
 	fi
 }
 
