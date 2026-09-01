@@ -8,6 +8,10 @@ function processTokens {
 	# The format of the output tokens will be [context: $folder] (action) args...
 	local currentContext
 	while IFS=$'\n' read -r line; do
+		if [[ -z pipeIt && "$line" =~ \(g\)\ c ]]; then
+			declare -g pipeIt true
+			echo "| catting all files"
+		fi
 		# If line starts with (action) then interpret arguments
 		if [[ "$line" =~ (.*)[:]$ ]]; then
 			currentContext="${BASH_REMATCH[1]}"
@@ -19,7 +23,11 @@ function processTokens {
 			# Doing nothing at the moment
 			# echo "comment: ${BASH_REMATCH[1]}"
 		else
-			echo "$line"
+			if [[ -n "$pipeIt" ]]; then
+				echo "[context: $currentContext] (c) $line"
+			else
+				echo "$line"
+			fi
 		fi
 	done
 }
@@ -51,10 +59,12 @@ function doAction {
 		pipeCat "$context" "$args"
 		;;
 	h)
-		echo "$TODO implement head function" >&2
+		local headArgs=($args)
+		commentOutput < <(head -n "${headArgs[0]}" "$context/${headArgs[1]}")
 		;;
 	t)
-		echo "$TODO implement tail function" >&2
+		local tailArgs=($args)
+		commentOutput < <(tail -n "${tailArgs[0]}" "$context/${tailArgs[1]}")
 		;;
 	to)
 		touch "$context/$args"
@@ -62,11 +72,69 @@ function doAction {
 		;;
 	cp)
 		echo "| copied $args"
-		echo "TODO implement copy function" >&2
+		local copyArgs=($args)
+		if [[ -f "$context/${copyArgs[0]}" ]]; then
+			# TODO need to add logic to check if target has '/' or not to determine where the file is going in regards to the project.
+			cp "$context/${copyArgs[0]}" "${copyArgs[1]}"
+		elif [[ -d "$context/${copyArgs[0]}" ]]; then
+			echo "| Arg 0 '${copyArgs[0]}' is a directory, use the cpr command to copy"
+		else
+			echo "| File '${copyArgs[0]}' doesn't exist"
+		fi
+		;;
+	cpr)
+		echo "| cpr not yet implemented" >&2
+		;;
+	n)
+		local renameArgs=($args)
+		if [[ -f "$context/${renameArgs[0]}" ]]; then
+			if [[ -f "$context/${renameArgs[1]}" ]]; then
+				echo "| File '${renameArgs[1]}' already exists"
+			else
+				mv "$context/${renameArgs[0]}" "$context/${renameArgs[1]}"
+			fi
+		elif [[ -d "$context/${renameArgs[0]}" ]]; then
+			if [[ -d "$context/${renameArgs[1]}" ]]; then
+				echo "| Dir '${renameArgs[1]}' already exists"
+			else
+				mv "$context/${renameArgs[0]}" "$context/${renameArgs[1]}"
+			fi
+		else
+			echo "| Source file or dir '${renameArgs[0]}' doesn't exist"
+		fi
+		;;
+	mv)
+		# TODO need to update the location output for new file if moved under new parent
+		# TODO logic here needs to be a little more complex
+		local moveArgs=($args)
+		if [[ -f "${moveArgs[0]}" ]]; then
+			if [[ -f "${moveArgs[1]}" ]]; then
+				echo "| File '${moveArgs[1]}' already exists"
+			else
+				# TODO need to check if target contains '/' then no change otherwise
+				mv "$context/${moveArgs[0]}" "${moveArgs[1]}"
+			fi
+		elif [[ -d "${moveArgs[0]}" ]]; then
+			if [[ -d "${moveArgs[1]}" ]]; then
+				echo "| Dir '${moveArgs[1]}' already exists"
+			else
+				# TODO need to check if target contains '/' then no change otherwise
+				mv "$context/${moveArgs[0]}" "${moveArgs[1]}"
+			fi
+		else
+			echo "| File '${moveArgs[0]}' doesn't exist"
+		fi
 		;;
 	mk)
-		echo "$args"
-		echo "TODO implement mkdir function" >&2
+		local mkdirArgs=($args)
+		for ((i = 0; i < ${#mkdirArgs[@]}; i++)); do
+			if [[ -d "$context/${mkdirArgs[i]}" ]]; then
+				echo "| Dir '${mkdirArgs[i]}' already exists"
+			else
+				mkdir "$context/${mkdirArgs[i]}"
+				echo "${mkdirArgs[i]}"
+			fi
+		done
 		;;
 	d)
 		if [[ -f "$context/$args" ]]; then
