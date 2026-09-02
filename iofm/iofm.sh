@@ -1,8 +1,15 @@
 #!/usr/bin/bash
 
 # Notes: just doing a small prototype
+# TODOS:
+# - Add support to output goto statement
+# - Add global config file support to ignore certain directories
+# - Add command line argument for root directory
+# - Add REPL
 
 declare -g directive
+declare configFile="~/.config/iofm.conf"
+declare -A globals
 
 function helpDoc {
 	cat <<EOF
@@ -233,13 +240,62 @@ function doAction {
 	esac
 }
 
+function listDir {
+	echo "| globals[exclude]: ${globals['exclude']}"
+	if [[ -n "${globals['exclude']}" ]]; then
+		local isExcluded=false
+		while IFS=$'\n' read -r line; do
+			if [[ "$line" =~ ^[.](.*)[/]?.*[:]$ ]]; then
+				local context="${BASH_REMATCH[1]}"
+				if [[ "$context" == "${globals['exclude']}" ]]; then
+					isExcluded=true
+				else
+					isExcluded=false
+				fi
+			elif [[ "$line" == "${globals['exclude']}" ]]; then
+				isExcluded=true
+			else
+				isExcluded=false
+			fi
+			if [[ $isExcluded != true ]]; then
+				echo "| not excluding"
+				echo "$line"
+			else
+				echo "| excluding"
+			fi
+		done < <(ls -R)
+	else
+		ls -R
+	fi
+}
+
+function processGlobalConfig {
+	if [[ -f "$configFile" ]]; then
+		while IFS=$'\n' read -r line; do
+			echo "| config line: $line"
+			if [[ "$line" =~ ^[^\#](.*)\ =\ (.*) ]]; then
+				echo "| ${BASH_REMATCH[1]}"
+				echo "| ${BASH_REMATCH[2]}"
+				# TODO skipping config validation for prototype
+				globals["${BASH_REMATCH[1]}"]="${BASH_REMATCH[2]}"
+			fi
+		done < <(cat $configFile)
+		echo "| ${globals[@]}"
+	else
+		echo "| no config file: $configFile"
+	fi
+}
+
 function main {
 	if [[ "$1" == "help" ]]; then
 		helpDoc
 		return 0
 	fi
+
+	processGlobalConfig
+
 	if [[ -t 0 ]]; then
-		ls -R
+		listDir
 	else
 		while read -r token; do
 			lineRead=true
@@ -255,7 +311,7 @@ function main {
 			fi
 		done < <(processTokens)
 		if [[ ! "$lineRead" ]]; then
-			ls -R
+			listDir
 		fi
 	fi
 }
