@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 # Notes: just doing a small prototype
 # TODOS:
@@ -258,6 +258,10 @@ function listDir {
 		local isExcluded=false
 		local context=""
 		while IFS=$'\n' read -r line; do
+			# TODO idk, can't get this to work.
+			if [[ "$line" =~ ^ls.*$ ]]; then
+				continue
+			fi
 			isExcluded="$(matchesExcluded "$line")"
 			if [[ "$line" =~ ^[.][/](.*)[/]?.*[:]$ ]]; then
 				context="${BASH_REMATCH[1]}"
