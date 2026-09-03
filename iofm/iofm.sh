@@ -8,7 +8,7 @@
 # - Add REPL
 
 declare -g directive
-declare configFile="~/.config/iofm.conf"
+declare configFile="$HOME/.config/iofm.conf"
 declare -A globals
 
 function helpDoc {
@@ -240,28 +240,39 @@ function doAction {
 	esac
 }
 
+function matchesExcluded {
+	local line="$1"
+	for v in ${globals['exclude']}; do
+		if [[ "$line" =~ "$v" ]]; then
+			echo "true"
+			return 0
+		fi
+	done
+	echo "false"
+	return 0
+}
+
 function listDir {
-	echo "| globals[exclude]: ${globals['exclude']}"
+	#echo "| globals[exclude]: ${globals[exclude]}"
 	if [[ -n "${globals['exclude']}" ]]; then
 		local isExcluded=false
+		local context=""
 		while IFS=$'\n' read -r line; do
-			if [[ "$line" =~ ^[.](.*)[/]?.*[:]$ ]]; then
-				local context="${BASH_REMATCH[1]}"
-				if [[ "$context" == "${globals['exclude']}" ]]; then
-					isExcluded=true
-				else
-					isExcluded=false
-				fi
-			elif [[ "$line" == "${globals['exclude']}" ]]; then
+			isExcluded="$(matchesExcluded "$line")"
+			if [[ "$line" =~ ^[.][/](.*)[/]?.*[:]$ ]]; then
+				context="${BASH_REMATCH[1]}"
+				isExcluded="$(matchesExcluded "$context")"
+			elif [[ $(matchesExcluded "$line") == true || $(matchesExcluded "$context") == true ]]; then
 				isExcluded=true
 			else
 				isExcluded=false
 			fi
+
 			if [[ $isExcluded != true ]]; then
-				echo "| not excluding"
 				echo "$line"
 			else
-				echo "| excluding"
+				# echo "| excluding: $line"
+				:
 			fi
 		done < <(ls -R)
 	else
@@ -272,15 +283,15 @@ function listDir {
 function processGlobalConfig {
 	if [[ -f "$configFile" ]]; then
 		while IFS=$'\n' read -r line; do
-			echo "| config line: $line"
-			if [[ "$line" =~ ^[^\#](.*)\ =\ (.*) ]]; then
-				echo "| ${BASH_REMATCH[1]}"
-				echo "| ${BASH_REMATCH[2]}"
-				# TODO skipping config validation for prototype
-				globals["${BASH_REMATCH[1]}"]="${BASH_REMATCH[2]}"
+			if [[ "$line" =~ ^(.*)\ =\ (.*) ]]; then
+				local prop="${BASH_REMATCH[1]}"
+				local val="${BASH_REMATCH[2]}"
+				if [[ ! "$line" =~ ^[#] ]]; then
+					# TODO skipping config validation for prototype
+					globals["$prop"]="$val"
+				fi
 			fi
-		done < <(cat $configFile)
-		echo "| ${globals[@]}"
+		done < <(cat "$configFile")
 	else
 		echo "| no config file: $configFile"
 	fi
