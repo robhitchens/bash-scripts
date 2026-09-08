@@ -162,7 +162,14 @@ function doAction {
 		fi
 		;;
 	cpr)
-		echo "| cpr not yet implemented" >&2
+		local copyArgs=($args)
+		if [[ -d "$context/${copyArgs[0]}" ]]; then
+			cp -r "$context/${copyArgs[0]}" "${copyArgs[1]}"
+		elif [[ -f "$context/${copyArgs[0]}" ]]; then
+			echo "| Arg 0 '${copyArgs[0]}' is a directory, use the cpr command to copy"
+		else
+			echo "| File '${copyArgs[0]}' doesn't exist"
+		fi
 		;;
 	n)
 		local renameArgs=($args)
@@ -210,7 +217,7 @@ function doAction {
 			if [[ -d "$context/${mkdirArgs[i]}" ]]; then
 				echo "| Dir '${mkdirArgs[i]}' already exists"
 			else
-				mkdir "$context/${mkdirArgs[i]}"
+				mkdir -p "$context/${mkdirArgs[i]}"
 				echo "${mkdirArgs[i]}"
 			fi
 		done
