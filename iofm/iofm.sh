@@ -193,14 +193,14 @@ function doAction {
 		# TODO need to update the location output for new file if moved under new parent
 		# TODO logic here needs to be a little more complex
 		local moveArgs=($args)
-		if [[ -f "${moveArgs[0]}" ]]; then
+		if [[ -f "$context/${moveArgs[0]}" ]]; then
 			if [[ -f "${moveArgs[1]}" ]]; then
 				echo "| File '${moveArgs[1]}' already exists"
 			else
 				# TODO need to check if target contains '/' then no change otherwise
 				mv "$context/${moveArgs[0]}" "${moveArgs[1]}"
 			fi
-		elif [[ -d "${moveArgs[0]}" ]]; then
+		elif [[ -d "$context/${moveArgs[0]}" ]]; then
 			if [[ -d "${moveArgs[1]}" ]]; then
 				echo "| Dir '${moveArgs[1]}' already exists"
 			else
