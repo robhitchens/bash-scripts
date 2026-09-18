@@ -13,6 +13,8 @@ declare -A globals
 
 # TODO add grep like command for fuzzy finding, generate comments with local path to file with line number. Default context to size 10, match grep output with file in output
 #      might start with top level directive first, could also have context limited search as well by placing command infront of file or directory.
+# TODO add support for depth directive
+# TODO add support for changing the current working directory of iofm output
 function helpDoc {
 	cat <<EOF
 Usage:
