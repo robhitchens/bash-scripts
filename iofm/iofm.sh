@@ -191,14 +191,18 @@ function doAction {
 		local renameArgs=($args)
 		if [[ -f "$context/${renameArgs[0]}" ]]; then
 			if [[ -f "$context/${renameArgs[1]}" ]]; then
+				echo "${renameArgs[0]}"
 				echo "| File '${renameArgs[1]}' already exists"
 			else
+				echo "${renameArgs[1]}"
 				mv "$context/${renameArgs[0]}" "$context/${renameArgs[1]}"
 			fi
 		elif [[ -d "$context/${renameArgs[0]}" ]]; then
 			if [[ -d "$context/${renameArgs[1]}" ]]; then
+				echo "${renameArgs[0]}"
 				echo "| Dir '${renameArgs[1]}' already exists"
 			else
+				echo "${renameArgs[1]}"
 				mv "$context/${renameArgs[0]}" "$context/${renameArgs[1]}"
 			fi
 		else
