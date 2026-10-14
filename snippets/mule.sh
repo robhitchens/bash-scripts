@@ -1045,6 +1045,9 @@ function runMunitTest {
 	# To compile just tests, need to use mvn -o test-compile
 	local args=(${@:2})
 	local command=""
+	# TODO add handling of multiple tests and methods. Join as comma separated list.
+	# TODO add support for localized flags. Migrate loop and verbose flags to this function
+	#      and add support for a '-c' flag to include running clean.
 	if [[ -n ${args[0]} ]]; then
 		# FIXME should handle if args[0] is a directory here.
 		command+="-Dmunit.test=${args[0]}"
