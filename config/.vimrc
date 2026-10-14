@@ -69,7 +69,9 @@ endfunction
 
 command Todo vim /\vTODO|FIXME/ % | copen
 
-cabbrev GF execute "normal! <C-V><C-W>gFzt"
+cabbrev Gf execute "normal! <C-V><C-W>fzt"
+cabbrev Gtf execute "normal! <C-V><C-W>gFzt"
+cabbrev Gvf execute ""
 
 " TODO add a script to bash scripts for installing vim plugin if not
 " installed.
