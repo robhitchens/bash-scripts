@@ -15,6 +15,8 @@ declare -A globals
 #      might start with top level directive first, could also have context limited search as well by placing command infront of file or directory.
 # TODO add support for depth directive
 # TODO add support for changing the current working directory of iofm output
+# TODO add support for directive to provide full paths for each node
+# TODO change 'directives' to config options. Now this allows global config and local inine config changes.
 function helpDoc {
 	cat <<EOF
 Usage:
