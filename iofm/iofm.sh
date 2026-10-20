@@ -63,6 +63,10 @@ Syntax:
                                     previous './directory:'
   (dr) fileName                     deletes a directory under the current context denoted by the
                                     previous './directory:'
+Directives:
+  comments                          only option is keep, this keeps all comments lines in output with each run.
+  path                              on or off, prints the relative path for all directory items
+  hidden                            display
 EOF
 }
 
@@ -78,6 +82,7 @@ function processTokens {
 			echo "|> $line"
 			continue
 		fi
+		# TODO will probably have to change directive to be an associative array. Should also probably just change directives to be inline config.
 		if [[ -z "$directive" && "$line" =~ ^\(\!d\)\ (.*)$ ]]; then
 			#echo "| encountered directive: $line"
 			directive="${BASH_REMATCH[1]}"
@@ -103,7 +108,11 @@ function processTokens {
 			if [[ -n "$pipeIt" ]]; then
 				echo "[context: $currentContext] (c) $line"
 			else
-				echo "$line"
+				if [[ -n "$directive" && "$directive" == 'path=on' ]]; then
+					echo "$currentContext/$line"
+				else
+					echo "$line"
+				fi
 			fi
 		fi
 	done
