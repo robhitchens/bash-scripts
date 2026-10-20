@@ -17,6 +17,7 @@ declare -A globals
 # TODO add support for changing the current working directory of iofm output
 # TODO add support for directive to provide full paths for each node
 # TODO change 'directives' to config options. Now this allows global config and local inine config changes.
+# TODO escape whitespace in paths
 function helpDoc {
 	cat <<EOF
 Usage:
