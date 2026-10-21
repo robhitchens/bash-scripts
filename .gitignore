@@ -1,3 +1,4 @@
 *.swp
 .gawk_history
 .gawkrc
+tags
