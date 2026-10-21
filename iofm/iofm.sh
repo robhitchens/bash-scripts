@@ -111,7 +111,7 @@ function processTokens {
 			if [[ -n "$pipeIt" ]]; then
 				echo "[context: $currentContext] (c) $line"
 			else
-				if [[ -n "$directive" && "$directive" == 'path=on' ]]; then
+				if [[ -n "$directive" && "$directive" == 'path=on' && -n "$line" ]]; then
 					echo "$currentContext/$line"
 				else
 					echo "$line"
@@ -312,7 +312,7 @@ function listDir {
 			fi
 
 			if [[ $isExcluded != true ]]; then
-				echo "$line"
+				echo "$line" | sed -s 's/ /\\ /g'
 			else
 				# echo "| excluding: $line"
 				:
