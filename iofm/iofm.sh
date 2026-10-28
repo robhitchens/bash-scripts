@@ -18,7 +18,12 @@ declare -A globals
 # TODO add support for directive to provide full paths for each node
 # TODO change 'directives' to config options. Now this allows global config and local inine config changes.
 # TODO escape whitespace in paths
-# TODO replace usage of ls -R with "find . -type d -name "target*" -prune -o -type d -name ".git*" -prune -o -type f -print"
+# TODO replace usage of ls -R with "find . -type d -name "target*" -prune -o -type d -name ".git*" -prune -o -type d -o -type f -print | sort"
+# TODO take find output and iterate building hasmap of dir->file string delimited by new lines
+#      can use -f and -d tests to determine if elements if a file or directory
+#      with config updates, can determine if file entries can but full paths or just names
+# TODO update directive and config logic to be the same, directives are essentially short term config overrides
+# TODO separate exclusion config option into excludeDir and excludeFile, both should accept glob patterns and the values of these can be used to build the options for find.
 function helpDoc {
 	cat <<EOF
 Usage:
