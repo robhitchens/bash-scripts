@@ -18,6 +18,7 @@ declare -A globals
 # TODO add support for directive to provide full paths for each node
 # TODO change 'directives' to config options. Now this allows global config and local inine config changes.
 # TODO escape whitespace in paths
+# TODO replace usage of ls -R with "find . -type d -name "target*" -prune -o -type d -name ".git*" -prune -o -type f -print"
 function helpDoc {
 	cat <<EOF
 Usage:
