@@ -139,3 +139,5 @@ export CLIBROWSER="w3m"
 export ML_AUTO_DOC_ID=true
 export LINKS_CONFIG_PRETTY_HEADERS=true
 export LINKS_CONFIG_AUTO_BROWSER=win
+export MANPAGER="less --mouse --wheel-lines=3 -s -M +Gg"
+export PAGER="less --mouse --wheel-lines=3"
