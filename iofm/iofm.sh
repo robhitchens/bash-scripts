@@ -397,9 +397,9 @@ function listDirRef {
 	done < <(eval "$findQuery" | sort -d)
 
 	# TODO sort keys before iterating over them
-	for key in $(echo "${!aggregate[*]}" | sort -d); do
+	for key in $(echo "${!aggregate[*]}" | xargs printf $'%s\n' | sort -d); do
 		echo "${key}:"
-		echo "${aggregate[$key]}"
+		echo "${aggregate[$key]}" | xargs printf $'%s\n' | sort
 		echo
 	done
 }
@@ -415,7 +415,7 @@ function main {
 	processGlobalConfig
 
 	if [[ -t 0 ]]; then
-		listDir
+		listDirRef
 	else
 		while read -r token; do
 			lineRead=true
@@ -431,7 +431,7 @@ function main {
 			fi
 		done < <(processTokens)
 		if [[ ! "$lineRead" ]]; then
-			listDir
+			listDirRef
 		fi
 	fi
 }
