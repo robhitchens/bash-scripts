@@ -1,0 +1,21 @@
+
+[user]
+	name = {name}
+	email = {email}
+[credential]
+	helper = store
+[diff]
+	tool = vimdiff
+[merge]
+	tool = vimdiff
+[difftool]
+	prompt = false
+	symlinks = false
+[core]
+	autocrlf = input
+[mergetool]
+	keepBackup = false
+[push]
+  autoSetupRemote = true
+[difftool "vimdiff"]
+	cmd = vimdiff \"$LOCAL\" \"$REMOTE\"
