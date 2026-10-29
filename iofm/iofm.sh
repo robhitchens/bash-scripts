@@ -396,7 +396,6 @@ function listDirRef {
 		fi
 	done < <(eval "$findQuery" | sort -d)
 
-	# TODO sort keys before iterating over them
 	for key in $(echo "${!aggregate[*]}" | xargs printf $'%s\n' | sort -d); do
 		echo "${key}:"
 		echo "${aggregate[$key]}" | xargs printf $'%s\n' | sort
