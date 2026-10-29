@@ -350,15 +350,6 @@ function processGlobalConfig {
 }
 
 function listDirRef {
-	# read excludedDir and excludedFile from config
-	# build find query
-	# sort results of find
-	# iterate over lines and test if dir or file
-	# create associative array
-	# separate path of dir or file
-	# place entry in associative array append entry + '\n'
-	# iterate over associate array and printf keys and values
-
 	local findQuery
 	if [[ -n "${globals[excludeDir]}" ]]; then
 		for d in $(echo "${globals[excludeDir]}" | xargs printf $'"%s"\n'); do
