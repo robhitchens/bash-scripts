@@ -286,6 +286,7 @@ function doAction {
 	esac
 }
 
+# Deprecated
 function matchesExcluded {
 	local line="$1"
 	for v in ${globals['exclude']}; do
@@ -298,6 +299,7 @@ function matchesExcluded {
 	return 0
 }
 
+# Deprecated
 function listDir {
 	#echo "| globals[exclude]: ${globals[exclude]}"
 	if [[ -n "${globals['exclude']}" ]]; then
@@ -401,6 +403,7 @@ function main {
 	fi
 
 	# TODO add support for flag to generate new output
+	# TODO add support for reading from file in arguments
 
 	processGlobalConfig
 
