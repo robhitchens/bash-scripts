@@ -24,6 +24,7 @@ declare -A globals
 #      with config updates, can determine if file entries can but full paths or just names
 # TODO update directive and config logic to be the same, directives are essentially short term config overrides
 # TODO separate exclusion config option into excludeDir and excludeFile, both should accept glob patterns and the values of these can be used to build the options for find.
+# TODO add arugment support for processing another dir
 function helpDoc {
 	cat <<EOF
 Usage:
@@ -329,6 +330,7 @@ function listDir {
 	fi
 }
 
+# TODO refactor ?
 function processGlobalConfig {
 	if [[ -f "$configFile" ]]; then
 		while IFS=$'\n' read -r line; do
@@ -337,6 +339,7 @@ function processGlobalConfig {
 				local val="${BASH_REMATCH[2]}"
 				if [[ ! "$line" =~ ^[#] ]]; then
 					# TODO skipping config validation for prototype
+					# TODO rename globals to config
 					globals["$prop"]="$val"
 				fi
 			fi
@@ -346,11 +349,43 @@ function processGlobalConfig {
 	fi
 }
 
+function listDirRef {
+	local findQuery
+	if [[ -n "${globals[excludeDir]}" ]]; then
+		for d in $(echo "${globals[excludeDir]}" | xargs printf $'"%s"\n'); do
+			findQuery="${findQuery}-type d -name ${d//\"/\'} -prune -o "
+		done
+	fi
+
+	if [[ -n "${globals[excludeFile]}" ]]; then
+		for f in $(echo "${globals[excludeFile]}" | xargs printf $'"%s"\n'); do
+			findQuery="${findQuery}-type f -name ${f//\"/\'} -prune -o "
+		done
+	fi
+
+	findQuery="find . ${findQuery}-type d -print -o -type f -print"
+
+	eval "$findQuery" | sort
+
+	: findQuery="${findQuery}${d//\"/}\n"
+	# read excludedDir and excludedFile from config
+	# build find query
+	# sort results of find
+	# iterate over lines and test if dir or file
+	# create associative array
+	# separate path of dir or file
+	# place entry in associative array append entry + '\n'
+	# iterate over associate array and printf keys and values
+	:
+}
+
 function main {
 	if [[ "$1" == "help" ]]; then
 		helpDoc
 		return 0
 	fi
+
+	# TODO add support for flag to generate new output
 
 	processGlobalConfig
 
