@@ -350,6 +350,15 @@ function processGlobalConfig {
 }
 
 function listDirRef {
+	# read excludedDir and excludedFile from config
+	# build find query
+	# sort results of find
+	# iterate over lines and test if dir or file
+	# create associative array
+	# separate path of dir or file
+	# place entry in associative array append entry + '\n'
+	# iterate over associate array and printf keys and values
+
 	local findQuery
 	if [[ -n "${globals[excludeDir]}" ]]; then
 		for d in $(echo "${globals[excludeDir]}" | xargs printf $'"%s"\n'); do
@@ -365,18 +374,34 @@ function listDirRef {
 
 	findQuery="find . ${findQuery}-type d -print -o -type f -print"
 
-	eval "$findQuery" | sort
+	declare -A aggregate
+	while IFS=$'\n' read -r line; do
+		local dName fName
+		if [[ -d "$line" ]]; then
+			# TODO check if dir entry already exists (it shouldn't, unless I mess something up)
+			# Create dir entry and append dir to parent entry, if exists...
+			dName="$(dirname "$line")"
+			fName="$(basename "$line")"
+			aggregate["${line}"]=''
+			aggregate["${dName}"]="${aggregate["${dName}"]}${fName}
+"
+		elif [[ -f "$line" ]]; then
+			# Append file entry to dir
+			dName="$(dirname "$line")"
+			fName="$(basename "$line")"
+			aggregate["${dName}"]="${aggregate["${dName}"]}${fName}
+"
+		else
+			echo "don't know: $line" >&2
+		fi
+	done < <(eval "$findQuery" | sort -d)
 
-	: findQuery="${findQuery}${d//\"/}\n"
-	# read excludedDir and excludedFile from config
-	# build find query
-	# sort results of find
-	# iterate over lines and test if dir or file
-	# create associative array
-	# separate path of dir or file
-	# place entry in associative array append entry + '\n'
-	# iterate over associate array and printf keys and values
-	:
+	# TODO sort keys before iterating over them
+	for key in $(echo "${!aggregate[*]}" | sort -d); do
+		echo "${key}:"
+		echo "${aggregate[$key]}"
+		echo
+	done
 }
 
 function main {
