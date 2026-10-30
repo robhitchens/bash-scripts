@@ -287,52 +287,6 @@ function doAction {
 	esac
 }
 
-# Deprecated
-function matchesExcluded {
-	local line="$1"
-	for v in ${globals['exclude']}; do
-		if [[ "$line" =~ "$v" ]]; then
-			echo "true"
-			return 0
-		fi
-	done
-	echo "false"
-	return 0
-}
-
-# Deprecated
-function listDir {
-	#echo "| globals[exclude]: ${globals[exclude]}"
-	if [[ -n "${globals['exclude']}" ]]; then
-		local isExcluded=false
-		local context=""
-		while IFS=$'\n' read -r line; do
-			# TODO idk, can't get this to work.
-			if [[ "$line" =~ ^ls.*$ ]]; then
-				continue
-			fi
-			isExcluded="$(matchesExcluded "$line")"
-			if [[ "$line" =~ ^[.][/](.*)[/]?.*[:]$ ]]; then
-				context="${BASH_REMATCH[1]}"
-				isExcluded="$(matchesExcluded "$context")"
-			elif [[ $(matchesExcluded "$line") == true || $(matchesExcluded "$context") == true ]]; then
-				isExcluded=true
-			else
-				isExcluded=false
-			fi
-
-			if [[ $isExcluded != true ]]; then
-				echo "$line" | sed -s 's/ /\\ /g'
-			else
-				# echo "| excluding: $line"
-				:
-			fi
-		done < <(ls -R)
-	else
-		ls -R
-	fi
-}
-
 # TODO refactor ?
 function processGlobalConfig {
 	if [[ -f "$configFile" ]]; then
