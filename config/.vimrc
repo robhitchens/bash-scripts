@@ -52,6 +52,41 @@ augroup QuickfixHighlight
   autocmd FileType qf highlight QuickFixLine ctermbg=DarkBlue ctermfg=White guibg=#000087 guifg=#FFFFFF
 augroup END
 
+function! XmqWrite()
+    let l:saved_view = winsaveview()
+    silent! %!xmq to-xml | xmlstarlet fo
+    write
+    silent! %!xmq
+    call winrestview(l:saved_view)
+endfunction
+
+function! XmqRead()
+    let l:saved_view = winsaveview()
+    silent! %!xmq
+    call winrestview(l:saved_view)
+    set syntax=xmq
+endfunction
+
+function! XmqToXml()
+    let l:saved_view = winsaveview()
+    silent! %!xmq to-xml | xmlstarlet fo
+    call winrestview(l:saved_view)
+    set syntax=xml
+endfunction
+
+function! MarkdownWrite()
+    let l:saved_view = winsaveview()
+    silent! %!pandoc -t commonmark_x
+    write
+    call winrestview(l:saved_view)
+endfunction
+
+function! MarkdownRead()
+    let l:saved_view = winsaveview()
+    silent! %!pandoc -t commonmark_x
+    call winrestview(l:saved_view)
+endfunction
+
 function! RunIOFM()
   let l:saved_view = winsaveview()
   silent! %!iofm
@@ -106,13 +141,27 @@ function! GitDiff()
   call winrestview(l:saved_view)
 endfunction
 
+command Xmqw call XmqWrite()
+command Xmqr call XmqRead()
+command XmqX call XmqToXml()
+command Mdw call MarkdownWrite()
+command Mdr call MarkdownRead()
 command Todo vim /\vTODO|FIXME|BUG/ % | copen
 command Gsym call GoSymbols()
 command Bsym call BashSymbols()
+command Msym call MuleSymbols()
 command Iofm call RunIOFM()
 command Iofmref call RunIOFMClean()
 command ReplaceUuids %s/{uuid}/\=substitute(system('uuidgen'), '\n', '', 'g')/gc
+command Gitd call GitDiff()
+command -nargs=* Difftool tab term git difftool <args>
+command -nargs=* Ml .!mule <args>
 
+cabbrev xw Xmqw
+cabbrev xr Xmqr
+cabbrev xx XmqX
+cabbrev mw Mdw
+cabbrev mr Mdr
 cabbrev fm Iofm
 cabbrev fmr Iofmref
 cabbrev Gf execute "normal! <C-V><C-W>fzt"
@@ -121,6 +170,7 @@ cabbrev Gvf execute "vertical wincmd f"
 cabbrev Co copen
 cabbrev Cc cclose
 cabbrev Tn tabnew
+autocmd BufRead,BufNewFile *.dwl set filetype=dw
 cabbrev Ww wincmd w
 cabbrev Wj wincmd j
 cabbrev Wk wincmd k
