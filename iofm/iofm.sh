@@ -25,6 +25,7 @@ declare -A globals
 # TODO update directive and config logic to be the same, directives are essentially short term config overrides
 # TODO separate exclusion config option into excludeDir and excludeFile, both should accept glob patterns and the values of these can be used to build the options for find.
 # TODO add arugment support for processing another dir
+# TODO for ordering operations while maintaining list postion for output, can just leave a marker and put id in associative array with operation, for operations that result in new files in a different location, will have to figure out a way to weave those back in to the output in the right spot
 function helpDoc {
 	cat <<EOF
 Usage:
@@ -366,6 +367,7 @@ function listDirRef {
 	fi
 
 	findQuery="find . ${findQuery}-type d -print -o -type f -print"
+	: echo "| $findQuery"
 
 	declare -A aggregate
 	while IFS=$'\n' read -r line; do
@@ -376,8 +378,12 @@ function listDirRef {
 			dName="$(dirname "$line")"
 			fName="$(basename "$line")"
 			aggregate["${line}"]=''
-			aggregate["${dName}"]="${aggregate["${dName}"]}${fName}
+			if [[ "$fName" == '.' && "$dName" == '.' ]]; then
+				: echo "| fName matched '.' "
+			else
+				aggregate["${dName}"]="${aggregate["${dName}"]}${fName}
 "
+			fi
 		elif [[ -f "$line" ]]; then
 			# Append file entry to dir
 			dName="$(dirname "$line")"
