@@ -306,7 +306,7 @@ function processGlobalConfig {
 	fi
 }
 
-function listDirRef {
+function listDir {
 	local findQuery
 	if [[ -n "${globals[excludeDir]}" ]]; then
 		for d in $(echo "${globals[excludeDir]}" | xargs printf $'"%s"\n'); do
@@ -368,7 +368,7 @@ function main {
 	processGlobalConfig
 
 	if [[ -t 0 ]]; then
-		listDirRef
+		listDir
 	else
 		while read -r token; do
 			lineRead=true
@@ -384,7 +384,7 @@ function main {
 			fi
 		done < <(processTokens)
 		if [[ ! "$lineRead" ]]; then
-			listDirRef
+			listDir
 		fi
 	fi
 }
