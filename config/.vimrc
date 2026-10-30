@@ -154,7 +154,8 @@ command Iofm call RunIOFM()
 command Iofmref call RunIOFMClean()
 command ReplaceUuids %s/{uuid}/\=substitute(system('uuidgen'), '\n', '', 'g')/gc
 command Gitd call GitDiff()
-command -nargs=* Difftool tab term git difftool <args>
+command -nargs=* Tdifftool tab term git difftool <args>
+command -nargs=* Ndifftool term git difftool <args>
 command -nargs=* Ml .!mule <args>
 
 cabbrev xw Xmqw
