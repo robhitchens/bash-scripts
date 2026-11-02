@@ -26,6 +26,7 @@ declare -A globals
 # TODO separate exclusion config option into excludeDir and excludeFile, both should accept glob patterns and the values of these can be used to build the options for find.
 # TODO add arugment support for processing another dir
 # TODO for ordering operations while maintaining list postion for output, can just leave a marker and put id in associative array with operation, for operations that result in new files in a different location, will have to figure out a way to weave those back in to the output in the right spot
+# TODO rework directives into options that can be repeated until a marker or a second instance that disables a directive. They would effectively be annotations or macro operations?
 function helpDoc {
 	cat <<EOF
 Usage:
