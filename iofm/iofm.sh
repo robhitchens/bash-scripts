@@ -342,6 +342,7 @@ function processGlobalConfig {
 	fi
 }
 
+# TODO cleanup and refactor, got escaping whitespacing working, but most likely broke something else
 function listDir {
 	local findQuery
 	if [[ -n "${globals[excludeDir]}" ]]; then
@@ -356,38 +357,42 @@ function listDir {
 		done
 	fi
 
-	findQuery="find . ${findQuery}-type d -print -o -type f -print"
+	findQuery="find . ${findQuery}-type d -print0 -o -type f -print0"
 	: echo "| $findQuery"
 
 	declare -A aggregate
-	while IFS=$'\n' read -r line; do
+	while IFS= read -r -d '' line; do
 		local dName fName
-		if [[ -d "$line" ]]; then
+		if [[ -d $line ]]; then
 			# TODO check if dir entry already exists (it shouldn't, unless I mess something up)
 			# Create dir entry and append dir to parent entry, if exists...
+			# FIXME need to escape whitespace
 			dName="$(dirname "$line")"
 			fName="$(basename "$line")"
-			aggregate["${line}"]=''
+			aggregate["${line// /\\ }"]=''
 			if [[ "$fName" == '.' && "$dName" == '.' ]]; then
 				: echo "| fName matched '.' "
 			else
-				aggregate["${dName}"]="${aggregate["${dName}"]}${fName}
+				aggregate[${dName// /\\ }]="${aggregate[${dName// /\\ }]}${fName// /\\ }
 "
 			fi
-		elif [[ -f "$line" ]]; then
+		elif [[ -f $line ]]; then
 			# Append file entry to dir
 			dName="$(dirname "$line")"
 			fName="$(basename "$line")"
-			aggregate["${dName}"]="${aggregate["${dName}"]}${fName}
+			aggregate[${dName// /\\ }]="${aggregate[${dName// /\\ }]}${fName// /\\ }
 "
 		else
-			echo "don't know: $line" >&2
+			echo "| don't know: ${line// /\\ }" >&2
 		fi
-	done < <(eval "$findQuery" | sort -d)
+	done < <(eval "$findQuery" | sort -d -z)
 
-	for key in $(echo "${!aggregate[*]}" | xargs printf $'%s\n' | sort -d); do
-		echo "${key}:"
-		echo "${aggregate[$key]}" | xargs printf $'%s\n' | sort
+	# TODO might have to utilize zero byte delimeter for these operations
+	local keys=$(echo "${!aggregate[*]}" | xargs printf $'%s\n' | sort -d)
+	IFS=$'\n'
+	for key in $keys; do
+		echo "${key// /\\ }:"
+		echo "${aggregate[${key// /\\ }]}" | xargs printf $'%s\n' | sort | sed -s 's/ /\\ /g'
 		echo
 	done
 }
