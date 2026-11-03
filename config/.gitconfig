@@ -4,6 +4,8 @@
 	email = {email}
 [credential]
 	helper = store
+[init]
+	defaultBranch = main
 [diff]
 	tool = vimdiff
 [merge]
