@@ -123,7 +123,7 @@ function processTokens {
 				echo "[context: $currentContext] (c) $line"
 			else
 				if [[ -n "$directive" && "$directive" == 'path=on' && -n "$line" ]]; then
-					echo "$currentContext/$line"
+					echo "<context: $currentContext>$currentContext/$line"
 				else
 					echo "<context: $currentContext>$line"
 				fi
