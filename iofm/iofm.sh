@@ -114,7 +114,7 @@ function processTokens {
 			fi
 		elif [[ "$line" =~ ^([.].*)[:]$ ]]; then
 			currentContext="${BASH_REMATCH[1]}"
-			echo "$line"
+			echo "<context: $line>$line"
 		elif [[ "$line" =~ ^[\(](.*)[\)]\ (.*)$ ]]; then
 			echo "[context: $currentContext] (${BASH_REMATCH[1]}) ${BASH_REMATCH[2]}"
 		elif [[ "$line" =~ ^[.].*[:]$ ]]; then
@@ -126,7 +126,7 @@ function processTokens {
 				if [[ -n "$directive" && "$directive" == 'path=on' && -n "$line" ]]; then
 					echo "$currentContext/$line"
 				else
-					echo "$line"
+					echo "<context: $currentContext>$line"
 				fi
 			fi
 		fi
@@ -141,17 +141,19 @@ function commentOutput {
 
 declare -A searchResults
 function populateSearch {
+	# FIXME: Search does not work in tandem with path=on directive/config as the implementation stands today
 	local context="$1"
 	local searchPattern="$2"
+	local key
 	# TODO may want to build up query to exclude dirs for search as well.
-	while IFS=$'\n' read line; do
-		: TODO for each line do the following:
-		: separate first element as key using "$context/$key"?
-		: 's/^(.+)([:][0-9]+.+)/\1/' sed expression for getting key, could probably extract with just a regular bash regex and use bash rematch
-		: create entry, append line to value separated by newline
-	done < <(grep -rin "$searchPattern" "$context")
 
-	# TODO update doAction logic to include output from searchResults if populated.
+	while IFS=$'\n' read line; do
+		[[ "$line" =~ ^(.+)[:]([0-9]+)[:].+$ ]]
+		key="${BASH_REMATCH[1]}"
+		searchResults["$key"]="${searchResults["$key"]}${line}
+"
+	done < <(grep -Irin "$searchPattern" "$context")
+	# TODO should probably expand to regex search, but simple fuzzy search should be fine for now
 }
 
 function doAction {
@@ -188,7 +190,7 @@ function doAction {
 	f)
 		local searchArgs=($args)
 		populateSearch "$context" "$searchArgs"
-		echo "(f) $searchArgs" # TODO keeping original argument in order as is.
+		echo "| (f) $searchArgs" # TODO keeping original argument in order as is.
 		;;
 	h)
 		local headArgs=($args)
@@ -404,7 +406,17 @@ function main {
 				local args="${BASH_REMATCH[3]}"
 				doAction "$context" "$action" $args
 			else
-				echo "$token"
+				[[ "$token" =~ [\<]context:\ (.+)[\>](.*) ]]
+				# TODO should probaly check if test failed
+
+				local searchKey="${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
+				[[ -n "$searchKey" ]] && local searchOutput="${searchResults["$searchKey"]}"
+
+				echo "${BASH_REMATCH[2]}"
+
+				if [[ -n "$searchOutput" ]]; then
+					commentOutput < <(echo "$searchOutput")
+				fi
 			fi
 		done < <(processTokens)
 		if [[ ! "$lineRead" ]]; then
