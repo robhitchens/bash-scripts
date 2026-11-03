@@ -11,8 +11,8 @@ declare -g directive
 declare configFile="$HOME/.config/iofm.conf"
 declare -A globals
 
-# TODO add grep like command for fuzzy finding, generate comments with local path to file with line number. Default context to size 10, match grep output with file in output
-#      might start with top level directive first, could also have context limited search as well by placing command infront of file or directory.
+# TODO add support for configurable context for search output
+# TODO add support to search for taking in file as argument to limit scope to single file.
 # TODO add support for depth directive
 # TODO add support for changing the current working directory of iofm output
 # TODO add support for directive to provide full paths for each node
@@ -41,7 +41,6 @@ Description:
   iofm manages files using simple syntax to execute file system operations one at a time or in batches.
   The output of iofm is valid input to iofm with the intent that interactions with iofm take place utilizing a text editor such as vim.
 
-  TODO fill out the rest of the description.
 Syntax:
   ./directory:                      denotes the parent directory of the following section
   nodeName                          denotes file or directory node under the current directory
@@ -144,15 +143,26 @@ function populateSearch {
 	# FIXME: Search does not work in tandem with path=on directive/config as the implementation stands today
 	local context="$1"
 	local searchPattern="$2"
-	local key
-	# TODO may want to build up query to exclude dirs for search as well.
+	local key excludeDirs excludeFiles
+
+	if [[ -n "${globals[excludeDir]}" ]]; then
+		for d in $(echo "${globals[excludeDir]}" | xargs printf $'"%s\n'); do
+			excludeDirs="${excludeDirs}--exclude-dir=${d//\"/\'} "
+		done
+	fi
+
+	if [[ -n "${globals[excludeFile]}" ]]; then
+		for f in $(echo "${globasl[excludeFile]}" | xargs printf $'"%s\n'); do
+			excludeFiles="${excludeFiles}--exclude=${f//\"/\'} "
+		done
+	fi
 
 	while IFS=$'\n' read line; do
 		[[ "$line" =~ ^(.+)[:]([0-9]+)[:].+$ ]]
 		key="${BASH_REMATCH[1]}"
 		searchResults["$key"]="${searchResults["$key"]}${line}
 "
-	done < <(grep -Irin "$searchPattern" "$context")
+	done < <(grep -Irin $excludeDirs $excludeFiles "$searchPattern" "$context")
 	# TODO should probably expand to regex search, but simple fuzzy search should be fine for now
 }
 
