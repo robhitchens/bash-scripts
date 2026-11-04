@@ -98,13 +98,12 @@ function processTokens {
 		fi
 		# TODO will probably have to change directive to be an associative array. Should also probably just change directives to be inline config.
 		if [[ -z "$directive" && "$line" =~ ^\(\!d\)\ (.*)$ ]]; then
-			#echo "| encountered directive: $line"
+			: echo "| encountered directive: $line"
 			directive="${BASH_REMATCH[1]}"
 			echo "|> $line"
 			continue
 		else
-			:
-			#echo "| directive already declared: $directive"
+			: echo "| directive already declared: $directive"
 		fi
 		# If line starts with (action) then interpret arguments
 		if [[ "$line" =~ ^[\|]\ (.*)$ ]]; then
@@ -179,11 +178,9 @@ function doAction {
 		if [[ -f "$context/$args" ]]; then
 			commentOutput < <(cat -n "$context/$args")
 		elif [[ -d "$context/$args" ]]; then
-			# echo "| $args is a directory" >&2
-			:
+			: echo "| $args is a directory" >&2
 		else
-			# echo "| $context/$args doesn't exist" >&2
-			:
+			: echo "| $context/$args doesn't exist" >&2
 		fi
 
 		;;
