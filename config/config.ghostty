@@ -1,0 +1,7 @@
+theme = Apple Classic
+background-image = {bg-image}
+background-image-opacity = 0.05
+background-image-fit = cover
+window-decoration = server
+window-theme = system
+gtk-titlebar = false
