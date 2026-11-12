@@ -191,6 +191,7 @@ function populateSearch {
 	# TODO should probably expand to regex search, but simple fuzzy search should be fine for now
 }
 
+# FIXME could break apart and refactor into a set of functions following an interface and a map of action->function
 function doAction {
 	local arr=("$@")
 	local context="${arr[0]}"
@@ -452,7 +453,6 @@ function processOverrideTokens {
 function processCommentTokens {
 	local token="$1"
 	if [[ "$token" =~ ^\<context:\ (.*)\ \{Comment\}\>(.*)$ ]]; then
-		# TODO probably need to check config here as to whether or not to emit parsed comments. Ah this was originally for directives.
 		if [[ "${globals[comments]}" == 'keep' ]]; then
 			echo "| ${BASH_REMATCH[2]}"
 		fi
