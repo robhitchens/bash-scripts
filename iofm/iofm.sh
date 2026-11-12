@@ -495,6 +495,7 @@ function main {
 			if [[ "${globals['emitTokens']}" == 'on' ]]; then
 				echo "$token"
 			else
+				# TODO could refactor to match on type first, then use regex to extract necessary values
 				processOverrideTokens "$token"
 				processCommentTokens "$token"
 				processActionTokens "$token"
