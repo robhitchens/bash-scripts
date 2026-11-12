@@ -57,7 +57,6 @@ Syntax:
                                     output after execution).
   (!cr) key=value                   declare repeated local config override (will persist in file 
                                     and be applied through additional executions)
-  (!g) c                            mixes in the contents of all files after this marker #Deprecated
   (s) fileName|directory            Stats the file
   (p) fileName                      Generates an absolute path to the file 
   (f) findPattern                   Searches the current context for files with content matching 
