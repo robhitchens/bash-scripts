@@ -113,7 +113,10 @@ function tokenizeInput {
 	local currentContext firstArg remainingArgs
 
 	while IFS=$'\n' read -r line; do
-		if [[ "$line" =~ ^\(\!c\)\ (.*)[=](.*)$ ]]; then
+		if [[ "$line" =~ ^\<context:\ .*\ \{.*\}\>.*$ ]]; then
+			# input matches token, so just re-emitting token
+			echo "$line"
+		elif [[ "$line" =~ ^\(\!c\)\ (.*)[=](.*)$ ]]; then
 
 			# tokenize local config
 			echo "<context: $currentContext {Override}>${BASH_REMATCH[1]} ${BASH_REMATCH[2]}"
@@ -163,7 +166,6 @@ function commentOutput {
 
 declare -A searchResults
 function populateSearch {
-	# FIXME: Search does not work in tandem with path=on directive/config as the implementation stands today
 	local context="$1"
 	local searchPattern="$2"
 	local key excludeDirs excludeFiles
@@ -425,7 +427,6 @@ function listDir {
 	done
 }
 
-# FIXME I think I need to inline this
 function processOverrideTokens {
 	local token="$1"
 	local configKey configValue
@@ -452,7 +453,9 @@ function processCommentTokens {
 	local token="$1"
 	if [[ "$token" =~ ^\<context:\ (.*)\ \{Comment\}\>(.*)$ ]]; then
 		# TODO probably need to check config here as to whether or not to emit parsed comments. Ah this was originally for directives.
-		echo "| ${BASH_REMATCH[2]}"
+		if [[ "${globals[comments]}" == 'keep' ]]; then
+			echo "| ${BASH_REMATCH[2]}"
+		fi
 	fi
 }
 
