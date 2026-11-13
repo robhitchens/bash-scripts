@@ -96,7 +96,7 @@ Config options:
     - keep                          this keeps all comments lines in output.
   path                              
     - short                         (default) prints basename of entry
-    - relative                      prints the working dir relative path for all entries
+    - full                          prints the working dir relative path for all entries
   hidden                            
     - display                       (default) this will list hidden files from output
     - hide                          this will remove hidden files from output
@@ -108,7 +108,7 @@ EOF
 
 function tokenizeInput {
 	# TODO if I need to output a confirmation, could utilize |? $Question: Y/N
-	#      token format would be <context: $context {Confirmation} {$previousToken} {$answer}>$question
+	#      token format would be <context: $context {Confirmation} {$previousTokenReference} {$answer}>$question
 	local currentContext firstArg remainingArgs
 
 	while IFS=$'\n' read -r line; do
@@ -427,7 +427,7 @@ function listDir {
 	done
 }
 
-function processOverrideTokens {
+function processOverrideToken {
 	local token="$1"
 	local configKey configValue
 	if [[ "$token" =~ ^\<context:\ (.*)\ \{Override\}\>(.*)\ (.*)$ ]]; then
@@ -449,7 +449,7 @@ function processOverrideTokens {
 	fi
 }
 
-function processCommentTokens {
+function processCommentToken {
 	local token="$1"
 	if [[ "$token" =~ ^\<context:\ (.*)\ \{Comment\}\>(.*)$ ]]; then
 		if [[ "${globals[comments]}" == 'keep' ]]; then
@@ -458,7 +458,7 @@ function processCommentTokens {
 	fi
 }
 
-function processActionTokens {
+function processActionToken {
 	local token="$1"
 	local context action args
 	if [[ "$token" =~ ^\<context:\ (.*)\ \{Action\}\>(.*)\ (.*)$ ]]; then
@@ -466,6 +466,42 @@ function processActionTokens {
 		action="${BASH_REMATCH[2]}"
 		args="${BASH_REMATCH[3]}"
 		doAction "$context" "$action" $args
+	fi
+}
+
+function processDirToken {
+	local token="$1"
+	if [[ "$token" =~ ^\<context:\ (.*)\ \{Dir}\>(.*)$ ]]; then
+		# Note: just matching non actionable token
+		echo "${BASH_REMATCH[1]}:"
+	fi
+}
+
+function processEntryToken {
+	local token="$token"
+
+	if [[ "$token" =~ ^\<context:\ (.*)\ \{Entry}\>(.*)$ ]]; then
+
+		# print out results in format configured
+		if [[ "${globals['path']}" == 'full' ]]; then
+			echo "${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
+		else
+			echo "${BASH_REMATCH[2]}"
+		fi
+
+		# mixin search results if matching result is found
+		local searchKey="${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
+		[[ -n "$searchKey" ]] && local searchOutput="${searchResults["$searchKey"]}"
+		if [[ -n "$searchOutput" ]]; then
+			commentOutput < <(echo "$searchOutput")
+		fi
+	fi
+}
+
+function processEmptyToken {
+	local token="$1"
+	if [[ "$token" =~ ^\<context:\ (.*)\ \{Empty\}\>$ ]]; then
+		echo
 	fi
 }
 
@@ -496,32 +532,12 @@ function main {
 				echo "$token"
 			else
 				# TODO could refactor to match on type first, then use regex to extract necessary values
-				processOverrideTokens "$token"
-				processCommentTokens "$token"
-				processActionTokens "$token"
-
-				if [[ "$token" =~ ^\<context:\ (.*)\ \{Dir}\>(.*)$ ]]; then
-					# Note: just matching non actionable token
-					echo "${BASH_REMATCH[1]}:"
-				elif [[ "$token" =~ ^\<context:\ (.*)\ \{Entry}\>(.*)$ ]]; then
-
-					# print out results in format configured
-					if [[ "${globals['path']}" == 'relative' ]]; then
-						echo "${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
-					else
-						echo "${BASH_REMATCH[2]}"
-					fi
-
-					# mixin search results if matching result is found
-					local searchKey="${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
-					[[ -n "$searchKey" ]] && local searchOutput="${searchResults["$searchKey"]}"
-					if [[ -n "$searchOutput" ]]; then
-						commentOutput < <(echo "$searchOutput")
-					fi
-
-				elif [[ "$token" =~ ^\<context:\ (.*)\ \{Empty\}\>$ ]]; then
-					echo
-				fi
+				processOverrideToken "$token"
+				processCommentToken "$token"
+				processActionToken "$token"
+				processDirToken "$token"
+				processEntryToken "$token"
+				processEmptyToken "$token"
 			fi
 		done < <(tokenizeInput)
 		if [[ ! "$lineRead" ]]; then
