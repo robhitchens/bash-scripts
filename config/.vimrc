@@ -62,9 +62,22 @@ endfunction
 
 function! XmqRead()
     let l:saved_view = winsaveview()
-    silent! %!xmq
+    "silent! %!xmq
+    let l:lines = getline(1, '$')
+    "let v:errmsg = system('xmq ' .. shellescape(expand('%')))
+    let l:output = systemlist('xmq', l:lines)
+    if v:shell_error != 0
+      cexpr l:output
+      copen
+    else
+      %d
+      "let l:lines = split(l:output, "\n", 1)
+      call setline(1, l:output)
+      cexpr ""
+      cclose
     call winrestview(l:saved_view)
     set syntax=xmq
+    endif
 endfunction
 
 function! XmqToXml()
