@@ -54,24 +54,30 @@ augroup END
 
 function! XmqWrite()
     let l:saved_view = winsaveview()
-    silent! %!xmq to-xml | xmlstarlet fo
-    write
-    silent! %!xmq
-    call winrestview(l:saved_view)
+    let l:lines = getline(1, '$')
+    let l:output = systemlist('xmq', l:lines)
+    if v:shell_error != 0
+      cexpr l:output "TODO need to properly format output for quickfix
+      copen
+    else
+      cexpr ""
+      cclose
+      silent! %!xmq to-xml | xmlstarlet fo
+      write
+      silent! %!xmq
+      call winrestview(l:saved_view)
+    endif
 endfunction
 
 function! XmqRead()
     let l:saved_view = winsaveview()
-    "silent! %!xmq
     let l:lines = getline(1, '$')
-    "let v:errmsg = system('xmq ' .. shellescape(expand('%')))
     let l:output = systemlist('xmq', l:lines)
     if v:shell_error != 0
-      cexpr l:output
+      cexpr l:output "TODO need to properly format output for quickfix
       copen
     else
       %d
-      "let l:lines = split(l:output, "\n", 1)
       call setline(1, l:output)
       cexpr ""
       cclose
@@ -82,9 +88,16 @@ endfunction
 
 function! XmqToXml()
     let l:saved_view = winsaveview()
-    silent! %!xmq to-xml | xmlstarlet fo
-    call winrestview(l:saved_view)
-    set syntax=xml
+    let l:lines = getline(1, '$')
+    let l:output = systemlist('xmq', l:lines)
+    if v:shell_error != 0
+      cexpr l:output "TODO need to properly format output for quickfix
+      copen
+    else
+      silent! %!xmq to-xml | xmlstarlet fo
+      call winrestview(l:saved_view)
+      set syntax=xml
+    endif
 endfunction
 
 function! MarkdownWrite()
