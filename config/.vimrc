@@ -127,17 +127,35 @@ endfunction
 
 function! FormatGoCode()
   let l:saved_view = winsaveview() " Save the current view (including cursor position)
-  " Execute your desired command here. For example, to run an external command:
-  silent! %!gofmt
-  " Or, to run a Vim command:
-  " normal G
-  call winrestview(l:saved_view) " Restore the saved view
+  let l:lines = getline(1, '$')
+  let l:output = systemlist('gofmt', l:lines)
+  if v:shell_error != 0
+    cexpr l:output "TODO need to properly format output for quickfix
+    copen
+  else
+    cexpr ""
+    cclose
+    %d
+    call setline(1, l:output)
+    call winrestview(l:saved_view) " Restore the saved view
+  endif
 endfunction
 
 function! FormatShellCode()
     let l:saved_view = winsaveview()
-    silent! %!shfmt
-    call winrestview(l:saved_view)
+    let l:lines = getline(1, '$')
+    let l:output = systemlist('shfmt', l:lines)
+    "silent! %!shfmt
+    if v:shell_error != 0
+      cexpr l:output "TODO need to properly format output for quickfix
+      copen
+    else
+      cexpr ""
+      cclose
+      %d
+      call setline(1, l:output)
+      call winrestview(l:saved_view)
+    endif
 endfunction
 
 function! FormatJson()
